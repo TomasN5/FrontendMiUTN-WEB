@@ -1,7 +1,14 @@
-export default function App() {
+// App.jsx
+import React from 'react';
+import Login from './components/login';
+import './App.css';
+
+function App() {
   return (
-    <div>
-      <h1>Mi Web con React + Vite 🚀</h1>
+    <div className="App">
+      <Login />
     </div>
   );
 }
+
+export default App;
