@@ -8,7 +8,7 @@
   box-sizing: border-box;
 }
 
-html, body {
+ body {
   height: 100%;
   overflow: hidden;
   background: linear-gradient(180deg, #ffffff 0%, #e6f2ff 100%);
