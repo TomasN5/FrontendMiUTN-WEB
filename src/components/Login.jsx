@@ -1,15 +1,20 @@
 import React, { useState } from 'react';
 import './Login.css';
 
-const Login = () => {
+const Login = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Aquí iría la lógica de autenticación
+    // Aquí iría la lógica de autenticación real
     console.log('Email:', email, 'Password:', password, 'RememberMe:', rememberMe);
+    
+    // Simulamos una autenticación exitosa
+    if (email && password) {
+      onLogin(); // Esto activará la navegación al dashboard
+    }
   };
 
   return (
@@ -67,7 +72,7 @@ const Login = () => {
             <a href="#forgot" className="forgot-link">¿Olvidaste tu contraseña?</a>
           </div>
           
-          <button type="submit" className="login-button">
+          <button type="submit" className="login-button" onClick={handleSubmit}>
             <span>Ingresar</span>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
