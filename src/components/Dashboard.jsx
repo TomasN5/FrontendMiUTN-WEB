@@ -1,8 +1,11 @@
+// Dashboard.jsx
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Dashboard.css';
 
 const Dashboard = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const navigate = useNavigate();
 
   // Datos de ejemplo para los anuncios académicos
   const announcements = [
@@ -49,6 +52,10 @@ const Dashboard = () => {
     setCurrentSlide((prev) => (prev - 1 + announcements.length) % announcements.length);
   };
 
+  const handleAnnouncementsClick = () => {
+    navigate('/announcements');
+  };
+
   return (
     <div className="dashboard">
       {/* Header */}
@@ -68,7 +75,7 @@ const Dashboard = () => {
         {/* Botones Principales */}
         <div className="buttons-container">
           <div className="main-buttons">
-            <button className="main-btn anuncios-btn">
+            <button className="main-btn anuncios-btn" onClick={handleAnnouncementsClick}>
               <span className="btn-text">Anuncios</span>
             </button>
             
@@ -77,7 +84,7 @@ const Dashboard = () => {
             </button>
             
             <button className="main-btn professores-btn">
-              <span className="btn-text">Profesores</span>
+              <span className="btn-text">Professores</span>
             </button>
           </div>
         </div>
