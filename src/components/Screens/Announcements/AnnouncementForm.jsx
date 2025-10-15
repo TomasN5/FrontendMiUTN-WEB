@@ -60,6 +60,13 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+     // Validaciones básicas
+    if (!formData.title.trim()) {
+      alert("El título es obligatorio");
+      return;
+    }
+    
+    // Enviar datos al componente padre
     onSave(formData);
   };
 
@@ -218,7 +225,7 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
                     className="announcement-radio-input"
                   />
                   <span className="announcement-radiomark"></span>
-                  Agora caralho
+                  Ahora
                 </label>
                 
                 <label className="announcement-radio-label">

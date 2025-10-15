@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
-import Announcements from './components/Screens/Announcements/Announcements';
+import Announcements from './components/Screens/Announcements';
 import AnnouncementForm from './components/Screens/Announcements/AnnouncementForm';
 
 import './App.css';
