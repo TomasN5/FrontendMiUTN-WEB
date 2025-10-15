@@ -13,25 +13,29 @@ const Dashboard = () => {
       id: 1,
       title: "Inicio del Segundo Cuatrimestre",
       description: "Las clases del segundo cuatrimestre comenzarán el 15 de agosto. Revisa tu horario en el sistema.",
-      date: "10 Ago 2024"
+      date: "10 Ago 2024",
+      important: true
     },
     {
       id: 2,
       title: "Convocatoria a Becas 2024",
       description: "Abierta la convocatoria para becas de excelencia académica. Postúlate hasta el 30 de agosto.",
-      date: "05 Ago 2024"
+      date: "05 Ago 2024",
+      important: true
     },
     {
       id: 3,
       title: "Mantenimiento del Sistema",
       description: "El sistema estará en mantenimiento el próximo sábado de 2:00 AM a 6:00 AM.",
-      date: "01 Ago 2024"
+      date: "01 Ago 2024",
+      important: false
     },
     {
       id: 4,
       title: "Talleres de Programación",
       description: "Inscripciones abiertas para los talleres de programación avanzada. Cupos limitados.",
-      date: "28 Jul 2024"
+      date: "28 Jul 2024",
+      important: false
     }
   ];
 
@@ -84,7 +88,7 @@ const Dashboard = () => {
             </button>
             
             <button className="main-btn professores-btn">
-              <span className="btn-text">Professores</span>
+              <span className="btn-text">Profesores</span>
             </button>
           </div>
         </div>
@@ -99,8 +103,11 @@ const Dashboard = () => {
               >
                 {announcements.map((announcement) => (
                   <div key={announcement.id} className="slide">
-                    <div className="announcement-card">
+                    <div className={`announcement-card ${announcement.important ? 'important' : ''}`}>
                       <div className="announcement-content">
+                        {announcement.important && (
+                          <div className="important-badge">¡Importante!</div>
+                        )}
                         <h3>{announcement.title}</h3>
                         <p>{announcement.description}</p>
                         <span className="announcement-date">{announcement.date}</span>

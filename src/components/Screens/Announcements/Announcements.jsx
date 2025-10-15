@@ -1,7 +1,7 @@
-// src/screens/Announcements.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Announcements.css';
+import AnnouncementForm from './AnnouncementForm';
 
 const Announcements = () => {
   const navigate = useNavigate();
@@ -38,6 +38,10 @@ const Announcements = () => {
     }
   ]);
 
+  // Estado para controlar el modal
+  const [showModal, setShowModal] = useState(false);
+  const [editingAnnouncement, setEditingAnnouncement] = useState(null);
+
   const handleBackToDashboard = () => {
     navigate('/dashboard');
   };
@@ -47,17 +51,44 @@ const Announcements = () => {
   };
 
   const handleAddAnnouncement = () => {
-    // Esto llevará a otra pantalla más adelante
-    console.log("Navegar a pantalla de agregar anuncio");
+    setEditingAnnouncement(null);
+    setShowModal(true);
   };
 
   const handleEditAnnouncement = (id) => {
-    // Esto llevará a otra pantalla más adelante
-    console.log("Editar anuncio:", id);
+    const announcementToEdit = announcements.find(ann => ann.id === id);
+    setEditingAnnouncement(announcementToEdit);
+    setShowModal(true);
   };
 
   const handleDeleteAnnouncement = (id) => {
     setAnnouncements(announcements.filter(ann => ann.id !== id));
+  };
+
+  const handleSaveAnnouncement = (formData) => {
+    if (editingAnnouncement) {
+      // Editar anuncio existente
+      setAnnouncements(announcements.map(ann => 
+        ann.id === editingAnnouncement.id 
+          ? { ...ann, ...formData }
+          : ann
+      ));
+    } else {
+      // Agregar nuevo anuncio
+      const newAnnouncement = {
+        id: Math.max(...announcements.map(ann => ann.id)) + 1,
+        ...formData,
+        published: true
+      };
+      setAnnouncements([...announcements, newAnnouncement]);
+    }
+    setShowModal(false);
+    setEditingAnnouncement(null);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setEditingAnnouncement(null);
   };
 
   return (
@@ -81,7 +112,7 @@ const Announcements = () => {
           
           <button className="nav-item">
             <span className="nav-icon">●</span>
-            <span className="nav-text">Professores</span>
+            <span className="nav-text">Profesores</span>
           </button>
           
           <div className="nav-divider"></div>
@@ -150,6 +181,25 @@ const Announcements = () => {
             ))}
           </div>
         </div>
+
+        {/* Modal para el formulario */}
+        {showModal && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h2>{editingAnnouncement ? 'Modificar Anuncio' : 'Agregar Anuncio'}</h2>
+                <button className="close-btn" onClick={handleCloseModal}>×</button>
+              </div>
+              <div className="modal-body">
+                <AnnouncementForm 
+                  announcement={editingAnnouncement}
+                  onSave={handleSaveAnnouncement}
+                  onCancel={handleCloseModal}
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
