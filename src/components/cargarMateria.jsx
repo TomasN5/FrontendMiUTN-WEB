@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; 
 import { useNavigate, useParams } from 'react-router-dom';
 import './Materias.css';
 import Sidebar from './sidebar';
@@ -21,12 +21,63 @@ export default function CargarMateria() {
 
   const [formData, setFormData] = useState({
     name: '',
-    comission: '',
+    commissionId: '',
+    commissionName: '',
     classroom: '',
     type: '',
-    profesor: '',
-    schedule: [{ day: '', startTime: '', endTime: '' }]
+    schedule: [{ day: '', startTime: '', endTime: '' }],
+    professorsId: ['']
   });
+
+  const [careerId, setCareerId] = useState(null);
+  const [commissions, setCommissions] = useState([]);
+  const [professors, setProfessors] = useState([]);
+  const [period, setPeriod] = useState('');
+  const [classrooms, setClassrooms] = useState([]);
+
+  // estados para modales
+  const [showCommissionModal, setShowCommissionModal] = useState(false);
+  const [showClassroomModal, setShowClassroomModal] = useState(false);
+
+  // estados auxiliares
+  const [newCommissionName, setNewCommissionName] = useState('');
+  const [newClassroomName, setNewClassroomName] = useState('');
+
+  // cargar datos iniciales
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [commRes, profRes, careerRes, classRes] = await Promise.all([
+          fetch('http://localhost:8080/api/v1/MiUTN/commission/findAll'),
+          fetch('http://localhost:8080/api/v1/miUTN/professor/findAll'),
+          fetch(`http://localhost:8080/api/v1/MiUTN/career/findByName?name=${nombre}`),
+          fetch('http://localhost:8080/api/v1/MiUTN/schedules/findAllClassroom')
+        ]);
+
+        if (!commRes.ok) throw new Error('Error al obtener comisiones');
+        if (!profRes.ok) throw new Error('Error al obtener profesores');
+        if (!careerRes.ok) throw new Error('Error al obtener carrera');
+        if (!classRes.ok) throw new Error('Error al obtener aulas');
+
+        const [commData, profData, careerData, classData] = await Promise.all([
+          commRes.json(),
+          profRes.json(),
+          careerRes.json(),
+          classRes.json()
+        ]);
+        
+
+        setCommissions(commData);
+        setProfessors(profData);
+        setCareerId(careerData.id);
+        setClassrooms(classData);
+      } catch (error) {
+        console.error('❌ Error al cargar datos:', error);
+      }
+    };
+
+    fetchData();
+  }, [nombre]);
 
   const handleChange = ({ target: { name, value } }) => {
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -45,23 +96,80 @@ export default function CargarMateria() {
     }));
   };
 
+  const getYearFromCommission = (commissionName) => {
+    const match = commissionName.match(/S(\d)/i);
+    return match ? parseInt(match[1]) : null;
+  };
+
+  const handleSelectCommission = (commission) => {
+    setFormData(prev => ({
+      ...prev,
+      commissionId: commission.id,
+      commissionName: commission.name
+    }));
+    setShowCommissionModal(false);
+  };
+
+  const handleSelectClassroom = (classroomName) => {
+    setFormData(prev => ({ ...prev, classroom: classroomName }));
+    setShowClassroomModal(false);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const selectedCommission = commissions.find(
+      (c) => c.id === parseInt(formData.commissionId)
+    );
+
+    if (!selectedCommission) {
+      alert("⚠️ Debes seleccionar una comisión válida");
+      return;
+    }
+
+    const year = getYearFromCommission(selectedCommission.name);
+    if (!year) {
+      alert("⚠️ No se pudo determinar el año a partir de la comisión seleccionada");
+      return;
+    }
+
+    const scheduleFormatted = formData.schedule.map((s) => ({
+      day: `${s.day} ${period}`,
+      startTime: s.startTime,
+      endTime: s.endTime,
+      classroom: formData.classroom,
+    }));
+
+    const payload = {
+      name: formData.name,
+      commissionId: Number(formData.commissionId),
+      year,
+      type: formData.type,
+      schedule: scheduleFormatted,
+      careerId,
+      professorsId: [Number(formData.professorsId[0])]
+    };
+
+    console.log("📦 Datos a enviar:", JSON.stringify(payload, null, 2));
+
     try {
-      const response = await fetch('http://localhost:8080/api/subjects', {
+      const response = await fetch("http://localhost:8080/api/v1/MiUTN/subject/save", {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload)
       });
+
       if (response.ok) {
-        alert('Materia creada correctamente');
+        alert('✅ Materia creada correctamente');
         navigate('/');
       } else {
-        alert('Error al crear la materia');
+        const errorData = await response.json();
+        console.error('Error en backend:', errorData);
+        alert('❌ Error al crear la materia');
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Error de conexión');
+      alert('⚠️ Error de conexión');
     }
   };
 
@@ -72,6 +180,7 @@ export default function CargarMateria() {
         <div className="cargar-materias">
           <h1 style={{ color: colorMateria }}>Cargar Materia</h1>
           <form className="panel-form" onSubmit={handleSubmit}>
+            
             <label>Nombre</label>
             <input
               type="text"
@@ -81,47 +190,115 @@ export default function CargarMateria() {
               required
             />
 
+            {/* 🔹 Comisión con modal */}
             <label>Comisión</label>
-            <div className="input-group">
-              <select
-                name="comission"
-                value={formData.comission}
-                onChange={handleChange}
-                required
-              >
-                <option value="" disabled>Seleccionar comisión</option>
-                <option value="A">S31</option>
-                <option value="B">S41</option>
-                <option value="C">S51</option>
-              </select>
-              <button type="button" className="agregar-btn" style={{ backgroundColor: colorMateria }}>+</button>
-            </div>
+            <input
+              type="text"
+              name="commissionName"
+              placeholder="Seleccionar comisión"
+              value={formData.commissionName}
+              readOnly
+              onClick={() => setShowCommissionModal(true)}
+              onFocus={() => setShowCommissionModal(true)}
+              required
+            />
 
+            {showCommissionModal && (
+              <div className="modal-overlay" onClick={() => setShowCommissionModal(false)}>
+                <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                  <h3>Seleccionar o Agregar Comisión</h3>
+
+                  <div className="modal-add">
+                    <input
+                      type="text"
+                      placeholder="Escribir nueva comisión (ej: S41)"
+                      value={newCommissionName}
+                      onChange={(e) => setNewCommissionName(e.target.value)}
+                    />
+                    <button
+                      className="btn-add-commission"
+                      onClick={() => {
+                        if (!newCommissionName.trim()) return alert("⚠️ Ingresá un nombre válido");
+                        const newCommission = { id: Date.now(), name: newCommissionName.trim() };
+                        setCommissions(prev => [...prev, newCommission]);
+                        handleSelectCommission(newCommission);
+                        setNewCommissionName('');
+                      }}
+                    >
+                      ➕ Agregar
+                    </button>
+                  </div>
+
+                  <hr style={{ margin: "10px 0" }} />
+                  <ul className="modal-list">
+                    {commissions.map((c) => (
+                      <li key={c.id} className="modal-item" onClick={() => handleSelectCommission(c)}>
+                        {c.name || c.nombre}
+                      </li>
+                    ))}
+                  </ul>
+                  <button className="btn-close-modal" onClick={() => setShowCommissionModal(false)}>Cerrar</button>
+                </div>
+              </div>
+            )}
+
+            {/* 🔹 Aula con modal */}
             <label>Aula</label>
-            <div className="input-group">
-              <select
-                name="classroom"
-                value={formData.classroom}
-                onChange={handleChange}
-                required
-              >
-                <option value="" disabled>Seleccionar aula</option>
-                <option value="131">131</option>
-                <option value="132">132</option>
-                <option value="133">133</option>
-                <option value="134">134</option>
-                <option value="135">135</option>
-                <option value="Malvinas">Anfiteatro Malvinas</option>
-              </select>
-              <button type="button" className="agregar-btn" style={{ backgroundColor: colorMateria }}>+</button>
-            </div>
+            <input
+              type="text"
+              name="classroom"
+              placeholder="Seleccionar aula"
+              value={formData.classroom}
+              readOnly
+              onClick={() => setShowClassroomModal(true)}
+              onFocus={() => setShowClassroomModal(true)}
+              required
+            />
+
+            {showClassroomModal && (
+              <div className="modal-overlay" onClick={() => setShowClassroomModal(false)}>
+                <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                  <h3>Seleccionar o Agregar Aula</h3>
+
+                  <div className="modal-add">
+                    <input
+                      type="text"
+                      placeholder="Escribir nueva aula (ej: 135)"
+                      value={newClassroomName}
+                      onChange={(e) => setNewClassroomName(e.target.value)}
+                    />
+                    <button
+                      className="btn-add-commission"
+                      onClick={() => {
+                        if (!newClassroomName.trim()) return alert("⚠️ Ingresá un nombre válido");
+                        const newClassroom = newClassroomName.trim();
+                        setClassrooms(prev => [...prev, newClassroom]);
+                        handleSelectClassroom(newClassroom);
+                        setNewClassroomName('');
+                      }}
+                    >
+                      ➕ Agregar
+                    </button>
+                  </div>
+
+                  <hr style={{ margin: "10px 0" }} />
+                  <ul className="modal-list">
+                    {classrooms.map((a, i) => (
+                      <li key={i} className="modal-item" onClick={() => handleSelectClassroom(a)}>
+                        {a}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <button className="btn-close-modal" onClick={() => setShowClassroomModal(false)}>Cerrar</button>
+                </div>
+              </div>
+            )}
 
             <label>Período</label>
             <select
-              name="type"
-              value={formData.type}
-              onChange={handleChange}
-              className="form-select"
+              value={period}
+              onChange={(e) => setPeriod(e.target.value)}
               required
             >
               <option value="" disabled>Seleccionar período</option>
@@ -132,16 +309,37 @@ export default function CargarMateria() {
 
             <label>Profesor</label>
             <select
-              name="profesor"
-              value={formData.profesor}
-              className="form-select"
-              onChange={handleChange}
+              value={formData.professorsId[0]}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  professorsId: [e.target.value]
+                }))
+              }
               required
             >
               <option value="" disabled>Seleccionar profesor</option>
-              <option value="Ruben">Ruben</option>
-              <option value="Migo">Migo</option>
-              <option value="Berni">Berni</option>
+              {professors.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name
+                    ? `${p.name} ${p.lastname || ''}`
+                    : p.nombre
+                    ? `${p.nombre} ${p.apellido || ''}`
+                    : 'Profesor sin nombre'}
+                </option>
+              ))}
+            </select>
+
+            <label>Tipo</label>
+            <select
+              name="type"
+              value={formData.type}
+              onChange={handleChange}
+              required
+            >
+              <option value="" disabled>Seleccionar tipo</option>
+              <option value="OBLIGATORIA">Obligatoria</option>
+              <option value="ELECTIVA">Electiva</option>
             </select>
 
             <fieldset>
@@ -183,11 +381,11 @@ export default function CargarMateria() {
                 Guardar Materia
               </button>
               <button
-              style={{
-                color: colorMateria,
-                border: `2px solid ${colorMateria}`,
-                backgroundColor: 'rgba(255, 255, 255, 0.5)'
-              }}
+                style={{
+                  color: colorMateria,
+                  border: `2px solid ${colorMateria}`,
+                  backgroundColor: 'rgba(255, 255, 255, 0.5)'
+                }}
                 type="button"
                 onClick={() => navigate(`/materia/${nombre.toLowerCase()}`)}
               >
