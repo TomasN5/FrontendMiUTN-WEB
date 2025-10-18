@@ -1,15 +1,15 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Materias.css';
+import './Styles/materias.css';
 import Sidebar from '../components/sidebar.jsx';
 
 const materias = [
-  { nombre: 'Civil', color: '#228B22' },
-  { nombre: 'Eléctrica', color: '#B22222' },
-  { nombre: 'Industrial', color: '#FFA01C' },
-  { nombre: 'Mecánica', color: '#20B2AA' },
-  { nombre: 'Química', color: '#8A2BE2' },
-  { nombre: 'Sistemas', color: '#4A89FF' }
+  { nombre: 'Civil', clase: 'civil' },
+  { nombre: 'Eléctrica', clase: 'electrica' },
+  { nombre: 'Industrial', clase: 'industrial' },
+  { nombre: 'Mecánica', clase: 'mecanica' },
+  { nombre: 'Química', clase: 'quimica' },
+  { nombre: 'Sistemas', clase: 'sistemas' }
 ];
 
 export default function Materias() {
@@ -29,8 +29,7 @@ export default function Materias() {
           {materias.map((m) => (
             <button
               key={m.nombre}
-              className="materia-btn"
-              style={{ backgroundColor: m.color }}
+              className={`materia-btn ${m.clase}`}
               onClick={() => handleClick(m.nombre)}
             >
               {m.nombre}

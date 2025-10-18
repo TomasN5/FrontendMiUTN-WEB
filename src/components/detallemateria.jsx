@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './Materias.css';
+import './Styles/detallemateria.css';
 import { useNavigate, useParams } from 'react-router-dom';
 import Sidebar from '../components/sidebar.jsx';
 import EliminarMateria from './eliminarmateria.jsx';
@@ -51,11 +51,6 @@ export default function MateriaDetalle() {
   // 🔹 Cargar materias según carrera o comisión
   const fetchMaterias = async (careerName, commissionId = null) => {
     try {
-      // 🧠 Verificamos qué valor se recibe
-      console.log("🧠 commissionId recibido:", commissionId);
-
-      // Si la API usa ID numérico, se mantiene findByCommissionId
-      // Si usa nombre, cambiar por findByCommissionName?name=${commissionId}
       const url = commissionId
         ? `http://localhost:8080/api/v1/MiUTN/subject/findByCommissionId?commissionId=${commissionId}`
         : `http://localhost:8080/api/v1/MiUTN/subject/findByCareerName?careerName=${careerName}`;
@@ -90,7 +85,7 @@ export default function MateriaDetalle() {
         }));
       });
 
-      // 🔹 Ordenar alfabéticamente por nombre de comisión (S31, S41, etc.)
+      // 🔹 Ordenar alfabéticamente por nombre de comisión
       const ordenadas = adaptadas.sort((a, b) => {
         const numA = parseInt(a.comision.replace(/\D/g, ''), 10);
         const numB = parseInt(b.comision.replace(/\D/g, ''), 10);
@@ -142,9 +137,9 @@ export default function MateriaDetalle() {
             value={comisionSeleccionada}
             onChange={(e) => setComisionSeleccionada(e.target.value)}
           >
-            <option value="">Filtrar por comisión...</option>
+            <option value="" className="option-style">Filtrar por comisión...</option>
             {comisiones.map((c) => (
-              <option key={c.id} value={c.id}>
+              <option key={c.id} value={c.id} className="option-style">
                 {c.name}
               </option>
             ))}
@@ -158,51 +153,56 @@ export default function MateriaDetalle() {
           </button>
         </div>
 
-        <table className="materias-table">
-          <thead>
-            <tr>
-              <th>Nombre</th>
-              <th>Período</th>
-              <th>Comisión</th>
-              <th>Horario</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
+        <div className="materias-table">
+          <div className="table-header">
+            <div className="header-row">
+              <div className="header-cell">Nombre</div>
+              <div className="header-cell">Tipo</div>
+              <div className="header-cell">Comisión</div>
+              <div className="header-cell">Horario</div>
+              <div className="header-cell">Acciones</div>
+            </div>
+          </div>
+          
+          <div className="table-body">
             {materias.map((m, idx) => (
-              <tr key={`${m.nombre}-${idx}`}>
-                <td>{m.nombre}</td>
-                <td>{m.periodo}</td>
-                <td>{m.comision}</td>
-                <td>
+              <div key={`${m.nombre}-${idx}`} className="table-row">
+                <div className="table-cell nombre-cell" data-label="Nombre">
+                  {m.nombre}
+                </div>
+                <div className="table-cell periodo-cell" data-label="Tipo">
+                  {m.periodo}
+                </div>
+                <div className="table-cell comision-cell" data-label="Comisión">
+                  {m.comision}
+                </div>
+                <div className="table-cell horario-cell" data-label="Horario">
                   {m.horarios.map((h, i) => (
-                    <div key={i}>{h}</div>
+                    <div key={i} className="horario-item">{h}</div>
                   ))}
-                </td>
-                <td className="acciones">
-                  <button
-                    style={{ backgroundColor: colorMateria }}
-                    onClick={() => navigate(`/materia/${nombre.toLowerCase()}/modificarmateria`,{
-                      state: { materia: m }
-                    })}
-                  >
-                    Modificar
-                  </button>
-                  <button
-                    style={{
-                      color: colorMateria,
-                      border: `2px solid ${colorMateria}`,
-                      backgroundColor: 'white'
-                    }}
-                    onClick={() => handleEliminarClick(m.nombre)}
-                  >
-                    Eliminar
-                  </button>
-                </td>
-              </tr>
+                </div>
+                <div className="table-cell acciones-container" data-label="Acciones">
+                  <div className="acciones-buttons">
+                    <button
+                      className="action-btn modify"
+                      onClick={() => navigate(`/materia/${nombre.toLowerCase()}/modificarmateria`, {
+                        state: { materia: m }
+                      })}
+                    >
+                      Modificar
+                    </button>
+                    <button
+                      className="action-btn delete"
+                      onClick={() => handleEliminarClick(m.nombre)}
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                </div>
+              </div>
             ))}
-          </tbody>
-        </table>
+          </div>
+        </div>
 
         {mostrarPopup && (
           <EliminarMateria

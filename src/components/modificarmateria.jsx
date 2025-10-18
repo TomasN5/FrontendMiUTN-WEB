@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './Materias.css';
+import './Styles/modificarmateria.css';
 import Sidebar from './sidebar';
 import { useNavigate, useParams, useLocation  } from 'react-router-dom';
 
@@ -293,7 +293,7 @@ export default function ModificarMateria({ initialData, onSubmit }) {
                   setNewCommissionName('');
                 }}
               >
-                ➕ Agregar
+                Agregar
               </button>
             </div>
             <ul className="modal-list">
@@ -332,7 +332,7 @@ export default function ModificarMateria({ initialData, onSubmit }) {
                   setNewClassroomName('');
                 }}
               >
-                ➕ Agregar
+                Agregar
               </button>
             </div>
             <ul className="modal-list">

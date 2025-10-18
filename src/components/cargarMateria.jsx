@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'; 
 import { useNavigate, useParams } from 'react-router-dom';
-import './Materias.css';
+import './Styles/cargarmateria.css';
 import Sidebar from './sidebar';
 
 const materias = [
@@ -225,7 +225,7 @@ export default function CargarMateria() {
                         setNewCommissionName('');
                       }}
                     >
-                      ➕ Agregar
+                      Agregar
                     </button>
                   </div>
 
@@ -277,7 +277,7 @@ export default function CargarMateria() {
                         setNewClassroomName('');
                       }}
                     >
-                      ➕ Agregar
+                      Agregar
                     </button>
                   </div>
 
