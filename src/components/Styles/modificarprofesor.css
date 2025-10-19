@@ -1,4 +1,4 @@
-/* CargarMateria.css */
+/* ModificarMateria.css */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
 
@@ -16,9 +16,9 @@ body {
 }
 
 /* Contenedor principal */
-.materias-container {
+.docentes-container {
   min-height: 100vh;
-  padding-left: 280px;
+  padding-left: 300px;
   padding-top: 2rem;
   padding-right: 2rem;
   background: linear-gradient(180deg, #F5F5F5 0%, #BBCEF3 100%);
@@ -30,8 +30,8 @@ body {
   overflow-x: hidden;
 }
 
-/* Sección de carga de materias */
-.cargar-materias {
+/* Sección de carga de docentes */
+.cargar-docentes {
   width: 100%;
   max-width: 800px;
   background: white;
@@ -42,7 +42,7 @@ body {
   overflow-x: hidden;
 }
 
-.cargar-materias h1 {
+.cargar-docentes h1 {
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 2.5rem;
   font-weight: 700;
@@ -175,22 +175,22 @@ button[style*="background-color"]:hover {
   width: 100%;
 }
 
-/* Acciones del panel - CENTRADO */
+/* 🔹 ACCIONES DEL PANEL - CENTRADO */
 .panel-actions {
   display: flex;
   flex-direction: column;
   gap: 1rem;
   justify-content: center;
-  align-items: center;
+  align-items: center; /* 🔹 Centrado horizontal */
   margin-top: 2rem;
   width: 100%;
 }
 
 .panel-actions button {
-  min-width: 200px;
+  min-width: 200px; /* 🔹 Ancho fijo para mejor centrado */
   padding: 14px 28px;
   font-size: 1.1rem;
-  width: auto;
+  width: auto; /* 🔹 Quitar width: 100% para permitir centrado */
 }
 
 .panel-actions button:last-child {
@@ -332,13 +332,14 @@ button[style*="background-color"]:hover {
 
 /* Responsive */
 @media (max-width: 1024px) {
-  .materias-container {
+  .docentes-container {
     padding-left: 1rem;
     padding-right: 1rem;
   }
 }
 
 @media (min-width: 768px) {
+  /* 🔹 Solo en desktop mostramos 2 columnas */
   .panel-form {
     grid-template-columns: 1fr 1fr;
   }
@@ -360,16 +361,17 @@ button[style*="background-color"]:hover {
     grid-template-columns: 1fr 1fr 1fr;
   }
   
+  /* 🔹 En desktop los botones en fila y centrados */
   .panel-actions {
     flex-direction: row;
-    justify-content: center;
-    align-items: center;
+    justify-content: center; /* 🔹 Centrado horizontal */
+    align-items: center; /* 🔹 Centrado vertical */
     gap: 1.5rem;
   }
   
   .panel-actions button {
     width: auto;
-    flex: 0 1 auto;
+    flex: 0 1 auto; /* 🔹 No crecen, mantienen su tamaño */
     min-width: 180px;
   }
   
@@ -383,18 +385,18 @@ button[style*="background-color"]:hover {
 }
 
 @media (max-width: 768px) {
-  .materias-container {
+  .docentes-container {
     padding-top: 120px;
     padding-left: 1rem;
     padding-right: 1rem;
   }
 
-  .cargar-materias {
+  .cargar-docentes {
     padding: 2rem 1.5rem;
     margin: 1rem auto;
   }
 
-  .cargar-materias h1 {
+  .cargar-docentes h1 {
     font-size: 2rem;
     margin-bottom: 2rem;
   }
@@ -409,15 +411,16 @@ button[style*="background-color"]:hover {
     gap: 0.75rem;
   }
 
+  /* 🔹 En mobile los botones en columna y centrados */
   .panel-actions {
     flex-direction: column;
     gap: 0.75rem;
-    align-items: center;
+    align-items: center; /* 🔹 Centrado horizontal */
   }
 
   .panel-actions button {
     width: 100%;
-    max-width: 300px;
+    max-width: 300px; /* 🔹 Ancho máximo para mejor apariencia */
   }
 
   .modal-content {
@@ -435,11 +438,11 @@ button[style*="background-color"]:hover {
 }
 
 @media (max-width: 480px) {
-  .cargar-materias {
+  .cargar-docentes {
     padding: 1.5rem 1rem;
   }
 
-  .cargar-materias h1 {
+  .cargar-docentes h1 {
     font-size: 1.75rem;
   }
 
@@ -456,7 +459,7 @@ button[style*="background-color"]:hover {
   }
 
   .panel-actions button {
-    max-width: 100%;
+    max-width: 100%; /* 🔹 En móviles muy pequeños ocupan todo el ancho */
   }
 }
 

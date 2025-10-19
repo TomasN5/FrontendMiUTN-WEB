@@ -2,18 +2,9 @@ import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import './Styles/buttonconfirm.css';
 
-export default function EliminarMateria({ onConfirm, onCancel }) {
+export default function EliminarDocente({ onConfirm, onCancel }) {
   const { nombre } = useParams();
   const navigate = useNavigate();
-
-  const colorMateria = {
-    industrial: '#FFA01C',
-    sistemas: '#4A89FF',
-    química: '#8A2BE2',
-    eléctrica: '#B22222',
-    mecánica: '#20B2AA',
-    civil: '#228B22'
-  }[nombre.toLowerCase()] || '#4A89FF';
 
   return (
     <div className="eliminar-modal-overlay">
@@ -22,14 +13,11 @@ export default function EliminarMateria({ onConfirm, onCancel }) {
           <h3>Confirmar Eliminación</h3>
         </div>
         <div className="eliminar-modal-body">
-          <p>¿Confirma eliminar la materia seleccionada?</p>
+          <p>¿Confirma eliminar el docente seleccionado?</p>
         </div>
         <div className="eliminar-modal-actions">
           <button
             className="eliminar-btn accept"
-            style={{ 
-              background: `linear-gradient(135deg, ${colorMateria} 0%, ${getDarkerColor(colorMateria)} 100%)`
-            }}
             onClick={onConfirm}
           >
             Aceptar
