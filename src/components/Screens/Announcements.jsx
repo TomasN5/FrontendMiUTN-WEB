@@ -1,5 +1,5 @@
 // src/screens/Announcements.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../Layouts/Sidebar';
 import AnnouncementsTable from './Announcements/AnnouncementsTable';
@@ -7,46 +7,74 @@ import AnnouncementModal from './Announcements/AnnouncementModal';
 import ConfirmModal from '../UI/ConfirmModal';
 import './Announcements.css';
 
+// URL base de la API
+const API_BASE_URL = 'https://96729b4f2b87.ngrok-free.app/api/v1/miUTN/publication';
+
 const Announcements = () => {
   const navigate = useNavigate();
-  const [announcements, setAnnouncements] = useState([
-    {
-      id: 1,
-      title: "Inscripcion 2026",
-      endDate: "Permanente",
-      published: true
-    },
-    {
-      id: 2,
-      title: "Charlas Magistrales",
-      endDate: "10/11/2025",
-      published: true
-    },
-    {
-      id: 3,
-      title: "Cena Egresados",
-      endDate: "1/12/2025",
-      published: false
-    },
-    {
-      id: 4,
-      title: "Final Diciembre",
-      endDate: "20/12/2025",
-      published: true
-    },
-    {
-      id: 5,
-      title: "Curso de ingreso intensivo",
-      endDate: "15/2/2026",
-      published: false
-    }
-  ]);
+  const [announcements, setAnnouncements] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [showModal, setShowModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [editingAnnouncement, setEditingAnnouncement] = useState(null);
-  const [pendingAnnouncement, setPendingAnnouncement] = useState(null); // ✅ FALTABA ESTE ESTADO
+  const [pendingAnnouncement, setPendingAnnouncement] = useState(null);
   const [activeMenuItem, setActiveMenuItem] = useState('announcements');
+
+  // FETCH: Obtener todos los anuncios
+  const fetchAnnouncements = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      console.log('HOLA!!');
+      
+      const response = await fetch(`${API_BASE_URL}/findAll`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status} ${response.statusText}`);
+      }
+      console.log(response);
+      const data = await response.json();
+      console.log(data);
+      
+      
+      // Mapear los datos de la API al formato que espera tu componente
+      const mappedAnnouncements = data.map(item => ({
+        id: item.id,
+        title: item.title,
+        // Usar description como endDate temporalmente, o ajustar según necesites
+        endDate: item.description || "Sin fecha", 
+        published: !item.hidden, // hidden: false significa publicado
+        description: item.description,
+        content: item.content,
+        priority: item.priority,
+        image: item.image,
+        expirable: item.expirable,
+        publicationMode: item.publicationMode
+      }));
+
+      setAnnouncements(mappedAnnouncements);
+      
+    } catch (err) {
+      setError(`Error al cargar los anuncios: ${err.message}`);
+      console.error('Error fetching announcements:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Cargar anuncios al montar el componente
+  useEffect(() => {
+    fetchAnnouncements();
+  }, []);
 
   const handleBackToDashboard = () => {
     navigate('/dashboard');
@@ -67,8 +95,29 @@ const Announcements = () => {
     setShowModal(true);
   };
 
-  const handleDeleteAnnouncement = (id) => {
-    setAnnouncements(announcements.filter(ann => ann.id !== id));
+  // FETCH: Eliminar anuncio
+  const handleDeleteAnnouncement = async (id) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/delete?id=${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error al eliminar: ${response.status}`);
+      }
+
+      // Si la eliminación fue exitosa, actualizar el estado local
+      setAnnouncements(announcements.filter(ann => ann.id !== id));
+      
+    } catch (err) {
+      setError(`Error al eliminar el anuncio: ${err.message}`);
+      console.error('Error deleting announcement:', err);
+    }
   };
 
   // ✅ FUNCIÓN CORREGIDA - Solo guarda en estado pendiente y muestra confirmación
@@ -77,43 +126,77 @@ const Announcements = () => {
     setShowConfirmModal(true);
   };
 
-  // ✅ FUNCIÓN CORREGIDA - Maneja la confirmación real
-  const handleConfirmSave = () => {
-    if (pendingAnnouncement) {
+  // ✅ FUNCIÓN ACTUALIZADA - Maneja la confirmación real con fetch
+  const handleConfirmSave = async () => {
+    if (!pendingAnnouncement) return;
+
+    try {
+      let response;
+      
       if (editingAnnouncement) {
-        // Editar anuncio existente
-        setAnnouncements(announcements.map(ann => 
-          ann.id === editingAnnouncement.id 
-            ? { 
-                ...ann, 
-                ...pendingAnnouncement,
-                // Mantener propiedades existentes que no vienen del formulario
-                id: editingAnnouncement.id,
-                published: editingAnnouncement.published 
-              }
-            : ann
-        ));
+        // FETCH: Actualizar anuncio existente
+        response = await fetch(`${API_BASE_URL}/update`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'ngrok-skip-browser-warning': 'true'
+          },
+          body: JSON.stringify({
+            id: editingAnnouncement.id,
+            title: pendingAnnouncement.title,
+            description: pendingAnnouncement.description,
+            content: pendingAnnouncement.content,
+            hidden: !pendingAnnouncement.published,
+            priority: pendingAnnouncement.priority || false,
+            image: pendingAnnouncement.image || "",
+            expirable: pendingAnnouncement.expirable || false,
+            publicationMode: pendingAnnouncement.publicationMode || "INMEDIATE"
+          })
+        });
       } else {
-        // Agregar nuevo anuncio
-        const newAnnouncement = {
-          id: Math.max(...announcements.map(ann => ann.id)) + 1,
-          ...pendingAnnouncement,
-          published: true
-        };
-        setAnnouncements([...announcements, newAnnouncement]);
+        // FETCH: Crear nuevo anuncio
+        response = await fetch(`${API_BASE_URL}/save`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'ngrok-skip-browser-warning': 'true'
+          },
+          body: JSON.stringify({
+            title: pendingAnnouncement.title,
+            description: pendingAnnouncement.description,
+            content: pendingAnnouncement.content,
+            hidden: !pendingAnnouncement.published,
+            priority: pendingAnnouncement.priority || false,
+            image: pendingAnnouncement.image || "",
+            expirable: pendingAnnouncement.expirable || false,
+            publicationMode: pendingAnnouncement.publicationMode || "INMEDIATE"
+          })
+        });
       }
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status} ${response.statusText}`);
+      }
+
+      // Recargar los anuncios después de guardar
+      await fetchAnnouncements();
       
       // Limpiar y cerrar modales
       setShowModal(false);
       setShowConfirmModal(false);
       setEditingAnnouncement(null);
       setPendingAnnouncement(null);
+      
+    } catch (err) {
+      setError(`Error al guardar el anuncio: ${err.message}`);
+      console.error('Error saving announcement:', err);
     }
   };
 
   // ✅ FUNCIÓN CORREGIDA - Maneja la cancelación
   const handleCancelSave = () => {
-    // Solo cerrar el modal de confirmación, mantener el formulario abierto
     setShowConfirmModal(false);
     setPendingAnnouncement(null);
   };
@@ -127,7 +210,11 @@ const Announcements = () => {
 
   const handleMenuItemClick = (itemId) => {
     setActiveMenuItem(itemId);
-    // Aquí puedes agregar lógica para cambiar entre secciones
+  };
+
+  // Función para reintentar la carga
+  const handleRetry = () => {
+    fetchAnnouncements();
   };
 
   return (
@@ -147,11 +234,25 @@ const Announcements = () => {
           </button>
         </header>
 
-        <AnnouncementsTable
-          announcements={announcements}
-          onEdit={handleEditAnnouncement}
-          onDelete={handleDeleteAnnouncement}
-        />
+        {/* Mostrar estado de carga */}
+        {loading && <div className="loading">Cargando anuncios...</div>}
+        
+        {/* Mostrar error */}
+        {error && (
+          <div className="error">
+            <p>{error}</p>
+            <button onClick={handleRetry}>Reintentar</button>
+          </div>
+        )}
+
+        {/* Mostrar tabla solo si no hay error y no está cargando */}
+        {!loading && !error && (
+          <AnnouncementsTable
+            announcements={announcements}
+            onEdit={handleEditAnnouncement}
+            onDelete={handleDeleteAnnouncement}
+          />
+        )}
 
         {/* Modal para el formulario */}
         <AnnouncementModal
