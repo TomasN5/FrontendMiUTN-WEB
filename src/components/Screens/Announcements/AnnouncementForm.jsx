@@ -15,6 +15,7 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
   });
 
   const [imagePreview, setImagePreview] = useState(null);
+  const [errors, setErrors] = useState({});
 
   // Cargar datos si estamos editando
   useEffect(() => {
@@ -33,12 +34,69 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
     }
   }, [announcement]);
 
+  const validateForm = () => {
+    const newErrors = {};
+
+    // Validar campos obligatorios
+    if (!formData.title.trim()) {
+      newErrors.title = 'El título es obligatorio';
+    }
+
+    if (!formData.description.trim()) {
+      newErrors.description = 'La descripción es obligatoria';
+    }
+
+    if (!formData.content.trim()) {
+      newErrors.content = 'El contenido es obligatorio';
+    }
+
+    // Validar programación si se seleccionó "Programar para"
+    if (formData.scheduleType === 'scheduled' && !formData.scheduledDate) {
+      newErrors.scheduledDate = 'La fecha de programación es obligatoria cuando se selecciona "Programar para"';
+    }
+
+    // Validar vigencia si se seleccionó "Fecha Hasta"
+    if (formData.validityType === 'date' && !formData.endDate) {
+      newErrors.endDate = 'La fecha de vigencia es obligatoria cuando se selecciona "Fecha Hasta"';
+    }
+
+    // Validar que la fecha de programación no sea en el pasado
+    if (formData.scheduleType === 'scheduled' && formData.scheduledDate) {
+      const scheduledDate = new Date(formData.scheduledDate);
+      const now = new Date();
+      if (scheduledDate < now) {
+        newErrors.scheduledDate = 'La fecha de programación no puede ser en el pasado';
+      }
+    }
+
+    // Validar que la fecha de vigencia no sea en el pasado
+    if (formData.validityType === 'date' && formData.endDate) {
+      const endDate = new Date(formData.endDate);
+      const now = new Date();
+      now.setHours(0, 0, 0, 0); // Reset hours to compare only dates
+      if (endDate < now) {
+        newErrors.endDate = 'La fecha de vigencia no puede ser en el pasado';
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
+
+    // Limpiar error del campo cuando el usuario empiece a escribir
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
   };
 
   const handleImageUpload = (e) => {
@@ -60,9 +118,8 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-     // Validaciones básicas
-    if (!formData.title.trim()) {
-      alert("El título es obligatorio");
+    
+    if (!validateForm()) {
       return;
     }
     
@@ -111,26 +168,36 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
 
             {/* Descripción */}
             <div className="announcement-form-section">
-              <h3>Descripción</h3>
+              <h3>Descripción <span className="required-field">*</span></h3>
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleInputChange}
                 placeholder="Breve descripción del anuncio"
-                className="announcement-form-textarea announcement-description-textarea"
+                className={`announcement-form-textarea announcement-description-textarea ${
+                  errors.description ? 'error' : ''
+                }`}
               />
+              {errors.description && (
+                <span className="error-message">{errors.description}</span>
+              )}
             </div>
 
             {/* Contenido */}
             <div className="announcement-form-section">
-              <h3>Contenido</h3>
+              <h3>Contenido <span className="required-field">*</span></h3>
               <textarea
                 name="content"
                 value={formData.content}
                 onChange={handleInputChange}
                 placeholder="Contenido detallado del anuncio"
-                className="announcement-form-textarea announcement-content-textarea"
+                className={`announcement-form-textarea announcement-content-textarea ${
+                  errors.content ? 'error' : ''
+                }`}
               />
+              {errors.content && (
+                <span className="error-message">{errors.content}</span>
+              )}
             </div>
           </div>
 
@@ -138,16 +205,20 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
           <div className="announcement-form-right">
             {/* Título */}
             <div className="announcement-form-section">
-              <h3>Título</h3>
+              <h3>Título <span className="required-field">*</span></h3>
               <input
                 type="text"
                 name="title"
                 value={formData.title}
                 onChange={handleInputChange}
                 placeholder="Ingresa el título del anuncio"
-                className="announcement-form-input"
-                required
+                className={`announcement-form-input ${
+                  errors.title ? 'error' : ''
+                }`}
               />
+              {errors.title && (
+                <span className="error-message">{errors.title}</span>
+              )}
             </div>
 
             {/* Prioridad */}
@@ -204,8 +275,13 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
                       name="endDate"
                       value={formData.endDate}
                       onChange={handleInputChange}
-                      className="announcement-date-input"
+                      className={`announcement-date-input ${
+                        errors.endDate ? 'error' : ''
+                      }`}
                     />
+                    {errors.endDate && (
+                      <span className="error-message">{errors.endDate}</span>
+                    )}
                   </div>
                 )}
               </div>
@@ -248,8 +324,13 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
                       name="scheduledDate"
                       value={formData.scheduledDate}
                       onChange={handleInputChange}
-                      className="announcement-date-input"
+                      className={`announcement-date-input ${
+                        errors.scheduledDate ? 'error' : ''
+                      }`}
                     />
+                    {errors.scheduledDate && (
+                      <span className="error-message">{errors.scheduledDate}</span>
+                    )}
                   </div>
                 )}
               </div>

@@ -449,6 +449,46 @@
   background: linear-gradient(135deg, #2580B3 0%, #0F4C75 100%);
 }
 
+
+/* Estilos para campos obligatorios y errores */
+.required-field {
+  color: #ff4444;
+}
+
+.error-message {
+  color: #ff4444;
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+}
+
+.announcement-form-input.error,
+.announcement-form-textarea.error,
+.announcement-date-input.error {
+  border-color: #ff4444;
+  box-shadow: 0 0 0 1px #ff4444;
+}
+
+/* Asegúrate de que los textareas tengan bordes para mostrar el error */
+.announcement-form-textarea {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 8px;
+  resize: vertical;
+}
+
+.announcement-form-input {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 8px;
+}
+
+.announcement-date-input {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 8px;
+}
+
 /* === RESPONSIVE === */
 @media (max-width: 1200px) {
   .announcement-form-container {
