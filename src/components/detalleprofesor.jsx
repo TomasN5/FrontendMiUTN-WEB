@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './Styles/detalleprofesor.css';
 import { useNavigate, useParams } from 'react-router-dom';
 import Sidebar from './sidebar.jsx';
 import EliminarDocente from './eliminardocente.jsx';
 
-// Datos de respaldo (fallback)
 const docentesFallback = [
   { nombre: 'Ruben Guerrieri', legajo: '11111', mail: 'ruben@frlp.utn.edu.ar' },
   { nombre: 'Sergio Antonini', legajo: '22222', mail: 'sergio@frlp.utn.edu.ar' },
@@ -19,13 +18,59 @@ export default function ProfesorDetalle() {
   const [mostrarPopup, setMostrarPopup] = useState(false);
   const [docenteSeleccionado, setDocenteSeleccionado] = useState(null);
 
+  const fetchDocentes = async () => {
+    try {
+      const url = `http://localhost:8080/api/v1/miUTN/professor/findAll`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`Error al obtener docentes desde ${url}`);
+      const data = await res.json();
+
+      const adaptadas = data.map((m) => ({
+        id: m.id,
+        nombre: `${m.name} ${m.lastname}`,
+        legajo: "111111",
+        mail: m.email,
+      }));
+
+      setDocentes(adaptadas);
+    } catch (error) {
+      console.error('No se pudo conectar a la API, usando datos locales.', error);
+      setDocentes(docentesFallback);
+    }
+  };
+
+  useEffect(() => {
+    fetchDocentes();
+  }, []);
+
   const handleEliminarClick = (docente) => {
     setDocenteSeleccionado(docente);
     setMostrarPopup(true);
   };
 
-  const handleConfirmarEliminacion = () => {
+  const handleConfirmarEliminacion = async() => {
     console.log('Eliminando docente:', docenteSeleccionado);
+    try {
+      const res = await fetch(`http://localhost:8080/api/v1/miUTN/professor/delete?id=${docenteSeleccionado.id}`, {
+        method: 'DELETE'
+      });
+
+      if (!res.ok) {
+        throw new Error('Error al eliminar al docente.');
+      }
+
+      // 🔹 Eliminar visualmente la materia
+      setDocentes((prev) => prev.filter((m) => m.id !== docenteSeleccionado.id));
+
+      alert(`Docente "${docenteSeleccionado.nombre}" eliminado correctamente.`);
+    } catch (error) {
+      console.error('Error al eliminar al docente:', error);
+      alert('No se pudo eliminar al docente. Verifica la conexión con la API.');
+    } finally {
+      setMostrarPopup(false);
+      setDocenteSeleccionado(null);
+    }
+
     setMostrarPopup(false);
   };
 
@@ -48,53 +93,43 @@ export default function ProfesorDetalle() {
             + Agregar Docente
           </button>
         </div>
+      
 
-        <div className="docentes-table">
-          <div className="table-header">
-            <div className="header-row">
-              <div className="header-cell">Nombre</div>
-              <div className="header-cell">Legajo</div>
-              <div className="header-cell">Mail</div>
-              <div className="header-cell">Acciones</div>
-            </div>
-          </div>
-
-          <div className="table-body">
+        <table className="docentes-table">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Legajo</th>
+              <th>Mail</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
             {docentes.map((p, idx) => (
-              <div key={`${p.nombre}-${idx}`} className="table-row">
-                <div className="table-cell nombre-cell" data-label="Nombre">
-                  {p.nombre}
-                </div>
-                <div className="table-cell legajo-cell" data-label="Legajo">
-                  {p.legajo}
-                </div>
-                <div className="table-cell mail-cell" data-label="Mail">
-                  {p.mail}
-                </div>
-                <div className="table-cell acciones-container" data-label="Acciones">
-                  <div className="acciones-buttons">
-                    <button
-                      className="action-btn modify"
-                      onClick={() =>
-                        navigate('/profesores/modificarprofesor', {
-                          state: { profesor: p },
-                        })
-                      }
-                    >
-                      Modificar
-                    </button>
-                    <button
-                      className="action-btn delete"
-                      onClick={() => handleEliminarClick(p.nombre)}
-                    >
-                      Eliminar
-                    </button>
-                  </div>
-                </div>
-              </div>
+              <tr key={idx}>
+                <td>{p.nombre}</td>
+                <td>{p.legajo}</td>
+                <td>{p.mail}</td>
+                <td className="acciones">
+                  <button
+                    className="btn-modificar"
+                    onClick={() =>
+                      navigate('/profesores/modificarprofesor', { state: { profesor: p } })
+                    }
+                  >
+                    Modificar
+                  </button>
+                  <button
+                    className="btn-eliminar"
+                    onClick={() => handleEliminarClick(p)}
+                  >
+                    Eliminar
+                  </button>
+                </td>
+              </tr>
             ))}
-          </div>
-        </div>
+          </tbody>
+        </table>
 
         {mostrarPopup && (
           <EliminarDocente

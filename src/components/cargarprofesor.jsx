@@ -30,13 +30,24 @@ export default function CargarProfesor() {
     }));
   };
 
+
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+      const payload = {
+        name: formData.name,
+        lastname: formData.lastname,
+        legajo:Number(formData.legajo),
+        email:formData.mail
+      }
+
+    console.log(payload)
     try {
-      const response = await fetch('http://localhost:8080/api/v1/MiUTN/professors', {
+      const response = await fetch('http://localhost:8080/api/v1/miUTN/professor/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload)
       });
       if (response.ok) {
         alert('Docente creado correctamente');
@@ -88,7 +99,7 @@ export default function CargarProfesor() {
             <input
               type="text"
               name="mail"
-              value={formData.mail}
+              value={formData.email}
               onChange={handleChange}
               required
             />
