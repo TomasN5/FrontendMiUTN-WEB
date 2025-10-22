@@ -68,6 +68,13 @@ const Dashboard = () => {
   const handleAnnouncementsClick = () => {
     navigate('/announcements');
   };
+  const handleProfessorClick = () => {
+    navigate('/profesores');
+  }
+  const handleSubjectClick = () => {
+    navigate('/materias');
+  }
+
 
   // ✅ Función para cerrar sesión
   const handleLogout = () => {
@@ -98,11 +105,11 @@ const Dashboard = () => {
               <span className="btn-text">Anuncios</span>
             </button>
             
-            <button className="main-btn materias-btn">
+            <button className="main-btn materias-btn" onClick={handleSubjectClick}>
               <span className="btn-text">Materias</span>
             </button>
             
-            <button className="main-btn professores-btn">
+            <button className="main-btn professores-btn"onClick={handleProfessorClick}>
               <span className="btn-text">Profesores</span>
             </button>
           </div>
