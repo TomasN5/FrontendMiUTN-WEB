@@ -1,0 +1,480 @@
+/* detallemateria.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+
+/* Contenedor principal */
+.detalle-materias-container {
+  min-height: 100vh;
+  padding-left: 280px;
+  padding-top: 2rem;
+  padding-right: 2rem;
+  padding-bottom: 2rem;
+  background: linear-gradient(180deg, #ffffff 0%, #e6f2ff 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  font-family: 'Inter', sans-serif;
+  overflow-y: auto;
+  height: 100vh;
+}
+
+/* Texto */
+.detalle-materias-subtitle {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 42px;
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+/* Header con filtros */
+.detalle-materias-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 1200px;
+  margin-bottom: 2rem;
+  padding: 0 2rem;
+  gap: 20px;
+}
+
+.detalle-materias-select {
+  padding: 12px 20px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  background: white;
+  color: #2d3748;
+  cursor: pointer;
+  transition: all 0.3s;
+  min-width: 200px;
+}
+
+.detalle-materias-select:hover {
+  border-color: #cbd5e0;
+}
+
+.detalle-materias-select:focus {
+  outline: none;
+  border-color: #4A89FF;
+  box-shadow: 0 0 0 3px rgba(74, 137, 255, 0.1);
+}
+
+.detalle-materias-option {
+  padding: 12px 16px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #2d3748;
+  background: white;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.detalle-materias-option:hover {
+  background: #f7fafc;
+  color: #4A89FF;
+}
+
+.detalle-materias-option:focus {
+  outline: none;
+  background: #edf2f7;
+}
+
+/* Botón Agregar Materia */
+.detalle-materias-agregar-btn {
+  background: #228B22;
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  white-space: nowrap;
+  width: auto;
+  min-width: 160px;
+  flex-shrink: 0;
+}
+
+.detalle-materias-agregar-btn:hover {
+  background: #1e7b1e;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(34, 139, 34, 0.3);
+}
+
+/* CONTENEDOR DE TABLA CON SCROLL FUNCIONAL */
+.detalle-materias-table-wrapper {
+  width: 100%;
+  max-width: 1200px;
+  max-height: 65vh;
+  overflow: hidden;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+/* Tabla de materias */
+.detalle-materias-table {
+  background: white;
+  border-radius: 12px;
+  width: 100%;
+  border-collapse: collapse;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.detalle-materias-table thead {
+  background: #f8fafc;
+  border-bottom: 2px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.detalle-materias-table tbody {
+  flex: 1;
+  overflow-y: auto;
+  max-height: calc(65vh - 60px);
+}
+
+.detalle-materias-table tr {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1.5fr 1.5fr;
+  align-items: center;
+  min-height: 70px;
+  padding: 0 30px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.detalle-materias-table tr:last-child {
+  border-bottom: none;
+}
+
+.detalle-materias-table th {
+  padding: 20px 0;
+  font-weight: 700;
+  color: #2d3748;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: left;
+}
+
+.detalle-materias-table td {
+  padding: 20px 0;
+  color: #4a5568;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+/* Celda de nombre */
+.detalle-materias-table td:first-child {
+  font-weight: 500;
+  color: #2d3748;
+  font-size: 16px;
+}
+
+/* Celda de horarios */
+.detalle-materias-horario-item {
+  margin-bottom: 4px;
+}
+
+.detalle-materias-horario-item:last-child {
+  margin-bottom: 0;
+}
+
+/* Celda de acciones */
+.detalle-materias-acciones {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-start;
+}
+
+.detalle-materias-modify-btn,
+.detalle-materias-delete-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  width: auto;
+  min-width: 100px;
+}
+
+.detalle-materias-modify-btn {
+  background: #feebc8;
+  color: #dd6b20;
+  border: 1px solid #fbd38d;
+}
+
+.detalle-materias-modify-btn:hover {
+  background: #fbd38d;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(221, 107, 32, 0.2);
+}
+
+.detalle-materias-delete-btn {
+  background: #fed7d7;
+  color: #c53030;
+  border: 1px solid #feb2b2;
+}
+
+.detalle-materias-delete-btn:hover {
+  background: #feb2b2;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(197, 48, 48, 0.2);
+}
+
+/* Estados de la tabla */
+.detalle-materias-table tbody tr:nth-child(even) {
+  background: #f8fafc;
+}
+
+.detalle-materias-table tbody tr:hover {
+  background: #edf2f7;
+}
+
+/* SCROLL PERSONALIZADO */
+.detalle-materias-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.detalle-materias-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.detalle-materias-container::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 4px;
+}
+
+.detalle-materias-container::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+.detalle-materias-table tbody::-webkit-scrollbar {
+  width: 8px;
+}
+
+.detalle-materias-table tbody::-webkit-scrollbar-track {
+  background: #f8fafc;
+  border-radius: 4px;
+}
+
+.detalle-materias-table tbody::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 4px;
+  border: 2px solid #f8fafc;
+}
+
+.detalle-materias-table tbody::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+/* Scroll para Firefox */
+.detalle-materias-table tbody {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e0 #f8fafc;
+}
+
+/* Scroll suave */
+.detalle-materias-table tbody {
+  scroll-behavior: smooth;
+}
+
+/* Responsive para el contenedor principal */
+@media (max-width: 1024px) {
+  .detalle-materias-container {
+    padding-left: 240px;
+  }
+  
+  .detalle-materias-table-wrapper {
+    max-height: 60vh;
+  }
+  
+  .detalle-materias-table tbody {
+    max-height: calc(60vh - 60px);
+  }
+}
+
+@media (max-width: 900px) {
+  .detalle-materias-container {
+    padding-left: 220px;
+  }
+}
+
+@media (max-width: 768px) {
+  .detalle-materias-container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-top: 100px;
+    height: auto;
+    min-height: 100vh;
+  }
+  
+  .detalle-materias-subtitle {
+    font-size: 32px;
+  }
+  
+  .detalle-materias-header {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0 1rem;
+    gap: 15px;
+  }
+  
+  .detalle-materias-agregar-btn {
+    width: 100%;
+    max-width: none;
+  }
+  
+  .detalle-materias-table-wrapper {
+    max-height: none;
+    overflow: visible;
+  }
+  
+  .detalle-materias-table {
+    display: block;
+    min-width: 600px;
+  }
+  
+  .detalle-materias-table tbody {
+    max-height: none;
+    overflow: visible;
+    display: block;
+  }
+  
+  .detalle-materias-table thead {
+    display: none;
+  }
+  
+  .detalle-materias-table tr {
+    display: flex;
+    flex-direction: column;
+    padding: 20px 15px;
+    gap: 15px;
+    align-items: stretch;
+  }
+  
+  .detalle-materias-table td {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .detalle-materias-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #2d3748;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  /* Asignar labels para mobile */
+  .detalle-materias-table td:first-child::before {
+    content: "Nombre";
+  }
+  
+  .detalle-materias-table td:nth-child(2)::before {
+    content: "Tipo";
+  }
+  
+  .detalle-materias-table td:nth-child(3)::before {
+    content: "Comisión";
+  }
+  
+  .detalle-materias-table td:nth-child(4)::before {
+    content: "Horario";
+    margin-bottom: 5px;
+  }
+  
+  .detalle-materias-table td:last-child::before {
+    content: "Acciones";
+    margin-bottom: 5px;
+  }
+  
+  .detalle-materias-acciones {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .detalle-materias-modify-btn,
+  .detalle-materias-delete-btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .detalle-materias-container {
+    padding-top: 80px;
+  }
+  
+  .detalle-materias-subtitle {
+    font-size: 28px;
+  }
+  
+  .detalle-materias-table tr {
+    padding: 15px 10px;
+  }
+  
+  .detalle-materias-acciones {
+    gap: 6px;
+  }
+  
+  .detalle-materias-modify-btn,
+  .detalle-materias-delete-btn {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+}
+
+/* Ajuste extra para pantallas muy pequeñas */
+@media (max-width: 360px) {
+  .detalle-materias-table {
+    min-width: 100%;
+  }
+}
+
+/* Mensaje cuando no hay materias */
+.detalle-materias-empty {
+  text-align: center;
+  padding: 3rem;
+  color: #718096;
+  font-size: 1.1rem;
+  background: white;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+/* Estados de focus para accesibilidad */
+.detalle-materias-agregar-btn:focus,
+.detalle-materias-select:focus,
+.detalle-materias-modify-btn:focus,
+.detalle-materias-delete-btn:focus {
+  outline: 2px solid #4A89FF;
+  outline-offset: 2px;
+}

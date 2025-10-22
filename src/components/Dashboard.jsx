@@ -60,6 +60,18 @@ const Dashboard = () => {
     navigate('/announcements');
   };
 
+  // Agregar esta función para navegar a materias
+  const handleMateriasClick = () => {
+    navigate('/materias');
+  };
+
+    // Agregar esta función para navegar a profesores
+  const handleProfesoresClick = () => {
+    navigate('/profesores');
+    console.log("HDLSAPDLSAD");
+    
+  };
+
   return (
     <div className="dashboard">
       {/* Header */}
@@ -83,11 +95,12 @@ const Dashboard = () => {
               <span className="btn-text">Anuncios</span>
             </button>
             
-            <button className="main-btn materias-btn">
+            {/* Agregar onClick al botón de Materias */}
+            <button className="main-btn materias-btn" onClick={handleMateriasClick}>
               <span className="btn-text">Materias</span>
             </button>
             
-            <button className="main-btn professores-btn">
+            <button className="main-btn professores-btn" onClick={handleProfesoresClick}>
               <span className="btn-text">Profesores</span>
             </button>
           </div>
