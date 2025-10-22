@@ -8,7 +8,7 @@ import ConfirmModal from '../UI/ConfirmModal';
 import './Announcements.css';
 
 // URL base de la API
-const API_BASE_URL = 'https://edc1086b6913.ngrok-free.app/api/v1/miUTN/publication';
+const API_BASE_URL = 'http://localhost:8080/api/v1/miUTN/publication';
 
 const Announcements = () => {
   const navigate = useNavigate();
