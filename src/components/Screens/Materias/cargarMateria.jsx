@@ -12,21 +12,45 @@ const materias = [
   { nombre: 'Civil', color: '#228B22' }
 ];
 
+// Arrays para los selects
+const diasSemana = [
+  'Lunes',
+  'Martes',
+  'Miércoles',
+  'Jueves',
+  'Viernes',
+  'Sábado'
+];
+
+// Generar opciones de horarios cada 30 minutos
+const generarHorarios = () => {
+  const horarios = [];
+  for (let hora = 7; hora <= 23; hora++) {
+    for (let minuto = 0; minuto < 60; minuto += 15) {
+      const horaFormateada = `${hora.toString().padStart(2, '0')}:${minuto.toString().padStart(2, '0')}`;
+      horarios.push(horaFormateada);
+    }
+  }
+  return horarios;
+};
+
+const horariosDisponibles = generarHorarios();
+
 export default function CargarMateria() {
   const { nombre } = useParams();
   const navigate = useNavigate();
   const [activeMenuItem, setActiveMenuItem] = useState('materias');
 
-const normalizarNombre = (str) => {
-  return str.toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim();
-};
+  const normalizarNombre = (str) => {
+    return str.toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim();
+  };
 
-const materiaActual = materias.find(m => 
-  normalizarNombre(m.nombre) === normalizarNombre(nombre)
-);
+  const materiaActual = materias.find(m => 
+    normalizarNombre(m.nombre) === normalizarNombre(nombre)
+  );
   const colorMateria = materiaActual?.color || '#4A89FF';
 
   const [formData, setFormData] = useState({
@@ -408,28 +432,50 @@ const materiaActual = materias.find(m =>
               <legend className="cargar-materias-legend">Horarios</legend>
               {formData.schedule.map((horario, index) => (
                 <div key={index} className="cargar-materias-horario">
-                  <input
-                    type="text"
-                    className="cargar-materias-input"
-                    placeholder="Día"
+                  {/* Select para Día */}
+                  <select
+                    className="cargar-materias-select"
                     value={horario.day}
                     onChange={(e) => handleScheduleChange(index, 'day', e.target.value)}
                     required
-                  />
-                  <input
-                    type="time"
-                    className="cargar-materias-input"
+                  >
+                    <option value="" disabled>Seleccionar día</option>
+                    {diasSemana.map((dia) => (
+                      <option key={dia} value={dia}>
+                        {dia}
+                      </option>
+                    ))}
+                  </select>
+
+                  {/* Select para Hora Inicio */}
+                  <select
+                    className="cargar-materias-select"
                     value={horario.startTime}
                     onChange={(e) => handleScheduleChange(index, 'startTime', e.target.value)}
                     required
-                  />
-                  <input
-                    type="time"
-                    className="cargar-materias-input"
+                  >
+                    <option value="" disabled>Desde</option>
+                    {horariosDisponibles.map((hora) => (
+                      <option key={`start-${hora}`} value={hora}>
+                        {hora}
+                      </option>
+                    ))}
+                  </select>
+
+                  {/* Select para Hora Fin */}
+                  <select
+                    className="cargar-materias-select"
                     value={horario.endTime}
                     onChange={(e) => handleScheduleChange(index, 'endTime', e.target.value)}
                     required
-                  />
+                  >
+                    <option value="" disabled>Hasta</option>
+                    {horariosDisponibles.map((hora) => (
+                      <option key={`end-${hora}`} value={hora}>
+                        {hora}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               ))}
               <button

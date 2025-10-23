@@ -25,6 +25,10 @@ const AnnouncementsTable = ({ announcements, onEdit, onDelete }) => {
     setAnnouncementToDelete(null);
   };
 
+  const shortenTitle = (title, maxLength = 20) => {
+  if (title.length <= maxLength) return title;
+  return title.substring(0, maxLength) + '...';
+};
   return (
     <>
       <div className="announcements-table">
@@ -40,8 +44,8 @@ const AnnouncementsTable = ({ announcements, onEdit, onDelete }) => {
         <div className="table-body">
           {announcements.map((announcement) => (
             <div key={announcement.id} className="table-row">
-              <div className="table-cell title-cell">
-                {announcement.title}
+              <div className="table-cell title-cell" title={announcement.title}>
+                {shortenTitle(announcement.title)}
               </div>
               <div className="table-cell date-cell">
                 {announcement.endDate}

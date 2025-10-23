@@ -12,6 +12,31 @@ const materias = [
   { nombre: 'Civil', color: '#228B22' }
 ];
 
+
+// Arrays para los selects
+const diasSemana = [
+  'Lunes',
+  'Martes',
+  'Miércoles',
+  'Jueves',
+  'Viernes',
+  'Sábado'
+];
+
+// Generar opciones de horarios cada 30 minutos
+const generarHorarios = () => {
+  const horarios = [];
+  for (let hora = 7; hora <= 23; hora++) {
+    for (let minuto = 0; minuto < 60; minuto += 15) {
+      const horaFormateada = `${hora.toString().padStart(2, '0')}:${minuto.toString().padStart(2, '0')}`;
+      horarios.push(horaFormateada);
+    }
+  }
+  return horarios;
+};
+
+const horariosDisponibles = generarHorarios();
+
 export default function ModificarMateria() {
   const { nombre } = useParams();
   const navigate = useNavigate();
@@ -271,29 +296,51 @@ export default function ModificarMateria() {
             <fieldset className="modificar-materias-fieldset">
               <legend className="modificar-materias-legend">Horarios</legend>
               {formData.schedule.map((horario, index) => (
-                <div key={index} className="modificar-materias-horario">
-                  <input
-                    type="text"
-                    className="modificar-materias-input"
-                    placeholder="Día"
+<div key={index} className="modificar-materias-horario">
+                  {/* Select para Día */}
+                  <select
+                    className="modificar-materias-select"
                     value={horario.day}
                     onChange={(e) => handleScheduleChange(index, 'day', e.target.value)}
                     required
-                  />
-                  <input
-                    type="time"
-                    className="modificar-materias-input"
+                  >
+                    <option value="" disabled>Seleccionar día</option>
+                    {diasSemana.map((dia) => (
+                      <option key={dia} value={dia}>
+                        {dia}
+                      </option>
+                    ))}
+                  </select>
+
+                  {/* Select para Hora Inicio */}
+                  <select
+                    className="modificar-materias-select"
                     value={horario.startTime}
                     onChange={(e) => handleScheduleChange(index, 'startTime', e.target.value)}
                     required
-                  />
-                  <input
-                    type="time"
-                    className="modificar-materias-input"
+                  >
+                    <option value="" disabled>Desde</option>
+                    {horariosDisponibles.map((hora) => (
+                      <option key={`start-${hora}`} value={hora}>
+                        {hora}
+                      </option>
+                    ))}
+                  </select>
+
+                  {/* Select para Hora Fin */}
+                  <select
+                    className="modificar-materias-select"
                     value={horario.endTime}
                     onChange={(e) => handleScheduleChange(index, 'endTime', e.target.value)}
                     required
-                  />
+                  >
+                    <option value="" disabled>Hasta</option>
+                    {horariosDisponibles.map((hora) => (
+                      <option key={`end-${hora}`} value={hora}>
+                        {hora}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               ))}
               <button
