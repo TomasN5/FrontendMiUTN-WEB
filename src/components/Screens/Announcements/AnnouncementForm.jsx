@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './AnnouncementForm.css';
+import { checkAuth,logout } from './../../CheckAuth';
 
 const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -20,6 +21,11 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
 
   // Cargar datos si estamos editando - CON MEJOR MANEJO
   useEffect(() => {
+    if (!checkAuth()) {
+          // Si no hay token, redirigimos al login
+          logout()
+    }
+
     if (announcement) {
       console.log('Datos del anuncio a editar:', announcement);
       setFormData({

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './materias.css';
 import Sidebar from '../Layouts/Sidebar';
+import { checkAuth,logout } from './../CheckAuth';
 
 const materias = [
   { nombre: 'Civil', clase: 'civil', id: 'civil' },
@@ -16,6 +17,12 @@ export default function Materias() {
   const navigate = useNavigate();
   const [activeMenuItem, setActiveMenuItem] = useState('materias');
 
+
+  useEffect(() => {
+      if (!checkAuth()) {
+            // Si no hay token, redirigimos al login
+            logout()
+      }});
   // Cambiar esta función para navegar a detallemateria
   const handleClick = (carreraId) => {
     navigate(`/materias/${carreraId}`);

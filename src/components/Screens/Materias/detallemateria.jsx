@@ -3,6 +3,7 @@ import './detallemateria.css';
 import { useNavigate, useParams } from 'react-router-dom';
 import Sidebar from '../../Layouts/Sidebar.jsx';
 import EliminarMateria from './eliminarmateria.jsx';
+import { checkAuth,logout } from './../../CheckAuth.jsx';
 
 // Datos de respaldo (fallback)
 const materiasFallback = [
@@ -35,6 +36,12 @@ const colorMateria = {
 
   // 🔹 Cargar comisiones al iniciar
   useEffect(() => {
+    if (!checkAuth()) {
+              // Si no hay token, redirigimos al login
+              logout()
+        }
+
+
     const fetchComisiones = async () => {
       try {
         const res = await fetch('https://8d13dfce1445.ngrok-free.app/api/v1/MiUTN/commission/findAll',{ headers: {

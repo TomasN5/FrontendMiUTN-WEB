@@ -7,16 +7,44 @@ const Login = ({ onLogin }) => {
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Aquí iría la lógica de autenticación real
-    console.log('Email:', email, 'Password:', password, 'RememberMe:', rememberMe);
-    
-    // Simulamos una autenticación exitosa
-    if (email && password) {
-      onLogin(); // Esto activará la navegación al dashboard
-    }
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  // Creamos el objeto con los datos del usuario
+  const credentials = {
+    email: email,
+    password: password,
   };
+
+  try {
+    // Realizamos la petición POST al endpoint de login
+    const response = await fetch('https://8d13dfce1445.ngrok-free.app/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true' // Indicamos que enviamos JSON
+      },
+      body: JSON.stringify(credentials), // Convertimos el objeto a JSON
+    });
+
+    // Verificamos si la respuesta fue exitosa
+    if (!response.ok) {
+      throw new Error('Error al iniciar sesión');
+    }
+
+    // Parseamos la respuesta (por ejemplo, un token o usuario)
+    const data = await response.json();
+    console.log('Respuesta del servidor:', data.accessToken);
+
+    localStorage.setItem('token', data.accessToken);
+    // Si todo salió bien, llamamos a la función onLogin
+    onLogin();
+
+  } catch (error) {
+    console.error('Error durante el login:', error.message);
+    alert('Error al iniciar sesión. Verificá tus credenciales.');
+  }
+};
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);

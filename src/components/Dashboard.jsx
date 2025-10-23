@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Dashboard.css';
+import { checkAuth,logout } from './CheckAuth';
 
 // URL base de la API - VERIFICA QUE ESTÉ CORRECTA
 const API_BASE_URL = 'https://8d13dfce1445.ngrok-free.app/api/v1/miUTN/publication';
@@ -12,6 +13,26 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+
+    // Cargar anuncios al montar el componente
+  useEffect(() => {
+    if (!checkAuth()) {
+      // Si no hay token, redirigimos al login
+      logout()
+    }
+    fetchAnnouncements();
+  }, []);
+
+  // Efecto para el slider automático (solo si hay anuncios)
+  useEffect(() => {
+    if (announcements.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentSlide((prev) => (prev + 1) % announcements.length);
+      }, 5000); // Aumenté a 5 segundos
+
+      return () => clearInterval(interval);
+    }
+  }, [announcements.length]);
 
   // FETCH: Obtener anuncios publicados con mejor manejo de errores
   const fetchAnnouncements = async () => {
@@ -101,21 +122,7 @@ const Dashboard = () => {
     }
   };
 
-  // Cargar anuncios al montar el componente
-  useEffect(() => {
-    fetchAnnouncements();
-  }, []);
 
-  // Efecto para el slider automático (solo si hay anuncios)
-  useEffect(() => {
-    if (announcements.length > 1) {
-      const interval = setInterval(() => {
-        setCurrentSlide((prev) => (prev + 1) % announcements.length);
-      }, 5000); // Aumenté a 5 segundos
-
-      return () => clearInterval(interval);
-    }
-  }, [announcements.length]);
 
   const nextSlide = () => {
     if (announcements.length > 0) {
@@ -159,7 +166,7 @@ const Dashboard = () => {
       <header className="dashboard-header">
         <div className="header-content">
           <h1 className="logo">MiUTN</h1>
-          <button className="logout-btn">Salir</button>
+          <button className="logout-btn" onClick={logout}>Salir</button>
         </div>
       </header>
 

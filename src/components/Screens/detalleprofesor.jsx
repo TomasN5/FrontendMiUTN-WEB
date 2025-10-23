@@ -3,6 +3,7 @@ import './detalleprofesor.css';
 import { useNavigate, useParams } from 'react-router-dom';
 import Sidebar from '../Layouts/Sidebar.jsx';
 import EliminarDocente from '../Screens/Profesores/eliminardocente.jsx';
+import { checkAuth,logout } from '../CheckAuth.jsx';
 
 const docentesFallback = [
   { nombre: 'Ruben Guerrieri', legajo: '11111', mail: 'ruben@frlp.utn.edu.ar' },
@@ -44,6 +45,10 @@ export default function ProfesorDetalle() {
   };
 
   useEffect(() => {
+     if (!checkAuth()) {
+              // Si no hay token, redirigimos al login
+              logout()
+        }
     fetchDocentes();
   }, []);
 

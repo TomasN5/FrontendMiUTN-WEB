@@ -5,6 +5,7 @@ import Sidebar from '../Layouts/Sidebar';
 import AnnouncementsTable from './Announcements/AnnouncementsTable';
 import AnnouncementModal from './Announcements/AnnouncementModal';
 import ConfirmModal from '../UI/ConfirmModal';
+import { checkAuth,logout } from './../CheckAuth';
 import './Announcements.css';
 
 // URL base de la API
@@ -78,6 +79,10 @@ const Announcements = () => {
 
   // Cargar anuncios al montar el componente
   useEffect(() => {
+    if (!checkAuth()) {
+          // Si no hay token, redirigimos al login
+          logout()
+    }
     fetchAnnouncements();
   }, []);
 
