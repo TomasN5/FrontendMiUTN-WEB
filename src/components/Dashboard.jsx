@@ -57,7 +57,7 @@ const Dashboard = () => {
           id: item.id,
           title: item.title,
           description: item.description,
-          date: quitarHora(item.creationDate) || "Sin fecha",
+          date: quitarHora(item.expirationDate) || "Sin fecha",
           important: item.priority,
           content: item.content,
           image: item.image,

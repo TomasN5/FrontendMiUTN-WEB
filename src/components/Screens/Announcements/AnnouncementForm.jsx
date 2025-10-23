@@ -314,7 +314,7 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
                 {formData.expirable && (
                   <div className="announcement-date-group">
                     <input
-                      type="date"
+                      type="datetime-local"
                       name="endDate"
                       value={formData.endDate}
                       onChange={handleInputChange}
