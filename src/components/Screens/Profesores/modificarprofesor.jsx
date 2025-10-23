@@ -50,9 +50,11 @@ export default function ModificarProfesor() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:8080/api/v1/MiUTN/professors', {
+      const response = await fetch('https://8d13dfce1445.ngrok-free.app/api/v1/MiUTN/professors', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true',
+         },
         body: JSON.stringify(formData)
       });
       if (response.ok) {

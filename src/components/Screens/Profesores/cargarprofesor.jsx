@@ -43,10 +43,11 @@ export default function CargarProfesor() {
 
     console.log(payload)
     try {
-      const response = await fetch('http://localhost:8080/api/v1/miUTN/professor/save', {
+      const response = await fetch('https://8d13dfce1445.ngrok-free.app/api/v1/miUTN/professor/save', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true'},
+        body: JSON.stringify(payload),
+        
       });
       if (response.ok) {
         alert('Docente creado correctamente');

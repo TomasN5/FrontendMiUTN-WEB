@@ -7,10 +7,11 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
     title: '',
     description: '',
     content: '',
-    isImportant: false,
-    scheduleType: 'now',
+    priority: false,
+    published: true,
+    publicationMode: 'INMEDIATE',
     scheduledDate: '',
-    validityType: 'permanent',
+    expirable: false,
     endDate: ''
   });
 
@@ -25,10 +26,11 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
         title: announcement.title || '',
         description: announcement.description || '',
         content: announcement.content || '',
-        isImportant: announcement.isImportant || false,
-        scheduleType: announcement.scheduleType || 'now',
+        priority: announcement.priority || false,
+        published: announcement.published !== undefined ? announcement.published : true,
+        publicationMode: announcement.publicationMode || 'INMEDIATE',
         scheduledDate: announcement.scheduledDate || '',
-        validityType: announcement.validityType || 'permanent',
+        expirable: announcement.expirable || false,
         endDate: announcement.endDate || ''
       });
     }
@@ -50,18 +52,18 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
       newErrors.content = 'El contenido es obligatorio';
     }
 
-    // Validar programación si se seleccionó "Programar para"
-    if (formData.scheduleType === 'scheduled' && !formData.scheduledDate) {
+    // Validar programación si se seleccionó "SCHEDULED"
+    if (formData.publicationMode === 'SCHEDULED' && !formData.scheduledDate) {
       newErrors.scheduledDate = 'La fecha de programación es obligatoria cuando se selecciona "Programar para"';
     }
 
-    // Validar vigencia si se seleccionó "Fecha Hasta"
-    if (formData.validityType === 'date' && !formData.endDate) {
+    // Validar vigencia si se seleccionó expirable
+    if (formData.expirable && !formData.endDate) {
       newErrors.endDate = 'La fecha de vigencia es obligatoria cuando se selecciona "Fecha Hasta"';
     }
 
     // Validar que la fecha de programación no sea en el pasado
-    if (formData.scheduleType === 'scheduled' && formData.scheduledDate) {
+    if (formData.publicationMode === 'SCHEDULED' && formData.scheduledDate) {
       const scheduledDate = new Date(formData.scheduledDate);
       const now = new Date();
       if (scheduledDate < now) {
@@ -70,7 +72,7 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
     }
 
     // Validar que la fecha de vigencia no sea en el pasado
-    if (formData.validityType === 'date' && formData.endDate) {
+    if (formData.expirable && formData.endDate) {
       const endDate = new Date(formData.endDate);
       const now = new Date();
       now.setHours(0, 0, 0, 0); // Reset hours to compare only dates
@@ -227,13 +229,30 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
                 <label className="announcement-checkbox-label">
                   <input
                     type="checkbox"
-                    name="isImportant"
-                    checked={formData.isImportant}
+                    name="priority"
+                    checked={formData.priority}
                     onChange={handleInputChange}
                     className="announcement-checkbox-input"
                   />
                   <span className="announcement-checkmark"></span>
                   Prioridad Alta
+                </label>
+              </div>
+            </div>
+
+            {/* Estado de publicación */}
+            <div className="announcement-form-section">
+              <div className="announcement-checkbox-group">
+                <label className="announcement-checkbox-label">
+                  <input
+                    type="checkbox"
+                    name="published"
+                    checked={formData.published}
+                    onChange={handleInputChange}
+                    className="announcement-checkbox-input"
+                  />
+                  <span className="announcement-checkmark"></span>
+                  Publicar anuncio
                 </label>
               </div>
             </div>
@@ -245,10 +264,10 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
                 <label className="announcement-radio-label">
                   <input
                     type="radio"
-                    name="validityType"
-                    value="permanent"
-                    checked={formData.validityType === 'permanent'}
-                    onChange={handleInputChange}
+                    name="expirable"
+                    value={false}
+                    checked={!formData.expirable}
+                    onChange={() => setFormData(prev => ({ ...prev, expirable: false }))}
                     className="announcement-radio-input"
                   />
                   <span className="announcement-radiomark"></span>
@@ -258,20 +277,20 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
                 <label className="announcement-radio-label">
                   <input
                     type="radio"
-                    name="validityType"
-                    value="date"
-                    checked={formData.validityType === 'date'}
-                    onChange={handleInputChange}
+                    name="expirable"
+                    value={true}
+                    checked={formData.expirable}
+                    onChange={() => setFormData(prev => ({ ...prev, expirable: true }))}
                     className="announcement-radio-input"
                   />
                   <span className="announcement-radiomark"></span>
                   Fecha Hasta
                 </label>
                 
-                {formData.validityType === 'date' && (
+                {formData.expirable && (
                   <div className="announcement-date-group">
                     <input
-                      type="date"
+                      type="datetime-local"
                       name="endDate"
                       value={formData.endDate}
                       onChange={handleInputChange}
@@ -294,9 +313,9 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
                 <label className="announcement-radio-label">
                   <input
                     type="radio"
-                    name="scheduleType"
-                    value="now"
-                    checked={formData.scheduleType === 'now'}
+                    name="publicationMode"
+                    value="INMEDIATE"
+                    checked={formData.publicationMode === 'INMEDIATE'}
                     onChange={handleInputChange}
                     className="announcement-radio-input"
                   />
@@ -307,9 +326,9 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
                 <label className="announcement-radio-label">
                   <input
                     type="radio"
-                    name="scheduleType"
-                    value="scheduled"
-                    checked={formData.scheduleType === 'scheduled'}
+                    name="publicationMode"
+                    value="SCHEDULED"
+                    checked={formData.publicationMode === 'SCHEDULED'}
                     onChange={handleInputChange}
                     className="announcement-radio-input"
                   />
@@ -317,7 +336,7 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
                   Programar para
                 </label>
                 
-                {formData.scheduleType === 'scheduled' && (
+                {formData.publicationMode === 'SCHEDULED' && (
                   <div className="announcement-date-group">
                     <input
                       type="datetime-local"

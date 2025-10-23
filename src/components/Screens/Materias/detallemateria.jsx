@@ -37,7 +37,9 @@ const colorMateria = {
   useEffect(() => {
     const fetchComisiones = async () => {
       try {
-        const res = await fetch('http://localhost:8080/api/v1/MiUTN/commission/findAll');
+        const res = await fetch('https://8d13dfce1445.ngrok-free.app/api/v1/MiUTN/commission/findAll',{ headers: {
+          'ngrok-skip-browser-warning': 'true',
+        }});
         if (!res.ok) throw new Error('Error al obtener comisiones');
         const data = await res.json();
         setComisiones(data);
@@ -53,10 +55,12 @@ const colorMateria = {
   const fetchMaterias = async (careerName, commissionId = null) => {
     try {
       const url = commissionId
-        ? `http://localhost:8080/api/v1/MiUTN/subject/findByCommissionId?commissionId=${commissionId}`
-        : `http://localhost:8080/api/v1/MiUTN/subject/findByCareerName?careerName=${careerName}`;
+        ? `https://8d13dfce1445.ngrok-free.app/api/v1/MiUTN/subject/findByCommissionId?commissionId=${commissionId}`
+        : `https://8d13dfce1445.ngrok-free.app/api/v1/MiUTN/subject/findByCareerName?careerName=${careerName}`;
 
-      const res = await fetch(url);
+      const res = await fetch(url,{ headers: {
+          'ngrok-skip-browser-warning': 'true',
+        }});
       if (!res.ok) throw new Error(`Error al obtener materias desde ${url}`);
       const data = await res.json();
 
@@ -122,8 +126,11 @@ const colorMateria = {
 
     console.log(materiaSeleccionada)
     try {
-      const res = await fetch(`http://localhost:8080/api/v1/MiUTN/subject/delete?id=${materiaSeleccionada.id}`, {
-        method: 'DELETE'
+      const res = await fetch(`https://8d13dfce1445.ngrok-free.app/api/v1/MiUTN/subject/delete?id=${materiaSeleccionada.id}`, {
+        method: 'DELETE',
+         headers: {
+          'ngrok-skip-browser-warning': 'true',
+        }
       });
 
       if (!res.ok) {

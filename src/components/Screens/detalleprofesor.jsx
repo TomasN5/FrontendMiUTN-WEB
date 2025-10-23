@@ -22,8 +22,10 @@ export default function ProfesorDetalle() {
 
   const fetchDocentes = async () => {
     try {
-      const url = `http://localhost:8080/api/v1/miUTN/professor/findAll`;
-      const res = await fetch(url);
+      const url = `https://8d13dfce1445.ngrok-free.app/api/v1/miUTN/professor/findAll`;
+      const res = await fetch(url,{ headers: {
+          'ngrok-skip-browser-warning': 'true',
+        }});
       if (!res.ok) throw new Error(`Error al obtener docentes desde ${url}`);
       const data = await res.json();
 
@@ -53,8 +55,11 @@ export default function ProfesorDetalle() {
   const handleConfirmarEliminacion = async() => {
     console.log('Eliminando docente:', docenteSeleccionado);
     try {
-      const res = await fetch(`http://localhost:8080/api/v1/miUTN/professor/delete?id=${docenteSeleccionado.id}`, {
-        method: 'DELETE'
+      const res = await fetch(`https://8d13dfce1445.ngrok-free.app/api/v1/miUTN/professor/delete?id=${docenteSeleccionado.id}`, {
+        method: 'DELETE',
+        headers: {
+          'ngrok-skip-browser-warning': 'true',
+        }
       });
 
       if (!res.ok) {

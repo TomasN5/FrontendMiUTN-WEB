@@ -58,10 +58,20 @@ const materiaActual = materias.find(m =>
     const fetchData = async () => {
       try {
         const [commRes, profRes, careerRes, classRes] = await Promise.all([
-          fetch('http://localhost:8080/api/v1/MiUTN/commission/findAll'),
-          fetch('http://localhost:8080/api/v1/miUTN/professor/findAll'),
-          fetch(`http://localhost:8080/api/v1/MiUTN/career/findByName?name=${nombre}`),
-          fetch('http://localhost:8080/api/v1/MiUTN/schedules/findAllClassroom')
+          fetch('https://8d13dfce1445.ngrok-free.app/api/v1/MiUTN/commission/findAll',{
+             headers: {
+          'ngrok-skip-browser-warning': 'true',
+        }
+          }),
+          fetch('https://8d13dfce1445.ngrok-free.app/api/v1/miUTN/professor/findAll',{ headers: {
+          'ngrok-skip-browser-warning': 'true',
+        }}),
+          fetch(`https://8d13dfce1445.ngrok-free.app/api/v1/MiUTN/career/findByName?name=${nombre}`,{ headers: {
+          'ngrok-skip-browser-warning': 'true',
+        }}),
+          fetch('https://8d13dfce1445.ngrok-free.app/api/v1/MiUTN/schedules/findAllClassroom',{ headers: {
+          'ngrok-skip-browser-warning': 'true',
+        }})
         ]);
 
         if (!commRes.ok) throw new Error('Error al obtener comisiones');
@@ -162,9 +172,11 @@ const materiaActual = materias.find(m =>
     console.log("📦 Datos a enviar:", JSON.stringify(payload, null, 2));
 
     try {
-      const response = await fetch("http://localhost:8080/api/v1/MiUTN/subject/save", {
+      const response = await fetch("https://8d13dfce1445.ngrok-free.app/api/v1/MiUTN/subject/save", {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' ,
+          'ngrok-skip-browser-warning': 'true',
+        },
         body: JSON.stringify(payload)
       });
 

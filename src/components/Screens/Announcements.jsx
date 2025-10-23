@@ -8,7 +8,7 @@ import ConfirmModal from '../UI/ConfirmModal';
 import './Announcements.css';
 
 // URL base de la API
-const API_BASE_URL = 'https://edc1086b6913.ngrok-free.app/api/v1/miUTN/publication';
+const API_BASE_URL = 'https://8d13dfce1445.ngrok-free.app/api/v1/miUTN/publication';
 
 const Announcements = () => {
   const navigate = useNavigate();
@@ -45,14 +45,20 @@ const Announcements = () => {
       const data = await response.json();
       console.log(data);
       
+      function quitarHora(fechaConHora) {
+          if(fechaConHora != null)
+            return fechaConHora.split('T')[0];
+          else
+            return null;
+      }
       
       // Mapear los datos de la API al formato que espera tu componente
       const mappedAnnouncements = data.map(item => ({
         id: item.id,
         title: item.title,
         // Usar description como endDate temporalmente, o ajustar según necesites
-        endDate: item.description || "Sin fecha", 
-        published: !item.hidden, // hidden: false significa publicado
+        endDate: quitarHora(item.expirationDate)|| "Sin fecha", 
+        published: item.hidden, // hidden: false significa publicado
         description: item.description,
         content: item.content,
         priority: item.priority,
@@ -134,47 +140,60 @@ const Announcements = () => {
       let response;
       
       if (editingAnnouncement) {
-        // FETCH: Actualizar anuncio existente
-        response = await fetch(`${API_BASE_URL}/update`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'ngrok-skip-browser-warning': 'true'
-          },
-          body: JSON.stringify({
-            id: editingAnnouncement.id,
-            title: pendingAnnouncement.title,
-            description: pendingAnnouncement.description,
-            content: pendingAnnouncement.content,
-            hidden: !pendingAnnouncement.published,
-            priority: pendingAnnouncement.priority || false,
-            image: pendingAnnouncement.image || "",
-            expirable: pendingAnnouncement.expirable || false,
-            publicationMode: pendingAnnouncement.publicationMode || "INMEDIATE"
-          })
-        });
-      } else {
-        // FETCH: Crear nuevo anuncio
-        response = await fetch(`${API_BASE_URL}/save`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'ngrok-skip-browser-warning': 'true'
-          },
-          body: JSON.stringify({
-            title: pendingAnnouncement.title,
-            description: pendingAnnouncement.description,
-            content: pendingAnnouncement.content,
-            hidden: !pendingAnnouncement.published,
-            priority: pendingAnnouncement.priority || false,
-            image: pendingAnnouncement.image || "",
-            expirable: pendingAnnouncement.expirable || false,
-            publicationMode: pendingAnnouncement.publicationMode || "INMEDIATE"
-          })
-        });
-      }
+          // FETCH: Actualizar anuncio existente
+          const formData = new FormData();
+          formData.append("id", editingAnnouncement.id);
+          formData.append("title", pendingAnnouncement.title);
+          formData.append("description", pendingAnnouncement.description);
+          formData.append("content", pendingAnnouncement.content);
+          formData.append("hidden", !pendingAnnouncement.published);
+          formData.append("priority", pendingAnnouncement.priority || false);
+          formData.append("expirable", pendingAnnouncement.expirable || false);
+          formData.append("publicationMode", pendingAnnouncement.publicationMode || "INMEDIATE");
+
+          // Si hay imagen seleccionada, se agrega al FormData
+          if (pendingAnnouncement.image) {
+            formData.append("image", pendingAnnouncement.image);
+          }
+
+          response = await fetch(`${API_BASE_URL}/update`, {
+            method: "PUT",
+            headers: {
+              "ngrok-skip-browser-warning": "true" // ❗ no pongas Content-Type
+            },
+            body: formData
+          });
+
+        } else {
+          // FETCH: Crear nuevo anuncio
+          const formData = new FormData();
+          formData.append("title", pendingAnnouncement.title);
+          formData.append("description", pendingAnnouncement.description);
+          formData.append("content", pendingAnnouncement.content);
+          console.log(pendingAnnouncement.published)
+          formData.append("hidden", pendingAnnouncement.published);
+          formData.append("priority", pendingAnnouncement.isImportant || false);
+          formData.append("expirable", pendingAnnouncement.expirable || false);
+          formData.append("expirationDate",pendingAnnouncement.endDate);
+          formData.append("scheduledDate",pendingAnnouncement.scheduledDate)
+          formData.append("publicationMode", pendingAnnouncement.publicationMode || "INMEDIATE");
+
+          // Si hay imagen seleccionada, se agrega al FormData
+          if (pendingAnnouncement.image) {
+            formData.append("image", pendingAnnouncement.image);
+          }
+
+          console.log(formData)
+
+          response = await fetch(`${API_BASE_URL}/save`, {
+            method: "POST",
+            headers: {
+              "ngrok-skip-browser-warning": "true"
+            },
+            body: formData
+          });
+}
+
 
       if (!response.ok) {
         throw new Error(`Error: ${response.status} ${response.statusText}`);
