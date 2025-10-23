@@ -56,9 +56,8 @@ const Announcements = () => {
       const mappedAnnouncements = data.map(item => ({
         id: item.id,
         title: item.title,
-        // Usar description como endDate temporalmente, o ajustar según necesites
-        endDate: quitarHora(item.expirationDate)|| "Sin fecha", 
-        published: item.hidden, // hidden: false significa publicado
+        endDate: quitarHora(item.expirationDate) || "Sin fecha", 
+        published: item.hidden, // ✅ CAMBIAR: item.hidden por !item.hidden
         description: item.description,
         content: item.content,
         priority: item.priority,
@@ -132,87 +131,95 @@ const Announcements = () => {
     setShowConfirmModal(true);
   };
 
-  // ✅ FUNCIÓN ACTUALIZADA - Maneja la confirmación real con fetch
-  const handleConfirmSave = async () => {
-    if (!pendingAnnouncement) return;
+// ✅ FUNCIÓN ACTUALIZADA - Maneja la confirmación real con fetch
+const handleConfirmSave = async () => {
+  if (!pendingAnnouncement) return;
 
-    try {
-      let response;
-      
-      if (editingAnnouncement) {
-          // FETCH: Actualizar anuncio existente
-          const formData = new FormData();
-          formData.append("id", editingAnnouncement.id);
-          formData.append("title", pendingAnnouncement.title);
-          formData.append("description", pendingAnnouncement.description);
-          formData.append("content", pendingAnnouncement.content);
-          formData.append("hidden", !pendingAnnouncement.published);
-          formData.append("priority", pendingAnnouncement.priority || false);
-          formData.append("expirable", pendingAnnouncement.expirable || false);
-          formData.append("publicationMode", pendingAnnouncement.publicationMode || "INMEDIATE");
+  try {
+    let response;
+    
+    if (editingAnnouncement) {
+      // FETCH: Actualizar anuncio existente
+      const formData = new FormData();
+      formData.append("id", editingAnnouncement.id);
+      formData.append("title", pendingAnnouncement.title);
+      formData.append("description", pendingAnnouncement.description);
+      formData.append("content", pendingAnnouncement.content);
+      formData.append("hidden", !pendingAnnouncement.published); // ✅ Consistente
+      formData.append("priority", pendingAnnouncement.priority || false);
+      formData.append("expirable", pendingAnnouncement.expirable || false);
+      formData.append("publicationMode", pendingAnnouncement.publicationMode || "INMEDIATE");
 
-          // Si hay imagen seleccionada, se agrega al FormData
-          if (pendingAnnouncement.image) {
-            formData.append("image", pendingAnnouncement.image);
-          }
-
-          response = await fetch(`${API_BASE_URL}/update`, {
-            method: "PUT",
-            headers: {
-              "ngrok-skip-browser-warning": "true" // ❗ no pongas Content-Type
-            },
-            body: formData
-          });
-
-        } else {
-          // FETCH: Crear nuevo anuncio
-          const formData = new FormData();
-          formData.append("title", pendingAnnouncement.title);
-          formData.append("description", pendingAnnouncement.description);
-          formData.append("content", pendingAnnouncement.content);
-          console.log(pendingAnnouncement.published)
-          formData.append("hidden", pendingAnnouncement.published);
-          formData.append("priority", pendingAnnouncement.isImportant || false);
-          formData.append("expirable", pendingAnnouncement.expirable || false);
-          formData.append("expirationDate",pendingAnnouncement.endDate);
-          formData.append("scheduledDate",pendingAnnouncement.scheduledDate)
-          formData.append("publicationMode", pendingAnnouncement.publicationMode || "INMEDIATE");
-
-          // Si hay imagen seleccionada, se agrega al FormData
-          if (pendingAnnouncement.image) {
-            formData.append("image", pendingAnnouncement.image);
-          }
-
-          console.log(formData)
-
-          response = await fetch(`${API_BASE_URL}/save`, {
-            method: "POST",
-            headers: {
-              "ngrok-skip-browser-warning": "true"
-            },
-            body: formData
-          });
-}
-
-
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status} ${response.statusText}`);
+      // Si hay imagen seleccionada, se agrega al FormData
+      if (pendingAnnouncement.image) {
+        formData.append("image", pendingAnnouncement.image);
       }
 
-      // Recargar los anuncios después de guardar
-      await fetchAnnouncements();
+      response = await fetch(`${API_BASE_URL}/update`, {
+        method: "PUT",
+        headers: {
+          "ngrok-skip-browser-warning": "true"
+        },
+        body: formData
+      });
+
+    } else {
+      // FETCH: Crear nuevo anuncio
+      const formData = new FormData();
+      formData.append("title", pendingAnnouncement.title);
+      formData.append("description", pendingAnnouncement.description);
+      formData.append("content", pendingAnnouncement.content);
       
-      // Limpiar y cerrar modales
-      setShowModal(false);
-      setShowConfirmModal(false);
-      setEditingAnnouncement(null);
-      setPendingAnnouncement(null);
+      // ✅ CORRECCIÓN: Usar !published para hidden (misma lógica que edición)
+      formData.append("hidden", pendingAnnouncement.published);
       
-    } catch (err) {
-      setError(`Error al guardar el anuncio: ${err.message}`);
-      console.error('Error saving announcement:', err);
+      formData.append("priority", pendingAnnouncement.priority || false);
+      formData.append("expirable", pendingAnnouncement.expirable || false);
+      formData.append("expirationDate", pendingAnnouncement.endDate);
+      formData.append("scheduledDate", pendingAnnouncement.scheduledDate);
+      formData.append("publicationMode", pendingAnnouncement.publicationMode || "INMEDIATE");
+
+      // Si hay imagen seleccionada, se agrega al FormData
+      if (pendingAnnouncement.image) {
+        formData.append("image", pendingAnnouncement.image);
+      }
+
+      // ✅ DEBUG: Verificar datos antes de enviar
+      console.log('📤 Datos a enviar para CREAR anuncio:');
+      console.log('- Título:', pendingAnnouncement.title);
+      console.log('- Prioridad:', pendingAnnouncement.priority);
+      console.log('- Publicado (checkbox):', pendingAnnouncement.published);
+      console.log('- Hidden (enviado a API):', pendingAnnouncement.published);
+      console.log('- Expirable:', pendingAnnouncement.expirable);
+      console.log('- PublicationMode:', pendingAnnouncement.publicationMode);
+
+      response = await fetch(`${API_BASE_URL}/save`, {
+        method: "POST",
+        headers: {
+          "ngrok-skip-browser-warning": "true"
+        },
+        body: formData
+      });
     }
-  };
+
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status} ${response.statusText}`);
+    }
+
+    // Recargar los anuncios después de guardar
+    await fetchAnnouncements();
+    
+    // Limpiar y cerrar modales
+    setShowModal(false);
+    setShowConfirmModal(false);
+    setEditingAnnouncement(null);
+    setPendingAnnouncement(null);
+    
+  } catch (err) {
+    setError(`Error al guardar el anuncio: ${err.message}`);
+    console.error('Error saving announcement:', err);
+  }
+};
 
   // ✅ FUNCIÓN CORREGIDA - Maneja la cancelación
   const handleCancelSave = () => {

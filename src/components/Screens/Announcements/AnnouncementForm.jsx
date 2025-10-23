@@ -18,19 +18,20 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
   const [imagePreview, setImagePreview] = useState(null);
   const [errors, setErrors] = useState({});
 
-  // Cargar datos si estamos editando
+  // Cargar datos si estamos editando - CON MEJOR MANEJO
   useEffect(() => {
     if (announcement) {
+      console.log('Datos del anuncio a editar:', announcement);
       setFormData({
         image: null,
         title: announcement.title || '',
         description: announcement.description || '',
         content: announcement.content || '',
-        priority: announcement.priority || false,
+        priority: Boolean(announcement.priority), // ✅ Asegurar que sea boolean
         published: announcement.published !== undefined ? announcement.published : true,
         publicationMode: announcement.publicationMode || 'INMEDIATE',
         scheduledDate: announcement.scheduledDate || '',
-        expirable: announcement.expirable || false,
+        expirable: Boolean(announcement.expirable), // ✅ Asegurar que sea boolean
         endDate: announcement.endDate || ''
       });
     }
@@ -75,7 +76,7 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
     if (formData.expirable && formData.endDate) {
       const endDate = new Date(formData.endDate);
       const now = new Date();
-      now.setHours(0, 0, 0, 0); // Reset hours to compare only dates
+      now.setHours(0, 0, 0, 0);
       if (endDate < now) {
         newErrors.endDate = 'La fecha de vigencia no puede ser en el pasado';
       }
@@ -87,6 +88,10 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
+    
+    // ✅ DEBUG: Log para verificar cambios
+    console.log(`Campo cambiado: ${name}, valor:`, type === 'checkbox' ? checked : value);
+    
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
@@ -99,6 +104,17 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
         [name]: ''
       }));
     }
+  };
+
+  // ✅ NUEVA FUNCIÓN para manejar radios de expirable
+  const handleExpirableChange = (value) => {
+    console.log('Expirable cambiado a:', value);
+    setFormData(prev => ({
+      ...prev,
+      expirable: value,
+      // Si se cambia a no expirable, limpiar la fecha
+      endDate: value ? prev.endDate : ''
+    }));
   };
 
   const handleImageUpload = (e) => {
@@ -121,7 +137,11 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     
+    // ✅ DEBUG: Ver datos antes de enviar
+    console.log('Datos a enviar:', formData);
+    
     if (!validateForm()) {
+      console.log('Errores de validación:', errors);
       return;
     }
     
@@ -223,7 +243,7 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
               )}
             </div>
 
-            {/* Prioridad */}
+            {/* Prioridad - CON DEBUG VISUAL */}
             <div className="announcement-form-section announcement-prioridad-section">
               <div className="announcement-checkbox-group">
                 <label className="announcement-checkbox-label">
@@ -236,6 +256,9 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
                   />
                   <span className="announcement-checkmark"></span>
                   Prioridad Alta
+                  <span style={{marginLeft: '10px', color: '#666', fontSize: '12px'}}>
+                    ({formData.priority ? 'ACTIVADA' : 'desactivada'})
+                  </span>
                 </label>
               </div>
             </div>
@@ -247,17 +270,20 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
                   <input
                     type="checkbox"
                     name="published"
-                    checked={formData.published}
+                    unchecked={formData.published}
                     onChange={handleInputChange}
                     className="announcement-checkbox-input"
                   />
                   <span className="announcement-checkmark"></span>
                   Publicar anuncio
+                  <span style={{marginLeft: '10px', color: '#666', fontSize: '12px'}}>
+                    ({formData.published ? 'PUBLICADO' : 'oculto'})
+                  </span>
                 </label>
               </div>
             </div>
 
-            {/* Vigencia */}
+            {/* Vigencia - CORREGIDO */}
             <div className="announcement-form-section">
               <h3>Vigencia del Anuncio</h3>
               <div className="announcement-radio-group announcement-vigencia-group">
@@ -265,9 +291,8 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
                   <input
                     type="radio"
                     name="expirable"
-                    value={false}
                     checked={!formData.expirable}
-                    onChange={() => setFormData(prev => ({ ...prev, expirable: false }))}
+                    onChange={() => handleExpirableChange(false)}
                     className="announcement-radio-input"
                   />
                   <span className="announcement-radiomark"></span>
@@ -278,9 +303,8 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
                   <input
                     type="radio"
                     name="expirable"
-                    value={true}
                     checked={formData.expirable}
-                    onChange={() => setFormData(prev => ({ ...prev, expirable: true }))}
+                    onChange={() => handleExpirableChange(true)}
                     className="announcement-radio-input"
                   />
                   <span className="announcement-radiomark"></span>
@@ -290,7 +314,7 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
                 {formData.expirable && (
                   <div className="announcement-date-group">
                     <input
-                      type="datetime-local"
+                      type="date"
                       name="endDate"
                       value={formData.endDate}
                       onChange={handleInputChange}
