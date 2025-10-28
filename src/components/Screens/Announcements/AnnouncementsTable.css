@@ -1,0 +1,210 @@
+/* src/components/Announcements/AnnouncementsTable.css */
+.announcements-table {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  width: 100%;
+}
+
+.table-header {
+  background: #f8fafc;
+  border-bottom: 2px solid #e2e8f0;
+  display: none;
+}
+
+.table-row {
+  display: flex;
+  flex-direction: column;
+  padding: 20px 15px;
+  border-bottom: 1px solid #e2e8f0;
+  gap: 15px;
+}
+
+.table-row:last-child {
+  border-bottom: none;
+}
+
+.table-cell {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.table-cell::before {
+  content: attr(data-label);
+  font-weight: 600;
+  color: #2d3748;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.title-cell {
+  font-weight: 500;
+  color: #2d3748;
+  font-size: 16px;
+  order: 1;
+}
+
+.title-cell::before {
+  content: "Título";
+}
+
+.date-cell {
+  color: #4a5568;
+  font-size: 15px;
+  font-weight: 500;
+  order: 2;
+}
+
+.date-cell::before {
+  content: "Fecha Fin";
+}
+
+.published-cell {
+  color: #4a5568;
+  font-size: 14px;
+  font-weight: 500;
+  order: 3;
+}
+
+.published-cell::before {
+  content: "Publicado";
+  margin-bottom: 5px;
+}
+
+.actions-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  order: 4;
+  margin-top: 10px;
+}
+
+.actions-cell::before {
+  content: "Acciones";
+  margin-bottom: 5px;
+}
+
+.action-btn {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  width: 100%;
+}
+
+.action-btn.modify {
+  background: #feebc8;
+  color: #dd6b20;
+  border: 1px solid #fbd38d;
+}
+
+.action-btn.modify:hover {
+  background: #fbd38d;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(221, 107, 32, 0.2);
+}
+
+.action-btn.delete {
+  background: #fed7d7;
+  color: #c53030;
+  border: 1px solid #feb2b2;
+}
+
+.action-btn.delete:hover {
+  background: #feb2b2;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(197, 48, 48, 0.2);
+}
+
+.published-status {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-block;
+  min-width: 50px;
+  text-align: center;
+}
+
+.published-status.published {
+  background: #c6f6d5;
+  color: #276749;
+  border: 1px solid #9ae6b4;
+}
+
+.published-status.not-published {
+  background: #fed7d7;
+  color: #c53030;
+  border: 1px solid #feb2b2;
+}
+
+/* Tablet (768px en adelante) */
+@media (min-width: 768px) {
+  .table-header {
+    display: block;
+  }
+  
+  .table-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1.5fr;
+    align-items: center;
+    min-height: 70px;
+    padding: 0 30px;
+    gap: 0;
+  }
+  
+  .header-row {
+    font-weight: 700;
+    color: #2d3748;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .table-cell {
+    padding: 20px 0;
+    display: block;
+  }
+  
+  .table-cell::before {
+    display: none;
+  }
+  
+  .title-cell,
+  .date-cell,
+  .published-cell {
+    order: 0;
+  }
+  
+  .actions-cell {
+    flex-direction: row;
+    gap: 12px;
+    order: 0;
+    margin-top: 0;
+    justify-content: flex-start;
+  }
+  
+  .actions-cell::before {
+    display: none;
+  }
+  
+  .action-btn {
+    width: auto;
+    min-width: 100px;
+    padding: 10px 20px;
+    margin: 2px;
+  }
+}

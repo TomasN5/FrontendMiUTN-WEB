@@ -1,0 +1,557 @@
+/* === ESTILOS GENERALES === */
+.announcement-form-container {
+  min-height: 100vh;
+  height: auto;
+  overflow-y: auto;
+  padding: 2rem 4rem;
+  background: linear-gradient(135deg, #6AB1F7 0%, #2E8BC0 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.announcement-form-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.announcement-form-header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: white;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* === CONTENIDO PRINCIPAL === */
+.announcement-form-content {
+  width: 100%;
+  max-width: 1400px;
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 20px;
+  padding: 3rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.announcement-form-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+}
+
+/* === SECCIONES GENERALES === */
+.announcement-form-section {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(46, 139, 192, 0.1);
+  border: 1px solid #E6F3FF;
+}
+
+.announcement-form-section h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #6AB1F7;
+}
+
+/* === INPUTS Y TEXTAREAS === */
+.announcement-form-input,
+.announcement-form-textarea,
+.announcement-date-input {
+  width: 100%;
+  padding: 1rem 1.2rem;
+  font-size: 1rem;
+  border: 2px solid #E6F3FF;
+  border-radius: 10px;
+  outline: none;
+  transition: all 0.3s ease;
+  background: #F8FBFF;
+  font-family: 'Inter', sans-serif;
+  color: #2D3748;
+}
+
+.announcement-form-input:focus,
+.announcement-form-textarea:focus,
+.announcement-date-input:focus {
+  border-color: #2E8BC0;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(46, 139, 192, 0.1);
+  transform: translateY(-2px);
+}
+
+.announcement-form-input::placeholder,
+.announcement-form-textarea::placeholder {
+  color: #A0AEC0;
+}
+
+.announcement-form-textarea {
+  min-height: 120px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.announcement-description-textarea {
+  min-height: 100px;
+}
+
+.announcement-content-textarea {
+  min-height: 180px;
+}
+
+/* === MEJORAS PARA EL ÁREA DE SUBIDA DE IMAGEN === */
+.announcement-image-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1rem;
+}
+
+.announcement-upload-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  border: 3px dashed #BEE3F8;
+  border-radius: 16px;
+  background: #F0F9FF;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  width: 100%;
+  min-height: 200px;
+  position: relative;
+}
+
+.announcement-upload-area:hover {
+  border-color: #2E8BC0;
+  background: #E6F3FF;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(46, 139, 192, 0.15);
+}
+
+.announcement-upload-area::before {
+  content: "📁";
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.7;
+}
+
+.announcement-upload-area::after {
+  content: "Haz clic o arrastra una imagen aquí";
+  font-size: 1rem;
+  color: #4A90A4;
+  font-weight: 500;
+}
+
+.announcement-file-input {
+  display: none;
+}
+
+.announcement-upload-btn {
+  background: linear-gradient(135deg, #2E8BC0 0%, #145DA0 100%);
+  color: white;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  font-size: 1rem;
+  border: none;
+  box-shadow: 0 4px 15px rgba(46, 139, 192, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.announcement-upload-btn::before {
+  content: "📤";
+  font-size: 1.2rem;
+}
+
+.announcement-upload-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(46, 139, 192, 0.4);
+  background: linear-gradient(135deg, #2580B3 0%, #0F4C75 100%);
+}
+
+.announcement-image-preview {
+  position: relative;
+  width: 100%;
+  max-width: 300px;
+  height: 200px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(46, 139, 192, 0.2);
+  margin: 1rem auto;
+  transition: all 0.3s ease;
+  border: 3px solid #E6F3FF;
+}
+
+.announcement-image-preview:hover {
+  transform: scale(1.02);
+  box-shadow: 0 12px 40px rgba(46, 139, 192, 0.3);
+  border-color: #2E8BC0;
+}
+
+.announcement-image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.announcement-remove-image {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: linear-gradient(135deg, #FF6B6B 0%, #EE5A52 100%);
+  color: white;
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  z-index: 2;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.announcement-remove-image::before {
+  content: "🗑️";
+}
+
+.announcement-remove-image:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+}
+
+/* === MEJORAS PARA EL CHECKBOX DE IMPORTANCIA === */
+.announcement-prioridad-section {
+  background: linear-gradient(135deg, #E6F3FF 0%, #D4EBF2 100%);
+  border: 2px solid #BEE3F8;
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.announcement-checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.announcement-checkbox-label {
+  display: flex;
+  align-items: center;
+  font-size: 1.1rem;
+  color: #2D3748;
+  cursor: pointer;
+  padding: 1rem 1.5rem;
+  background: white;
+  border-radius: 12px;
+  border: 2px solid #E6F3FF;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  position: relative;
+  overflow: hidden;
+}
+
+.announcement-checkbox-label::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(46, 139, 192, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.announcement-checkbox-label:hover::before {
+  left: 100%;
+}
+
+.announcement-checkbox-label:hover {
+  border-color: #2E8BC0;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(46, 139, 192, 0.15);
+}
+
+.announcement-checkbox-input {
+  position: absolute;
+  opacity: 0;
+}
+
+.announcement-checkmark {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  border: 2px solid #CBD5E0;
+  border-radius: 6px;
+  background: white;
+  margin-right: 1rem;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.announcement-checkbox-input:checked + .announcement-checkmark {
+  background: linear-gradient(135deg, #2E8BC0 0%, #145DA0 100%);
+  border-color: #2E8BC0;
+  animation: checkmarkPop 0.3s ease;
+}
+
+.announcement-checkbox-input:checked + .announcement-checkmark::after {
+  content: "✓";
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  animation: checkmarkFade 0.3s ease;
+}
+
+@keyframes checkmarkPop {
+  0% { transform: scale(0.8); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+@keyframes checkmarkFade {
+  0% { opacity: 0; transform: scale(0); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* === MEJORAS PARA LOS RADIO BUTTONS === */
+.announcement-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.announcement-radio-label {
+  display: flex;
+  align-items: center;
+  font-size: 1rem;
+  color: #4A5568;
+  cursor: pointer;
+  padding: 1rem 1.5rem;
+  background: white;
+  border-radius: 12px;
+  border: 2px solid #E6F3FF;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.announcement-radio-label:hover {
+  border-color: #2E8BC0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(46, 139, 192, 0.1);
+}
+
+.announcement-radio-input {
+  position: absolute;
+  opacity: 0;
+}
+
+.announcement-radiomark {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #CBD5E0;
+  border-radius: 50%;
+  background: white;
+  margin-right: 1rem;
+  transition: all 0.3s ease;
+}
+
+.announcement-radio-input:checked + .announcement-radiomark {
+  border-color: #2E8BC0;
+  background: #2E8BC0;
+  box-shadow: 0 0 0 4px rgba(46, 139, 192, 0.2);
+}
+
+.announcement-radio-input:checked + .announcement-radiomark::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  background: white;
+  border-radius: 50%;
+}
+
+/* === GRUPOS DE FECHA === */
+.announcement-date-group {
+  margin-top: 1rem;
+  padding: 1.5rem;
+  background: #F0F9FF;
+  border-radius: 12px;
+  border: 2px dashed #BEE3F8;
+}
+
+.announcement-date-input {
+  background: white;
+}
+
+/* === BOTONES DE ACCIÓN === */
+.announcement-form-actions {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 2px solid #E6F3FF;
+}
+
+.announcement-btn-cancel,
+.announcement-btn-accept {
+  padding: 1rem 3rem;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.3s ease;
+  min-width: 160px;
+  box-shadow: 0 6px 20px rgba(46, 139, 192, 0.15);
+}
+
+.announcement-btn-cancel {
+  background: linear-gradient(135deg, #718096 0%, #4A5568 100%);
+  color: white;
+}
+
+.announcement-btn-cancel:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(113, 128, 150, 0.4);
+}
+
+.announcement-btn-accept {
+  background: linear-gradient(135deg, #2E8BC0 0%, #145DA0 100%);
+  color: white;
+}
+
+.announcement-btn-accept:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(46, 139, 192, 0.4);
+  background: linear-gradient(135deg, #2580B3 0%, #0F4C75 100%);
+}
+
+
+/* Estilos para campos obligatorios y errores */
+.required-field {
+  color: #ff4444;
+}
+
+.error-message {
+  color: #ff4444;
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+}
+
+.announcement-form-input.error,
+.announcement-form-textarea.error,
+.announcement-date-input.error {
+  border-color: #ff4444;
+  box-shadow: 0 0 0 1px #ff4444;
+}
+
+/* Asegúrate de que los textareas tengan bordes para mostrar el error */
+.announcement-form-textarea {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 8px;
+  resize: vertical;
+}
+
+.announcement-form-input {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 8px;
+}
+
+.announcement-date-input {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 8px;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 1200px) {
+  .announcement-form-container {
+    padding: 1.5rem 2rem;
+  }
+  
+  .announcement-form-content {
+    padding: 2rem;
+  }
+}
+
+@media (max-width: 992px) {
+  .announcement-form-layout {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .announcement-form-container {
+    padding: 1rem;
+  }
+
+  .announcement-form-content {
+    padding: 1.5rem;
+  }
+
+  .announcement-form-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .announcement-btn-cancel,
+  .announcement-btn-accept {
+    width: 100%;
+    min-width: auto;
+  }
+}
+
+@media (max-width: 576px) {
+  .announcement-form-header h1 {
+    font-size: 2rem;
+  }
+
+  .announcement-form-section {
+    padding: 1rem;
+  }
+
+  .announcement-upload-area {
+    padding: 2rem 1rem;
+    min-height: 150px;
+  }
+
+  .announcement-upload-area::before {
+    font-size: 2.5rem;
+  }
+
+  .announcement-upload-area::after {
+    font-size: 0.9rem;
+  }
+
+  .announcement-checkbox-label,
+  .announcement-radio-label {
+    padding: 0.8rem 1rem;
+    font-size: 1rem;
+  }
+}

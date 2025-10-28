@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import Announcements from './components/Screens/Announcements';
+import AnnouncementForm from './components/Screens/Announcements/AnnouncementForm';
+
 import './App.css';
 
 function App() {
@@ -45,6 +47,26 @@ function App() {
               ) : (
                 <Navigate to="/login" replace />
               )
+            } 
+          />
+          <Route 
+            path="/announcements/new" 
+            element={
+            isAuthenticated ? (
+            <AnnouncementForm />
+            ) : (
+          <Navigate to="/login" replace />
+          )
+          } 
+        />
+        <Route 
+            path="/announcements/edit/:id" 
+            element={
+            isAuthenticated ? (
+              <AnnouncementForm />
+            ) : (
+              <Navigate to="/login" replace />
+            )
             } 
           />
           <Route path="/" element={<Navigate to="/login" replace />} />

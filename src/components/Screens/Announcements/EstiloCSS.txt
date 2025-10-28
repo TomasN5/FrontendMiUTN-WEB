@@ -1,0 +1,295 @@
+/* === ESTILOS GENERALES === */
+.announcement-form-container {
+  min-height: 100vh;
+  height: auto;
+  overflow-y: auto;
+  padding: 2rem 4rem;
+  background-color: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.announcement-form-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.announcement-form-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #003366;
+}
+
+/* === CONTENIDO PRINCIPAL === */
+.announcement-form-content {
+  width: 100%;
+  max-width: 1400px;
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 2.5rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.announcement-form-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+}
+
+/* === SECCIONES GENERALES === */
+.announcement-form-section {
+  margin-bottom: 1.5rem;
+}
+
+.announcement-form-section h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 0.5rem;
+}
+
+.announcement-supporting-text {
+  font-size: 0.9rem;
+  color: #888;
+  margin-top: 0.3rem;
+}
+
+/* === INPUTS Y TEXTAREAS === */
+.announcement-form-input,
+.announcement-form-textarea,
+.announcement-date-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  border: 1.5px solid #ccc;
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.announcement-form-input:focus,
+.announcement-form-textarea:focus,
+.announcement-date-input:focus {
+  border-color: #007bff;
+}
+
+.announcement-form-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.announcement-description-textarea {
+  min-height: 80px;
+}
+
+.announcement-content-textarea {
+  min-height: 150px;
+}
+
+/* === IMAGEN === */
+.announcement-image-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.announcement-upload-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+}
+
+.announcement-file-input {
+  display: none;
+}
+
+.announcement-upload-btn {
+  background-color: #007bff;
+  color: white;
+  padding: 0.6rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-weight: 600;
+}
+
+.announcement-upload-btn:hover {
+  background-color: #0056b3;
+}
+
+.announcement-image-preview {
+  position: relative;
+  width: 250px; /* ancho fijo */
+  height: 180px; /* alto fijo */
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  margin-bottom: 0.5rem;
+}
+
+.announcement-image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* evita deformar, mantiene proporción */
+  display: block;
+}
+
+.announcement-remove-image {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background-color: rgba(255, 0, 0, 0.8);
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  z-index: 2;
+  transition: background-color 0.2s ease;
+}
+
+.announcement-remove-image:hover {
+  background-color: #b02a37;
+}
+
+/* === CHECKBOX Y RADIO === */
+.announcement-checkbox-group,
+.announcement-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.announcement-checkbox-label,
+.announcement-radio-label {
+  display: flex;
+  align-items: center;
+  font-size: 1rem;
+  color: #333;
+  cursor: pointer;
+  position: relative;
+  padding-left: 2rem;
+}
+
+/* Checkbox personalizado */
+.announcement-checkbox-input {
+  position: absolute;
+  opacity: 0;
+}
+
+.announcement-checkmark {
+  position: absolute;
+  left: 0;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #007bff;
+  border-radius: 4px;
+  background-color: #fff;
+}
+
+.announcement-checkbox-input:checked + .announcement-checkmark {
+  background-color: #007bff;
+}
+
+/* Radio personalizado */
+.announcement-radio-input {
+  position: absolute;
+  opacity: 0;
+}
+
+.announcement-radiomark {
+  position: absolute;
+  left: 0;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #007bff;
+  border-radius: 50%;
+  background-color: #fff;
+}
+
+.announcement-radio-input:checked + .announcement-radiomark {
+  background-color: #007bff;
+}
+
+/* === GRUPOS DE FECHA === */
+.announcement-date-group {
+  margin-top: 0.5rem;
+}
+
+/* === BOTONES DE ACCIÓN === */
+.announcement-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1.5rem;
+  margin-top: 2.5rem;
+}
+
+.announcement-btn-cancel,
+.announcement-btn-accept {
+  padding: 0.75rem 2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: transform 0.1s ease, background-color 0.2s ease;
+}
+
+.announcement-btn-cancel {
+  background-color: #e9ecef;
+  color: #333;
+}
+
+.announcement-btn-cancel:hover {
+  background-color: #d6d8da;
+  transform: scale(1.03);
+}
+
+.announcement-btn-accept {
+  background-color: #28a745;
+  color: #fff;
+}
+
+.announcement-btn-accept:hover {
+  background-color: #218838;
+  transform: scale(1.03);
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 992px) {
+  .announcement-form-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .announcement-form-container {
+    padding: 1.5rem;
+  }
+
+  .announcement-form-content {
+    padding: 1.5rem;
+  }
+
+  .announcement-form-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .announcement-btn-cancel,
+  .announcement-btn-accept {
+    width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .announcement-form-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .announcement-upload-btn {
+    width: 100%;
+  }
+}
