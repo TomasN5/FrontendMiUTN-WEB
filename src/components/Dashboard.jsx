@@ -7,6 +7,15 @@ const Dashboard = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const navigate = useNavigate();
 
+  // ✅ Verificación de token al entrar
+  useEffect(() => {
+    const token = sessionStorage.getItem('token');
+    console.log(token)
+    if (!token) {
+      navigate('/login'); // si no hay token, va al login
+    }
+  }, [navigate]);
+
   // Datos de ejemplo para los anuncios académicos
   const announcements = [
     {
@@ -59,6 +68,19 @@ const Dashboard = () => {
   const handleAnnouncementsClick = () => {
     navigate('/announcements');
   };
+  const handleProfessorClick = () => {
+    navigate('/profesores');
+  }
+  const handleSubjectClick = () => {
+    navigate('/materias');
+  }
+
+
+  // ✅ Función para cerrar sesión
+  const handleLogout = () => {
+    sessionStorage.removeItem('token'); // elimina el token
+    navigate('/login'); // redirige al login
+  };
 
   return (
     <div className="dashboard">
@@ -66,7 +88,7 @@ const Dashboard = () => {
       <header className="dashboard-header">
         <div className="header-content">
           <h1 className="logo">MiUTN</h1>
-          <button className="logout-btn">Salir</button>
+          <button className="logout-btn" onClick={handleLogout}>Salir</button>
         </div>
       </header>
 
@@ -83,11 +105,11 @@ const Dashboard = () => {
               <span className="btn-text">Anuncios</span>
             </button>
             
-            <button className="main-btn materias-btn">
+            <button className="main-btn materias-btn" onClick={handleSubjectClick}>
               <span className="btn-text">Materias</span>
             </button>
             
-            <button className="main-btn professores-btn">
+            <button className="main-btn professores-btn"onClick={handleProfessorClick}>
               <span className="btn-text">Profesores</span>
             </button>
           </div>
