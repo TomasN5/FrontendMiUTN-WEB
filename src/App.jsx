@@ -148,7 +148,28 @@ function App() {
             } 
           />
     
-         <Route path="/planoviewer" element={<PlanoViewer src={plano} />} />
+          <Route path="/planoviewer" element={<PlanoViewer src={plano} />} />
+          <Route path="/profesores/" element={ isAuthenticated ? (<ProfesorDetalle /> ) : (
+              <Navigate to="/login" replace />
+            )} />
+          <Route path="/profesores/cargarprofesor" element={ isAuthenticated ? (<CargarProfesor /> ) : (
+              <Navigate to="/login" replace />
+            )} />
+          <Route path="/profesores/modificarprofesor" element={ isAuthenticated ? (<ModificarProfesor /> ) : (
+              <Navigate to="/login" replace />
+            )} />
+          <Route path="/materias" element={ isAuthenticated ? (<Materias /> ) : (
+              <Navigate to="/login" replace />
+            )} />
+          <Route path="/materia/:nombre" element={ isAuthenticated ? (<MateriaDetalle /> ) : (
+              <Navigate to="/login" replace />
+            )} />
+          <Route path="/materia/:nombre/cargarmateria" element={ isAuthenticated ? (<CargarMateria /> ) : (
+              <Navigate to="/login" replace />
+            )} />
+          <Route path="/materia/:nombre/modificarmateria" element={ isAuthenticated ? (<ModificarMateria /> ) : (
+              <Navigate to="/login" replace />
+            )} />
           <Route path="/" element={<Navigate to="/login" replace />} />
         </Routes>
       </div>

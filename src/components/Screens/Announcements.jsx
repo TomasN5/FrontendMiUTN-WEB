@@ -9,7 +9,7 @@ import { checkAuth,logout } from './../CheckAuth';
 import './Announcements.css';
 
 // URL base de la API
-const API_BASE_URL = 'https://8d13dfce1445.ngrok-free.app/api/v1/miUTN/publication';
+const API_BASE_URL = 'http://localhost:8080/api/v1/miUTN/publication';
 
 const Announcements = () => {
   const navigate = useNavigate();
