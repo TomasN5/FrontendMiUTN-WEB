@@ -161,7 +161,7 @@ export default function CargarMateria() {
 
       if (response.ok) {
         alert('✅ Materia creada correctamente');
-        navigate('/');
+        navigate('/materias');
       } else {
         const errorData = await response.json();
         console.error('Error en backend:', errorData);

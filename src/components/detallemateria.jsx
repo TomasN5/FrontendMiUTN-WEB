@@ -62,7 +62,9 @@ export default function MateriaDetalle() {
       // 🔹 Adaptar datos
       const adaptadas = data.flatMap((m) => {
         if (!m.schedule || m.schedule.length === 0) {
+          console.log(m)
           return [{
+            id:m.id,
             nombre: m.name,
             periodo: m.type,
             comision: '-',
@@ -78,6 +80,7 @@ export default function MateriaDetalle() {
         }, {});
 
         return Object.entries(porComision).map(([comision, horarios]) => ({
+          id:m.id,
           nombre: m.name,
           periodo: m.type,
           comision,
@@ -113,9 +116,30 @@ export default function MateriaDetalle() {
     setMostrarPopup(true);
   };
 
-  const handleConfirmarEliminacion = () => {
-    console.log('Eliminando materia:', materiaSeleccionada);
-    setMostrarPopup(false);
+  const handleConfirmarEliminacion = async () => {
+    if (!materiaSeleccionada) return;
+
+    console.log(materiaSeleccionada)
+    try {
+      const res = await fetch(`http://localhost:8080/api/v1/MiUTN/subject/delete?id=${materiaSeleccionada.id}`, {
+        method: 'DELETE'
+      });
+
+      if (!res.ok) {
+        throw new Error('Error al eliminar la materia.');
+      }
+
+      // 🔹 Eliminar visualmente la materia
+      setMaterias((prev) => prev.filter((m) => m.id !== materiaSeleccionada.id));
+
+      alert(`Materia "${materiaSeleccionada.nombre}" eliminada correctamente.`);
+    } catch (error) {
+      console.error('Error al eliminar materia:', error);
+      alert('No se pudo eliminar la materia. Verifica la conexión con la API.');
+    } finally {
+      setMostrarPopup(false);
+      setMateriaSeleccionada(null);
+    }
   };
 
   const handleCancelarEliminacion = () => {
@@ -193,7 +217,7 @@ export default function MateriaDetalle() {
                     </button>
                     <button
                       className="action-btn delete"
-                      onClick={() => handleEliminarClick(m.nombre)}
+                      onClick={() => handleEliminarClick(m)}
                     >
                       Eliminar
                     </button>

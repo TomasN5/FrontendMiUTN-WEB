@@ -1,0 +1,92 @@
+.docentes-container {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch; /* importante: permite que los hijos ocupen 100% */
+}
+.subtitle {
+  font-size: 1.6rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.docentes-header {
+  display: flex;
+  justify-content: flex-end; /* alinea a la derecha */
+  align-items: center;
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+.agregar-btn {
+  background-color: #4a89ff;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+
+.agregar-btn:hover {
+  background-color: #3a6edc;
+}
+
+.docentes-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #f9fafc;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.docentes-table th,
+.docentes-table td {
+  padding: 14px 18px;
+  text-align: left;
+}
+
+.docentes-table th {
+  background-color: #e9effd;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #3a3a3a;
+}
+
+.docentes-table tr:nth-child(even) {
+  background-color: #f4f6ff;
+}
+
+.docentes-table tr:hover {
+  background-color: #eef3ff;
+}
+
+.acciones {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-modificar {
+  background-color: #ffe0a1;
+  color: #7a4d00;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-eliminar {
+  background-color: #f7b0b0;
+  color: #a80000;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-modificar:hover {
+  background-color: #ffd87a;
+}
+
+.btn-eliminar:hover {
+  background-color: #f28c8c;
+}
