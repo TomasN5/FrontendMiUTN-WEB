@@ -4,6 +4,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Sidebar from '../Layouts/Sidebar.jsx';
 import EliminarDocente from '../Screens/Profesores/eliminardocente.jsx';
 import { checkAuth,logout } from '../CheckAuth.jsx';
+import env from '../../config/env.js';
+
+const api_URL = env.API_BASE_URL;
 
 const docentesFallback = [
   { nombre: 'Ruben Guerrieri', legajo: '11111', mail: 'ruben@frlp.utn.edu.ar' },
@@ -23,7 +26,7 @@ export default function ProfesorDetalle() {
 
   const fetchDocentes = async () => {
     try {
-      const url = `https://8d13dfce1445.ngrok-free.app/api/v1/miUTN/professor/findAll`;
+      const url = api_URL +`api/v1/miUTN/professor/findAll`;
       const res = await fetch(url,{ headers: {
           'ngrok-skip-browser-warning': 'true',
         }});
@@ -60,7 +63,7 @@ export default function ProfesorDetalle() {
   const handleConfirmarEliminacion = async() => {
     console.log('Eliminando docente:', docenteSeleccionado);
     try {
-      const res = await fetch(`https://8d13dfce1445.ngrok-free.app/api/v1/miUTN/professor/delete?id=${docenteSeleccionado.id}`, {
+      const res = await fetch(api_URL + `api/v1/miUTN/professor/delete?id=${docenteSeleccionado.id}`, {
         method: 'DELETE',
         headers: {
           'ngrok-skip-browser-warning': 'true',

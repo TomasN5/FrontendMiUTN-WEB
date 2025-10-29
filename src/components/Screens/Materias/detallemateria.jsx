@@ -4,6 +4,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Sidebar from '../../Layouts/Sidebar.jsx';
 import EliminarMateria from './eliminarmateria.jsx';
 import { checkAuth,logout } from './../../CheckAuth.jsx';
+import env from '../../../config/env.js';
+
+const api_URL = env.API_BASE_URL;
 
 // Datos de respaldo (fallback)
 const materiasFallback = [
@@ -44,14 +47,14 @@ const colorMateria = {
 
     const fetchComisiones = async () => {
       try {
-        const res = await fetch('https://8d13dfce1445.ngrok-free.app/api/v1/MiUTN/commission/findAll',{ headers: {
+        const res = await fetch(api_URL+'api/v1/MiUTN/commission/findAll',{ headers: {
           'ngrok-skip-browser-warning': 'true',
         }});
         if (!res.ok) throw new Error('Error al obtener comisiones');
         const data = await res.json();
         setComisiones(data);
       } catch (error) {
-        console.error('No se pudo conectar a la API de comisiones, usando datos locales.');
+        console.error('No se pudo conectar a la API de comisiones, usando datos locales.',error);
         setComisiones([{ id: 1, name: 'S31' }, { id: 2, name: 'S41' }, { id: 3, name: 'S51' }]);
       }
     };
@@ -62,8 +65,8 @@ const colorMateria = {
   const fetchMaterias = async (careerName, commissionId = null) => {
     try {
       const url = commissionId
-        ? `https://8d13dfce1445.ngrok-free.app/api/v1/MiUTN/subject/findByCommissionId?commissionId=${commissionId}`
-        : `https://8d13dfce1445.ngrok-free.app/api/v1/MiUTN/subject/findByCareerName?careerName=${careerName}`;
+        ? api_URL+`api/v1/MiUTN/subject/findByCommissionId?commissionId=${commissionId}`
+        : api_URL+`api/v1/MiUTN/subject/findByCareerName?careerName=${careerName}`;
 
       const res = await fetch(url,{ headers: {
           'ngrok-skip-browser-warning': 'true',
@@ -133,7 +136,7 @@ const colorMateria = {
 
     console.log(materiaSeleccionada)
     try {
-      const res = await fetch(`https://8d13dfce1445.ngrok-free.app/api/v1/MiUTN/subject/delete?id=${materiaSeleccionada.id}`, {
+      const res = await fetch(api_URL+`api/v1/MiUTN/subject/delete?id=${materiaSeleccionada.id}`, {
         method: 'DELETE',
          headers: {
           'ngrok-skip-browser-warning': 'true',

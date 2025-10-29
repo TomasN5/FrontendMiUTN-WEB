@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import './cargarMateria.css';
 import Sidebar from '../../Layouts/Sidebar';
+import env from '../../../config/env';
+
+const api_URL = env.API_BASE_URL;
 
 const materias = [
   { nombre: 'Industrial', color: '#FFA01C' },
@@ -82,18 +85,18 @@ export default function CargarMateria() {
     const fetchData = async () => {
       try {
         const [commRes, profRes, careerRes, classRes] = await Promise.all([
-          fetch('https://8d13dfce1445.ngrok-free.app/api/v1/MiUTN/commission/findAll',{
+          fetch(api_URL+'api/v1/MiUTN/commission/findAll',{
              headers: {
           'ngrok-skip-browser-warning': 'true',
         }
           }),
-          fetch('https://8d13dfce1445.ngrok-free.app/api/v1/miUTN/professor/findAll',{ headers: {
+          fetch(api_URL+'api/v1/miUTN/professor/findAll',{ headers: {
           'ngrok-skip-browser-warning': 'true',
         }}),
-          fetch(`https://8d13dfce1445.ngrok-free.app/api/v1/MiUTN/career/findByName?name=${nombre}`,{ headers: {
+          fetch(api_URL+`api/v1/MiUTN/career/findByName?name=${nombre}`,{ headers: {
           'ngrok-skip-browser-warning': 'true',
         }}),
-          fetch('https://8d13dfce1445.ngrok-free.app/api/v1/MiUTN/schedules/findAllClassroom',{ headers: {
+          fetch(api_URL+'api/v1/MiUTN/schedules/findAllClassroom',{ headers: {
           'ngrok-skip-browser-warning': 'true',
         }})
         ]);
@@ -196,7 +199,7 @@ export default function CargarMateria() {
     console.log("📦 Datos a enviar:", JSON.stringify(payload, null, 2));
 
     try {
-      const response = await fetch("https://8d13dfce1445.ngrok-free.app/api/v1/MiUTN/subject/save", {
+      const response = await fetch(api_URL+"api/v1/MiUTN/subject/save", {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' ,
           'ngrok-skip-browser-warning': 'true',

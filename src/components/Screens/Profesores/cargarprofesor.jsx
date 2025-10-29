@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './cargarprofesor.css';
 import Sidebar from '../../Layouts/Sidebar';
+import env from '../../../config/env';
+
+const api_URL = env.API_BASE_URL;
+
 export default function CargarProfesor() {
   const navigate = useNavigate();
   const [activeMenuItem, setActiveMenuItem] = useState('profesores');
@@ -43,7 +47,7 @@ export default function CargarProfesor() {
 
     console.log(payload)
     try {
-      const response = await fetch('https://8d13dfce1445.ngrok-free.app/api/v1/miUTN/professor/save', {
+      const response = await fetch(api_URL +'api/v1/miUTN/professor/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true'},
         body: JSON.stringify(payload),
