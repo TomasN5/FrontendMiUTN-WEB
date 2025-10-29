@@ -4,6 +4,7 @@ export const COLORS = {
   hall: "rgba(255, 235, 59, 0.35)",
   pasillo: "rgba(0, 0, 255, 0.8)",
   bano: "rgba(186, 104, 200, 0.30)",
+  escalera: "rgba(120, 40, 40, 0.35)",
   borde: "rgba(0,0,0,0.6)",
   punto: "red",
   ruta: "green"
@@ -15,7 +16,26 @@ export const AREA_TYPES = {
   HALL: "hall",
   BANO: "bano",
   PUNTO: "punto",
-  PASILLO: "pasillo"
+  PASILLO: "pasillo",
+  ESCALERA: "escalera"
+};
+
+// Nuevas constantes para edificios y carreras
+export const CARRERAS = {
+  SISTEMAS: "sistemas",
+  QUIMICA: "quimica", 
+  MECANICA: "mecanica",
+  CIVIL: "civil",
+  INDUSTRIAL: "industrial",
+  ELECTRICA: "electrica"
+};
+
+export const PISOS = {
+  SOTANO: "Sótano",
+  PISO1: "Piso 1",
+  PISO2: "Piso 2", 
+  PISO3: "Piso 3",
+  PISO4: "Piso 4"
 };
 
 export const CONTROL_PANEL_STYLE = {

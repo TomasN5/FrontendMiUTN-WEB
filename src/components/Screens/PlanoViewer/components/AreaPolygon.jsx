@@ -1,6 +1,7 @@
 import React from 'react';
-import { COLORS } from '../utils/constants';
+import { COLORS, AREA_TYPES } from '../utils/constants';
 import { geometryUtils } from '../utils/geometry';
+import Staircase from './Staircase';
 
 const AreaPolygon = ({ 
   area, 
@@ -9,6 +10,20 @@ const AreaPolygon = ({
   onNodeClick,
   getPolygonCenter 
 }) => {
+  // Si es una escalera, usar el componente Staircase
+  if (area.tipo === AREA_TYPES.ESCALERA) {
+    return (
+      <Staircase
+        area={area}
+        zoomScale={zoomScale}
+        isSelectable={isSelectable}
+        onNodeClick={onNodeClick}
+        getPolygonCenter={getPolygonCenter}
+      />
+    );
+  }
+
+  // Resto del código existente para otros tipos...
   const handleClick = () => {
     if (isSelectable && onNodeClick) {
       onNodeClick(area);
@@ -46,7 +61,7 @@ const AreaPolygon = ({
     );
   }
 
-  // Si es un área poligonal
+  // Si es un área poligonal normal
   const [centerX, centerY] = getPolygonCenter(area.points);
 
   return (

@@ -33,18 +33,24 @@ export const usePlanoEditor = () => {
     setCursorPos([x, y]);
   }, [modoEdicion, tipoActual]);
 
-  const handleGuardarArea = useCallback(() => {
-    if (puntosTemporales.length > 2) {
-      const nuevaArea = {
-        id: `a${areas.length + 1}`,
-        nombre: nombreArea || `Nueva ${tipoActual}`,
-        tipo: tipoActual,
-        points: puntosTemporales
-      };
-      setAreas((prev) => [...prev, nuevaArea]);
-      resetEditorState();
-    }
-  }, [puntosTemporales, tipoActual, nombreArea, areas.length]);
+// En la función handleGuardarArea, agrega soporte para escaleras:
+const handleGuardarArea = useCallback(() => {
+  if (puntosTemporales.length > 2) {
+    const nuevaArea = {
+      id: `a${areas.length + 1}`,
+      nombre: nombreArea || `Nueva ${tipoActual}`,
+      tipo: tipoActual,
+      points: puntosTemporales,
+      // Propiedades específicas para escaleras
+      ...(tipoActual === AREA_TYPES.ESCALERA && {
+        pisoActual: "1", // Por defecto
+        pisoDestino: "2" // Por defecto
+      })
+    };
+    setAreas((prev) => [...prev, nuevaArea]);
+    resetEditorState();
+  }
+}, [puntosTemporales, tipoActual, nombreArea, areas.length]);
 
   const handleGuardarPuntos = useCallback(() => {
     if (puntosTemporales.length > 0) {
