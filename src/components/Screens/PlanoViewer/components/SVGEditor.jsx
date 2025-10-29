@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import AreaPolygon from './AreaPolygon';
 import ConnectionLine from './ConnectionLine';
 import TemporaryElements from './TemporaryElements';
 import { COLORS } from '../utils/constants';
+import { platformUtils } from '../utils/helpers';
 
 const SVGEditor = ({
   src,
@@ -23,9 +24,81 @@ const SVGEditor = ({
   onMouseMove,
   onNodeClick,
   getRelativeCoords,
-  snapIndicators // ← Nueva prop
+  snapIndicators,
+  debugEdges,
+  animatedPath,
+  isRouteAnimating,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
+  const [isCtrlPressed, setIsCtrlPressed] = useState(false);
+
+  // Detectar cuando se presiona Ctrl
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Control' || e.key === 'Meta') {
+        setIsCtrlPressed(true);
+      }
+    };
+
+    const handleKeyUp = (e) => {
+      if (e.key === 'Control' || e.key === 'Meta') {
+        setIsCtrlPressed(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keyup', handleKeyUp);
+    };
+  }, []);
+
+  // Determinar si el panning debe estar deshabilitado
+  const isPanningDisabled = useCallback(() => {
+    // Panning SOLO permitido cuando Ctrl está presionado
+    return !isCtrlPressed;
+  }, [isCtrlPressed]);
+
+  // Determinar si las funcionalidades de edición están deshabilitadas
+  const isEditingDisabled = useCallback(() => {
+    // Edición deshabilitada cuando Ctrl está presionado
+    return isCtrlPressed;
+  }, [isCtrlPressed]);
+
+  // Handler para clicks en el SVG
+  const handleSVGClick = useCallback((e) => {
+    // Si Ctrl está presionado, NO permitir funcionalidades de edición
+    if (isEditingDisabled()) {
+      e.preventDefault();
+      return;
+    }
+    
+    if (!isDragging || modoEdicion) {
+      onClickSVG(e);
+    }
+  }, [isEditingDisabled, isDragging, modoEdicion, onClickSVG]);
+
+  // Handler para movimiento del mouse
+  const handleSVGMouseMove = useCallback((e) => {
+    // Si Ctrl está presionado, NO permitir funcionalidades de edición
+    if (isEditingDisabled()) {
+      return;
+    }
+    
+    onMouseMove(e);
+  }, [isEditingDisabled, onMouseMove]);
+
+  // Handler para clicks en nodos
+  const handleNodeClickWrapper = useCallback((node) => {
+    // Si Ctrl está presionado, NO permitir clicks en nodos
+    if (isEditingDisabled()) {
+      return;
+    }
+    
+    onNodeClick(node);
+  }, [isEditingDisabled, onNodeClick]);
 
   // Estilos definidos dentro del componente
   const zoomControlsStyle = {
@@ -96,9 +169,6 @@ const SVGEditor = ({
     }
   `;
 
-  // Determinar si el panning debe estar deshabilitado
-  const isPanningDisabled = zoomScale <= 1.1 && !modoEdicion;
-
   return (
     <TransformWrapper
       minScale={1}
@@ -111,7 +181,7 @@ const SVGEditor = ({
       onPanningStart={() => setIsDragging(true)}
       onPanningStop={() => setIsDragging(false)}
       panning={{
-        disabled: isPanningDisabled,
+        disabled: isPanningDisabled(),
         lockAxisX: false,
         lockAxisY: false,
         velocityDisabled: true
@@ -123,7 +193,7 @@ const SVGEditor = ({
         touchPadDisabled: false
       }}
       doubleClick={{
-        disabled: false,
+        disabled: true,
         step: 0.5
       }}
     >
@@ -194,7 +264,9 @@ const SVGEditor = ({
             wrapperStyle={{ 
               width: "100%", 
               height: "100%",
-              cursor: isPanningDisabled ? 'default' : (isDragging ? 'grabbing' : 'grab')
+              cursor: isPanningDisabled() 
+                ? 'default' 
+                : (isDragging ? 'grabbing' : 'grab')
             }}
             contentStyle={{ 
               width: "100%", 
@@ -209,15 +281,13 @@ const SVGEditor = ({
               style={{
                 display: "block",
                 background: "#fff",
-                cursor: modoEdicion ? "crosshair" : (isPanningDisabled ? 'default' : (isDragging ? 'grabbing' : 'grab')),
+                cursor: isPanningDisabled() 
+                  ? (modoEdicion && !isEditingDisabled() ? "crosshair" : "default")
+                  : (isDragging ? 'grabbing' : 'grab'),
                 shapeRendering: "geometricPrecision"
               }}
-              onClick={(e) => {
-                if (!isDragging || modoEdicion) {
-                  onClickSVG(e);
-                }
-              }}
-              onMouseMove={onMouseMove}
+              onClick={handleSVGClick}
+              onMouseMove={handleSVGMouseMove}
             >
               <image
                 href={src}
@@ -251,8 +321,8 @@ const SVGEditor = ({
                     key={a.id}
                     area={a}
                     zoomScale={zoomScale}
-                    isSelectable={modoEdicion && tipoActual === "pasillo"}
-                    onNodeClick={onNodeClick}
+                    isSelectable={modoEdicion && tipoActual === "pasillo" && !isEditingDisabled()}
+                    onNodeClick={handleNodeClickWrapper}
                     getPolygonCenter={getRelativeCoords.getPolygonCenter}
                   />
                 ))}
@@ -263,13 +333,50 @@ const SVGEditor = ({
                   key={p.id}
                   area={p}
                   zoomScale={zoomScale}
-                  isSelectable={modoEdicion && tipoActual === "pasillo"}
-                  onNodeClick={onNodeClick}
+                  isSelectable={modoEdicion && tipoActual === "pasillo" && !isEditingDisabled()}
+                  onNodeClick={handleNodeClickWrapper}
                 />
               ))}
 
-              {/* Ruta - Siempre visible */}
-              {rutaActual.length > 1 && (
+              {/* Ruta Animada */}
+              {animatedPath && animatedPath.length > 1 && (
+                <g>
+                  <polyline
+                    points={animatedPath.map(point => `${point.x},${point.y}`).join(" ")}
+                    stroke={COLORS.ruta}
+                    strokeWidth="3"
+                    fill="none"
+                    strokeDasharray="6,3"
+                  />
+                  
+                  {isRouteAnimating && animatedPath.length > 0 && (
+                    <circle
+                      cx={animatedPath[animatedPath.length - 1].x}
+                      cy={animatedPath[animatedPath.length - 1].y}
+                      r="4"
+                      fill="#ef4444"
+                      stroke="white"
+                      strokeWidth="1.5"
+                    >
+                      <animate
+                        attributeName="r"
+                        values="4;6;4"
+                        dur="0.8s"
+                        repeatCount="indefinite"
+                      />
+                      <animate
+                        attributeName="opacity"
+                        values="1;0.7;1"
+                        dur="0.8s"
+                        repeatCount="indefinite"
+                      />
+                    </circle>
+                  )}
+                </g>
+              )}
+
+              {/* Ruta Completa (solo si no hay animación) */}
+              {!isRouteAnimating && rutaActual && rutaActual.length > 1 && (
                 <polyline
                   points={rutaActual.map(id => {
                     const node = areas.find(a => a.id === id) || points.find(p => p.id === id);
@@ -278,14 +385,15 @@ const SVGEditor = ({
                       : getRelativeCoords.getPolygonCenter(node.points).join(",");
                   }).join(" ")}
                   stroke={COLORS.ruta}
-                  strokeWidth={5}
+                  strokeWidth="3"
                   fill="none"
-                  strokeDasharray="8,4"
+                  strokeDasharray="6,3"
+                  opacity="0.6"
                 />
               )}
 
-              {/* Elementos temporales - Solo en modo edición */}
-              {modoEdicion && (
+              {/* Elementos temporales - Solo en modo edición y cuando Ctrl NO está presionado */}
+              {modoEdicion && !isEditingDisabled() && (
                 <TemporaryElements
                   tipoActual={tipoActual}
                   puntosTemporales={puntosTemporales}
@@ -294,11 +402,12 @@ const SVGEditor = ({
                 />
               )}
 
-              {/* Snap Indicators - Se renderizan aquí */}
-              {snapIndicators}
+              {/* Snap Indicators - Solo cuando Ctrl NO está presionado */}
+              {!isEditingDisabled() && snapIndicators}
+              {debugEdges}
 
-              {/* Overlay informativo cuando el zoom es mínimo y no estamos editando */}
-              {zoomScale <= 1.1 && !modoEdicion && (
+              {/* Overlay informativo */}
+              {isPanningDisabled() && !modoEdicion && (
                 <rect
                   x="0"
                   y="0"
@@ -307,21 +416,20 @@ const SVGEditor = ({
                   fill="transparent"
                   style={{ pointerEvents: "none" }}
                 >
-                  <title>Haz zoom para navegar por el mapa o entra en modo edición</title>
+                  <title>Presiona {platformUtils.getModifierSymbol()} para navegar por el mapa</title>
                 </rect>
               )}
             </svg>
           </TransformComponent>
 
-          {/* Mensaje flotante cuando el zoom es mínimo y no estamos editando */}
-          {zoomScale <= 1.1 && !modoEdicion && (
+          {/* Mensajes informativos */}
+          {isPanningDisabled() && !modoEdicion && (
             <div style={zoomMessageStyle}>
-              🔍 Haz zoom para navegar o ✏️ Entra en edición
+              🔍 Haz zoom y presiona {platformUtils.getModifierSymbol()} para navegar
             </div>
           )}
 
-          {/* Mensaje cuando estamos en modo edición */}
-          {modoEdicion && (
+          {isPanningDisabled() && modoEdicion && !isCtrlPressed && (
             <div style={{
               ...zoomMessageStyle,
               background: "rgba(59, 130, 246, 0.9)",
@@ -329,6 +437,30 @@ const SVGEditor = ({
               opacity: 1
             }}>
               ✏️ Modo edición activo - Haz clic para agregar puntos
+            </div>
+          )}
+
+          {/* Mensaje cuando Ctrl está presionado en modo edición */}
+          {modoEdicion && isCtrlPressed && (
+            <div style={{
+              ...zoomMessageStyle,
+              background: "rgba(139, 92, 246, 0.9)",
+              animation: "none",
+              opacity: 1
+            }}>
+              🎮 {platformUtils.getModifierSymbol()} presionado - Arrastra para mover el mapa
+            </div>
+          )}
+
+          {/* Mensaje cuando se necesita Ctrl para navegar (zoom alto) */}
+          {!modoEdicion && !isCtrlPressed && zoomScale > 1.1 && (
+            <div style={{
+              ...zoomMessageStyle,
+              background: "rgba(139, 92, 246, 0.9)",
+              animation: "none",
+              opacity: 1
+            }}>
+              🎮 Presiona {platformUtils.getModifierSymbol()} + Arrastrar para moverte por el mapa
             </div>
           )}
         </>

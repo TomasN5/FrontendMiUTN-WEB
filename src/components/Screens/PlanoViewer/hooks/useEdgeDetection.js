@@ -1,133 +1,240 @@
-import { useCallback, useRef } from 'react';
+import { useCallback } from 'react';
 
 export const useEdgeDetection = (naturalWidth, naturalHeight) => {
-  const canvasRef = useRef(null);
   
-  // Función para detectar bordes en la imagen
   const detectEdges = useCallback((imageSrc) => {
     return new Promise((resolve) => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       const img = new Image();
       
+      img.crossOrigin = "Anonymous";
+      
       img.onload = () => {
         canvas.width = naturalWidth;
         canvas.height = naturalHeight;
         
-        // Dibujar la imagen
         ctx.drawImage(img, 0, 0, naturalWidth, naturalHeight);
-        
-        // Obtener los datos de la imagen
         const imageData = ctx.getImageData(0, 0, naturalWidth, naturalHeight);
         const data = imageData.data;
         
-        // Detectar bordes (algoritmo simplificado)
         const edges = [];
-        const edgeThreshold = 50; // Sensibilidad para detectar bordes
+        detectSimpleEdges(data, naturalWidth, naturalHeight, edges);
         
-        for (let y = 1; y < naturalHeight - 1; y++) {
-          for (let x = 1; x < naturalWidth - 1; x++) {
-            const idx = (y * naturalWidth + x) * 4;
-            
-            // Calcular gradiente (detección de bordes simple)
-            const brightness = (data[idx] + data[idx + 1] + data[idx + 2]) / 3;
-            const rightBrightness = (data[idx + 4] + data[idx + 5] + data[idx + 6]) / 3;
-            const bottomBrightness = (data[idx + naturalWidth * 4] + data[idx + naturalWidth * 4 + 1] + data[idx + naturalWidth * 4 + 2]) / 3;
-            
-            const horizontalDiff = Math.abs(brightness - rightBrightness);
-            const verticalDiff = Math.abs(brightness - bottomBrightness);
-            
-            if (horizontalDiff > edgeThreshold || verticalDiff > edgeThreshold) {
-              edges.push({ x, y });
-            }
-          }
-        }
-        
+    
         resolve(edges);
+      };
+      
+      img.onerror = () => {
+        console.warn('No se pudo cargar la imagen para detección de bordes');
+        resolve([]);
       };
       
       img.src = imageSrc;
     });
   }, [naturalWidth, naturalHeight]);
 
-  // Función para encontrar el punto más cercano a una pared
-  const findClosestEdge = useCallback((edges, point, maxDistance = 50) => {
-    let closestEdge = null;
-    let minDistance = maxDistance;
+  const detectSimpleEdges = (data, width, height, edges) => {
+    const step = 2;
     
-    for (const edge of edges) {
-      const distance = Math.sqrt(
-        Math.pow(edge.x - point.x, 2) + Math.pow(edge.y - point.y, 2)
-      );
-      
-      if (distance < minDistance) {
-        minDistance = distance;
-        closestEdge = edge;
+    for (let y = 5; y < height - 5; y += step) {
+      for (let x = 5; x < width - 5; x += step) {
+        const idx = (y * width + x) * 4;
+        
+        const brightness = (data[idx] + data[idx + 1] + data[idx + 2]) / 3;
+        if (brightness < 60) {
+          edges.push({ 
+            x, 
+            y, 
+            orientation: getPixelOrientation(data, width, x, y),
+            strength: 100 - brightness
+          });
+          continue;
+        }
+        
+        if (hasHighContrast(data, width, height, x, y)) {
+          edges.push({ 
+            x, 
+            y, 
+            orientation: getPixelOrientation(data, width, x, y),
+            strength: 80
+          });
+        }
       }
     }
-    
-    return closestEdge;
-  }, []);
+  };
 
-  // Función para encontrar el punto medio entre dos paredes paralelas
-  const findMidPointBetweenWalls = useCallback((edges, point, searchRadius = 100) => {
-    // Buscar bordes horizontales (paredes verticales)
-    const horizontalEdges = edges.filter(edge => 
-      Math.abs(edge.y - point.y) < searchRadius
+  const getPixelOrientation = (data, width, x, y) => {
+    const idx = (y * width + x) * 4;
+    const currentBrightness = (data[idx] + data[idx + 1] + data[idx + 2]) / 3;
+    
+    const leftIdx = (y * width + (x - 2)) * 4;
+    const rightIdx = (y * width + (x + 2)) * 4;
+    const horizontalContrast = Math.max(
+      Math.abs(currentBrightness - (data[leftIdx] + data[leftIdx + 1] + data[leftIdx + 2]) / 3),
+      Math.abs(currentBrightness - (data[rightIdx] + data[rightIdx + 1] + data[rightIdx + 2]) / 3)
     );
     
-    // Buscar bordes verticales (paredes horizontales)
-    const verticalEdges = edges.filter(edge => 
-      Math.abs(edge.x - point.x) < searchRadius
+    const topIdx = ((y - 2) * width + x) * 4;
+    const bottomIdx = ((y + 2) * width + x) * 4;
+    const verticalContrast = Math.max(
+      Math.abs(currentBrightness - (data[topIdx] + data[topIdx + 1] + data[topIdx + 2]) / 3),
+      Math.abs(currentBrightness - (data[bottomIdx] + data[bottomIdx + 1] + data[bottomIdx + 2]) / 3)
     );
     
-    let snappedPoint = { ...point };
-    let snapType = 'none';
+    return horizontalContrast > verticalContrast ? 'horizontal' : 'vertical';
+  };
+
+  const hasHighContrast = (data, width, height, x, y) => {
+    const idx = (y * width + x) * 4;
+    const currentBrightness = (data[idx] + data[idx + 1] + data[idx + 2]) / 3;
     
-    // Snap a paredes verticales (buscar puntos a izquierda y derecha)
-    if (horizontalEdges.length >= 2) {
-      const leftEdges = horizontalEdges.filter(edge => edge.x < point.x);
-      const rightEdges = horizontalEdges.filter(edge => edge.x > point.x);
+    const neighbors = [
+      { dx: -3, dy: 0 }, { dx: 3, dy: 0 },
+      { dx: 0, dy: -3 }, { dx: 0, dy: 3 },
+    ];
+    
+    let highContrastCount = 0;
+    
+    for (const neighbor of neighbors) {
+      const newX = x + neighbor.dx;
+      const newY = y + neighbor.dy;
       
-      if (leftEdges.length > 0 && rightEdges.length > 0) {
-        const leftMost = Math.max(...leftEdges.map(e => e.x));
-        const rightMost = Math.min(...rightEdges.map(e => e.x));
+      if (newX >= 0 && newX < width && newY >= 0 && newY < height) {
+        const newIdx = (newY * width + newX) * 4;
+        const newBrightness = (data[newIdx] + data[newIdx + 1] + data[newIdx + 2]) / 3;
+        const contrast = Math.abs(currentBrightness - newBrightness);
         
-        const midX = (leftMost + rightMost) / 2;
-        if (Math.abs(midX - point.x) < searchRadius) {
-          snappedPoint.x = midX;
-          snapType = 'horizontal';
+        if (contrast > 25) {
+          highContrastCount++;
         }
       }
     }
     
-    // Snap a paredes horizontales (buscar puntos arriba y abajo)
-    if (verticalEdges.length >= 2) {
-      const topEdges = verticalEdges.filter(edge => edge.y < point.y);
-      const bottomEdges = verticalEdges.filter(edge => edge.y > point.y);
+    return highContrastCount >= 2;
+  };
+
+  // FUNCIÓN AJUSTADA - Busca SOLO paredes MUY cercanas
+  const findMidPointBetweenWalls = useCallback((edges, point, searchRadius = 60) => { // Radio más pequeño
+    if (edges.length === 0) {
+      return {
+        point: point,
+        snapType: 'none',
+        originalPoint: point
+      };
+    }
+
+    let bestSnap = { point: point, snapType: 'none', distance: Infinity };
+    
+    // Buscar en un radio MUY pequeño para pasillos estrechos
+    const nearbyEdges = edges.filter(edge => 
+      Math.abs(edge.x - point.x) < searchRadius && 
+      Math.abs(edge.y - point.y) < searchRadius
+    );
+    
+    if (nearbyEdges.length < 2) {
+      return {
+        point: point,
+        snapType: 'none',
+        originalPoint: point
+      };
+    }
+
+    // BUSCAR PASILLOS VERTICALES (entre paredes horizontales MUY cercanas)
+    const horizontalEdges = nearbyEdges.filter(edge => edge.orientation === 'horizontal');
+    if (horizontalEdges.length >= 2) {
+      // Filtrar paredes que estén aproximadamente a la misma altura (muy cercanas en Y)
+      const similarYEdges = horizontalEdges.filter(edge => Math.abs(edge.y - point.y) < 15);
       
-      if (topEdges.length > 0 && bottomEdges.length > 0) {
-        const topMost = Math.max(...topEdges.map(e => e.y));
-        const bottomMost = Math.min(...bottomEdges.map(e => e.y));
-        
-        const midY = (topMost + bottomMost) / 2;
-        if (Math.abs(midY - point.y) < searchRadius) {
-          snappedPoint.y = midY;
-          snapType = snapType === 'horizontal' ? 'both' : 'vertical';
+      if (similarYEdges.length >= 2) {
+        // Buscar pares de paredes que estén a izquierda y derecha del punto
+        for (let i = 0; i < similarYEdges.length; i++) {
+          for (let j = i + 1; j < similarYEdges.length; j++) {
+            const edge1 = similarYEdges[i];
+            const edge2 = similarYEdges[j];
+            
+            // Una debe estar a la izquierda y otra a la derecha
+            if ((edge1.x < point.x && edge2.x > point.x) || (edge2.x < point.x && edge1.x > point.x)) {
+              const leftEdge = edge1.x < edge2.x ? edge1 : edge2;
+              const rightEdge = edge1.x > edge2.x ? edge1 : edge2;
+              
+              const distanceBetween = rightEdge.x - leftEdge.x;
+              
+              // Rango MUY ESTRECHO para pasillos (15-80 píxeles) - SOLO pasillos angostos
+              if (distanceBetween >= 15 && distanceBetween <= 80) {
+                const midX = Math.round((leftEdge.x + rightEdge.x) / 2);
+                const distanceToMid = Math.abs(midX - point.x);
+                
+                // Solo hacer snap si está muy cerca del centro
+                if (distanceToMid < 30 && distanceToMid < bestSnap.distance) {
+                  bestSnap = {
+                    point: { ...point, x: midX },
+                    snapType: 'horizontal',
+                    distance: distanceToMid
+                  };
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    // BUSCAR PASILLOS HORIZONTALES (entre paredes verticales MUY cercanas)
+    const verticalEdges = nearbyEdges.filter(edge => edge.orientation === 'vertical');
+    if (verticalEdges.length >= 2) {
+      // Filtrar paredes que estén aproximadamente en la misma columna (muy cercanas en X)
+      const similarXEdges = verticalEdges.filter(edge => Math.abs(edge.x - point.x) < 15);
+      
+      if (similarXEdges.length >= 2) {
+        // Buscar pares de paredes que estén arriba y abajo del punto
+        for (let i = 0; i < similarXEdges.length; i++) {
+          for (let j = i + 1; j < similarXEdges.length; j++) {
+            const edge1 = similarXEdges[i];
+            const edge2 = similarXEdges[j];
+            
+            // Una debe estar arriba y otra abajo
+            if ((edge1.y < point.y && edge2.y > point.y) || (edge2.y < point.y && edge1.y > point.y)) {
+              const topEdge = edge1.y < edge2.y ? edge1 : edge2;
+              const bottomEdge = edge1.y > edge2.y ? edge1 : edge2;
+              
+              const distanceBetween = bottomEdge.y - topEdge.y;
+              
+              // Rango MUY ESTRECHO para pasillos (15-80 píxeles) - SOLO pasillos angostos
+              if (distanceBetween >= 15 && distanceBetween <= 80) {
+                const midY = Math.round((topEdge.y + bottomEdge.y) / 2);
+                const distanceToMid = Math.abs(midY - point.y);
+                
+                // Solo hacer snap si está muy cerca del centro
+                if (distanceToMid < 30 && distanceToMid < bestSnap.distance) {
+                  if (bestSnap.snapType === 'horizontal') {
+                    bestSnap.point.y = midY;
+                    bestSnap.snapType = 'both';
+                    bestSnap.distance = Math.min(bestSnap.distance, distanceToMid);
+                  } else {
+                    bestSnap = {
+                      point: { ...point, y: midY },
+                      snapType: 'vertical',
+                      distance: distanceToMid
+                    };
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }
     
     return {
-      point: snappedPoint,
-      snapType,
+      point: bestSnap.point,
+      snapType: bestSnap.snapType,
       originalPoint: point
     };
   }, []);
 
   return {
     detectEdges,
-    findClosestEdge,
     findMidPointBetweenWalls
   };
 };

@@ -1,12 +1,14 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { usePlanoEditor } from './hooks/usePlanoEditor';
 import { useSVGCoordinates } from './hooks/useSVGCoordinates';
 import { useGPSNavigation } from './hooks/useGPSNavigation';
 import { useEdgeDetection } from './hooks/useEdgeDetection';
+import { useRouteAnimation } from './hooks/useRouteAnimation';
 import ControlPanel from './components/ControlPanel';
 import SVGEditor from './components/SVGEditor';
 import StairConfigModal from './components/StairConfigModal';
 import SnapIndicators from './components/SnapIndicators';
+import DebugEdges from './components/DebugEdges';
 import { geometryUtils } from './utils/geometry';
 import { AREA_TYPES } from './utils/constants';
 
@@ -21,44 +23,94 @@ const PlanoViewer = ({
   const [edges, setEdges] = useState([]);
   const [snapResult, setSnapResult] = useState(null);
   const [isSnapEnabled, setIsSnapEnabled] = useState(true);
+  const [showDebugEdges, setShowDebugEdges] = useState(false);
   
   // Hooks personalizados
   const editor = usePlanoEditor();
   const coordinates = useSVGCoordinates(naturalWidth, naturalHeight);
   const gps = useGPSNavigation(editor.areas, editor.points);
   const edgeDetection = useEdgeDetection(naturalWidth, naturalHeight);
+  const routeAnimation = useRouteAnimation();
+
+  // Usar useRef para valores que cambian frecuentemente
+  const editorRef = useRef();
+  const prevRutaRef = useRef([]);
+
+  // Actualizar la ref cuando editor cambie
+  useEffect(() => {
+    editorRef.current = editor;
+  });
 
   // Detectar bordes cuando se carga la imagen
   useEffect(() => {
     const loadEdges = async () => {
       try {
+      
         const detectedEdges = await edgeDetection.detectEdges(src);
         setEdges(detectedEdges);
-        console.log(`Detectados ${detectedEdges.length} bordes`);
+       
       } catch (error) {
-        console.warn('No se pudieron detectar bordes:', error);
+        
+        setEdges([]);
       }
     };
     
-    loadEdges();
+    if (src) {
+      loadEdges();
+    }
   }, [src, edgeDetection]);
 
-  // Handler optimizado para zoom
+  // SOLUCIÓN: useEffect separado y simplificado para la animación
+  useEffect(() => {
+    // Solo animar si la ruta cambió y tiene más de 1 punto
+    if (gps.rutaActual.length > 1 && 
+        JSON.stringify(gps.rutaActual) !== JSON.stringify(prevRutaRef.current)) {
+      
+      console.log("Iniciando animación para nueva ruta:", gps.rutaActual);
+      
+      const getPointCoordinates = (nodeId) => {
+        const currentEditor = editorRef.current;
+        if (!currentEditor) return { x: 0, y: 0 };
+        
+        const node = currentEditor.areas.find(a => a.id === nodeId) || 
+                     currentEditor.points.find(p => p.id === nodeId);
+        if (!node) return { x: 0, y: 0 };
+        
+        if (node.tipo === "punto") {
+          return { x: node.x, y: node.y };
+        } else {
+          const center = geometryUtils.getPolygonCenter(node.points);
+          return { x: center[0], y: center[1] };
+        }
+      };
+
+      routeAnimation.startRouteAnimation(gps.rutaActual, getPointCoordinates, 1500);
+      prevRutaRef.current = gps.rutaActual;
+    }
+  }, [gps.rutaActual, routeAnimation]); // ← Solo estas dependencias
+
+  // Reset animation cuando la ruta se vacía
+  useEffect(() => {
+    if (gps.rutaActual.length === 0 && prevRutaRef.current.length > 0) {
+      routeAnimation.resetAnimation();
+      prevRutaRef.current = [];
+    }
+  }, [gps.rutaActual, routeAnimation]);
+
+  // ... (mantén todos los demás handlers igual) ...
   const handleZoom = useCallback((ref) => {
     setZoomScale(ref.state.scale);
   }, []);
 
-  // Handler para movimiento del mouse con snap
   const handleMouseMove = useCallback((e) => {
     if (editor.modoEdicion) {
-      const coords = coordinates.getRelativeCoords(e);
+      const rawCoords = coordinates.getRelativeCoords(e);
       
-      let finalCoords = coords;
+      let finalCoords = rawCoords;
       let snapData = null;
       
-      // Aplicar snap si está habilitado y hay bordes detectados
       if (isSnapEnabled && edges.length > 0) {
-        snapData = edgeDetection.findMidPointBetweenWalls(edges, coords);
+        snapData = edgeDetection.findMidPointBetweenWalls(edges, rawCoords);
         finalCoords = snapData.point;
         setSnapResult(snapData);
       } else {
@@ -69,30 +121,21 @@ const PlanoViewer = ({
     }
   }, [editor.modoEdicion, editor.handleMouseMove, coordinates.getRelativeCoords, isSnapEnabled, edges, edgeDetection]);
 
-  // Handler para clicks en SVG con snap
   const handleClickSVG = useCallback((e) => {
     if (editor.modoEdicion) {
-      const coords = coordinates.getRelativeCoords(e);
+      const rawCoords = coordinates.getRelativeCoords(e);
       
-      let finalCoords = coords;
+      let finalCoords = rawCoords;
       
-      // Aplicar snap si está habilitado
       if (isSnapEnabled && edges.length > 0) {
-        const snapData = edgeDetection.findMidPointBetweenWalls(edges, coords);
+        const snapData = edgeDetection.findMidPointBetweenWalls(edges, rawCoords);
         finalCoords = snapData.point;
       }
       
-      // Crear un evento simulado con las coordenadas ajustadas
-      const simulatedEvent = {
-        ...e,
-        simulatedCoords: finalCoords
-      };
-      
-      editor.handleClickSVG(simulatedEvent, () => finalCoords);
+      editor.handleClickSVG(e, () => finalCoords);
     }
   }, [editor.modoEdicion, editor.handleClickSVG, coordinates.getRelativeCoords, isSnapEnabled, edges, edgeDetection]);
 
-  // Handler para guardar área (modificado para escaleras)
   const handleGuardarArea = useCallback(() => {
     if (editor.puntosTemporales.length > 2) {
       if (editor.tipoActual === AREA_TYPES.ESCALERA) {
@@ -114,7 +157,6 @@ const PlanoViewer = ({
     }
   }, [editor.puntosTemporales, editor.tipoActual, editor.nombreArea, editor.areas.length, editor.handleCancelar]);
 
-  // Handler para guardar puntos
   const handleGuardarPuntos = useCallback(() => {
     if (editor.puntosTemporales.length > 0) {
       const nuevosPuntos = editor.puntosTemporales.map((pt, i) => ({
@@ -129,7 +171,6 @@ const PlanoViewer = ({
     }
   }, [editor.puntosTemporales, editor.points.length, editor.handleCancelar]);
 
-  // Handler para guardar la escalera configurada
   const handleSaveStair = useCallback((config) => {
     const nuevaEscalera = {
       id: `a${editor.areas.length + 1}`,
@@ -149,24 +190,28 @@ const PlanoViewer = ({
     setStairConfigData(null);
   }, [editor.areas.length, editor.handleCancelar, stairConfigData]);
 
-  // Handler para deshacer
   const handleDeshacer = useCallback(() => {
     editor.handleDeshacer();
   }, [editor.handleDeshacer]);
 
-  // Handler para cancelar
   const handleCancelar = useCallback(() => {
     editor.handleCancelar();
     setSnapResult(null);
   }, [editor.handleCancelar]);
 
-  // Toggle para snap
   const toggleSnap = useCallback(() => {
     setIsSnapEnabled(prev => !prev);
     setSnapResult(null);
   }, []);
 
-  // Estilos inline para el contenedor principal
+  const toggleDebugEdges = useCallback(() => {
+    setShowDebugEdges(prev => !prev);
+  }, []);
+
+  const handleCalcularRuta = useCallback(() => {
+    gps.handleCalcularRuta();
+  }, [gps.handleCalcularRuta]);
+
   const containerStyle = {
     width: "100%",
     height: "100vh",
@@ -175,10 +220,36 @@ const PlanoViewer = ({
     background: "linear-gradient(135deg, #f5f7fa 0%, #cbd5e1 100%)"
   };
 
+  const handleSavePasillo = useCallback(() => {
+      // Si hay un nodo seleccionado, forzar la creación de un pasillo
+      // Esto simula hacer clic en el mismo nodo para "guardar" la selección actual
+      if (editor.selectedNode) {
+        // Podemos crear un pasillo especial o simplemente resetear la selección
+        console.log("Guardando configuración de pasillo para:", editor.selectedNode.nombre);
+        
+        // Opción 1: Crear un pasillo que conecte consigo mismo (como marcador)
+        const idBase = editor.areas.length + editor.points.length + 1;
+        const pasilloMarcador = {
+          id: `pm${idBase}`,
+          tipo: AREA_TYPES.PASILLO,
+          from: editor.selectedNode,
+          to: editor.selectedNode, // Se conecta consigo mismo
+          nombre: `Punto ${editor.selectedNode.nombre}`
+        };
+        
+        editor.setAreas((prev) => [...prev, pasilloMarcador]);
+        
+        // Opción 2: Simplemente resetear la selección
+        editor.setSelectedNode(null);
+        
+        // Mostrar mensaje de confirmación
+        alert(`✅ Punto ${editor.selectedNode.nombre} guardado como referencia de pasillo`);
+      }
+    }, [editor.selectedNode, editor.areas.length, editor.points.length, editor.setAreas, editor.setSelectedNode]);
+
   return (
     <div style={containerStyle}>
       <ControlPanel
-        // Estado
         modoEdicion={editor.modoEdicion}
         tipoActual={editor.tipoActual}
         nombreArea={editor.nombreArea}
@@ -188,12 +259,13 @@ const PlanoViewer = ({
         areas={editor.areas}
         points={editor.points}
         zoomScale={zoomScale}
-        
-        // NUEVAS PROPS PARA SNAP
         isSnapEnabled={isSnapEnabled}
-        onToggleSnap={toggleSnap}
+        showDebugEdges={showDebugEdges}
+        edgesCount={edges.length}
+        isRouteAnimating={routeAnimation.isAnimating}
+        selectedNode={editor.selectedNode}
+        onSavePasillo={handleSavePasillo}
         
-        // Handlers existentes
         onToggleEdit={() => editor.setModoEdicion(true)}
         onChangeType={editor.setTipoActual}
         onChangeName={editor.setNombreArea}
@@ -201,9 +273,12 @@ const PlanoViewer = ({
         onSavePoints={handleGuardarPuntos}
         onUndo={handleDeshacer}
         onCancel={handleCancelar}
-        onCalculateRoute={gps.handleCalcularRuta}
+        onCalculateRoute={handleCalcularRuta}
         onOriginChange={gps.setOrigen}
         onDestinationChange={gps.setDestino}
+        onToggleSnap={toggleSnap}
+        onToggleDebugEdges={toggleDebugEdges}
+        onStopAnimation={routeAnimation.stopAnimation}
       />
 
       <SVGEditor
@@ -217,6 +292,8 @@ const PlanoViewer = ({
         puntosTemporales={editor.puntosTemporales}
         cursorPos={editor.cursorPos}
         rutaActual={gps.rutaActual}
+        animatedPath={routeAnimation.animatedPath}
+        isRouteAnimating={routeAnimation.isAnimating}
         selectedNode={editor.selectedNode}
         zoomScale={zoomScale}
         onZoom={handleZoom}
@@ -230,9 +307,14 @@ const PlanoViewer = ({
             isVisible={editor.modoEdicion && isSnapEnabled} 
           />
         }
+        debugEdges={
+          <DebugEdges 
+            edges={edges} 
+            isVisible={showDebugEdges} 
+          />
+        }
       />
 
-      {/* Modal de configuración de escaleras */}
       <StairConfigModal
         isOpen={showStairConfig}
         onClose={() => setShowStairConfig(false)}

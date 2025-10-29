@@ -11,18 +11,25 @@ const ControlPanel = ({
   areas,
   points,
   zoomScale,
-  isSnapEnabled, // ← Nueva prop
-  onToggleSnap,  // ← Nueva prop
+  isSnapEnabled,
+  showDebugEdges,
+  edgesCount,
+  isRouteAnimating,
+  selectedNode,  // ← NUEVA PROP
   onToggleEdit,
   onChangeType,
   onChangeName,
   onSaveArea,
   onSavePoints,
+  onSavePasillo,
   onUndo,
   onCancel,
   onCalculateRoute,
   onOriginChange,
-  onDestinationChange
+  onDestinationChange,
+  onToggleSnap,
+  onToggleDebugEdges,
+  onStopAnimation
 }) => {
   const nodes = [...areas.filter(a => a.tipo !== AREA_TYPES.PASILLO), ...points];
 
@@ -131,49 +138,97 @@ const ControlPanel = ({
         </div>
       </div>
 
-      {/* Control de Snap - Solo visible en modo edición */}
+      {/* Control de Snap y Debug - Solo visible en modo edición */}
       {modoEdicion && (
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '10px', 
-          padding: '8px 12px', 
-          background: '#f8fafc', 
-          borderRadius: '8px', 
-          border: '1px solid #e2e8f0' 
-        }}>
-          <button
-            onClick={onToggleSnap}
-            style={{
-              padding: '8px 12px',
-              background: isSnapEnabled ? '#10b981' : '#ef4444',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '12px',
-              fontWeight: '600',
-              flex: 1,
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.transform = "translateY(-1px)";
-              e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.transform = "translateY(0px)";
-              e.target.style.boxShadow = "none";
-            }}
-          >
-            {isSnapEnabled ? '🔗 Snap: ON' : '🔓 Snap: OFF'}
-          </button>
-          <div style={{
-            fontSize: '10px',
-            color: '#64748b',
-            textAlign: 'center',
-            flex: 1
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {/* Snap Control */}
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '10px', 
+            padding: '8px 12px', 
+            background: '#f8fafc', 
+            borderRadius: '8px', 
+            border: '1px solid #e2e8f0' 
           }}>
-            {isSnapEnabled ? 'Imantación activa' : 'Imantación desactivada'}
+            <button
+              onClick={onToggleSnap}
+              style={{
+                padding: '8px 12px',
+                background: isSnapEnabled ? '#10b981' : '#ef4444',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '12px',
+                fontWeight: '600',
+                flex: 1,
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = "translateY(-1px)";
+                e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = "translateY(0px)";
+                e.target.style.boxShadow = "none";
+              }}
+            >
+              {isSnapEnabled ? '🔗 Snap: ON' : '🔓 Snap: OFF'}
+            </button>
+            <div style={{
+              fontSize: '10px',
+              color: '#64748b',
+              textAlign: 'center',
+              flex: 1
+            }}>
+              {isSnapEnabled ? 'Imantación activa' : 'Imantación desactivada'}
+            </div>
+          </div>
+
+          {/* Debug Control */}
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '10px', 
+            padding: '8px 12px', 
+            background: showDebugEdges ? '#fef3c7' : '#f8fafc', 
+            borderRadius: '8px', 
+            border: showDebugEdges ? '1px solid #f59e0b' : '1px solid #e2e8f0' 
+          }}>
+            <button
+              onClick={onToggleDebugEdges}
+              style={{
+                padding: '8px 12px',
+                background: showDebugEdges ? '#f59e0b' : '#6b7280',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '12px',
+                fontWeight: '600',
+                flex: 1,
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = "translateY(-1px)";
+                e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = "translateY(0px)";
+                e.target.style.boxShadow = "none";
+              }}
+            >
+              {showDebugEdges ? '🔴 Debug ON' : '⚪ Debug OFF'}
+            </button>
+            <div style={{
+              fontSize: '10px',
+              color: showDebugEdges ? '#92400e' : '#64748b',
+              textAlign: 'center',
+              flex: 1
+            }}>
+              {edgesCount} bordes detectados
+            </div>
           </div>
         </div>
       )}
@@ -197,11 +252,13 @@ const ControlPanel = ({
           ✏️ Entrar en modo edición
         </button>
       ) : (
-        <EditModeActions
+       <EditModeActions
           tipoActual={tipoActual}
           puntosTemporales={puntosTemporales}
+          selectedNode={selectedNode}
           onSaveArea={onSaveArea}
           onSavePoints={onSavePoints}
+          onSavePasillo={onSavePasillo}  // ← NUEVA PROP
           onUndo={onUndo}
           onCancel={onCancel}
           buttonStyle={buttonStyle}
@@ -215,105 +272,189 @@ const ControlPanel = ({
         onOriginChange={onOriginChange}
         onDestinationChange={onDestinationChange}
         onCalculateRoute={onCalculateRoute}
+        onStopAnimation={onStopAnimation}
+        isRouteAnimating={isRouteAnimating}
         buttonStyle={buttonStyle}
       />
     </div>
   );
 };
 
-// Componente para acciones en modo edición
 const EditModeActions = ({
   tipoActual,
   puntosTemporales,
+  selectedNode,
   onSaveArea,
   onSavePoints,
+  onSavePasillo,  // ← NUEVA PROP
   onUndo,
   onCancel,
   buttonStyle
-}) => (
-  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-    {/* Botón Guardar Área (para polígonos) */}
-    {tipoActual !== AREA_TYPES.PASILLO && tipoActual !== AREA_TYPES.PUNTO && (
-      <button
-        onClick={onSaveArea}
-        disabled={puntosTemporales.length < 3}
-        style={buttonStyle("#10b981", puntosTemporales.length < 3)}
-        onMouseEnter={(e) => {
-          if (!e.target.disabled) {
-            e.target.style.transform = "translateY(-1px)";
-            e.target.style.boxShadow = "0 4px 12px rgba(16, 185, 129, 0.3)";
+}) => {
+  // Para pasillos, mostrar controles específicos
+  if (tipoActual === "pasillo") {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+        {/* Estado del modo pasillo */}
+        <div style={{
+          padding: "8px 12px",
+          background: selectedNode ? "#fef3c7" : "#f1f5f9",
+          borderRadius: "8px",
+          fontSize: "12px",
+          color: selectedNode ? "#92400e" : "#475569",
+          textAlign: "center",
+          border: selectedNode ? "1px solid #f59e0b" : "1px solid #e2e8f0"
+        }}>
+          {selectedNode 
+            ? `🔗 Seleccionado: ${selectedNode.nombre} - Haz clic en otro nodo para conectar`
+            : "🔗 Haz clic en un nodo para iniciar la conexión"
           }
+        </div>
+
+        {/* NUEVO: Botón Guardar Pasillo Manual */}
+        <button
+          onClick={onSavePasillo}
+          disabled={!selectedNode}
+          style={buttonStyle("#10b981", !selectedNode)}
+          onMouseEnter={(e) => {
+            if (!e.target.disabled) {
+              e.target.style.transform = "translateY(-1px)";
+              e.target.style.boxShadow = "0 4px 12px rgba(16, 185, 129, 0.3)";
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = "translateY(0px)";
+            e.target.style.boxShadow = "none";
+          }}
+        >
+          💾 Guardar Conexión Actual
+        </button>
+
+        {/* Botón Deshacer para pasillos */}
+        <button
+          onClick={onUndo}
+          disabled={!selectedNode}
+          style={buttonStyle("#f59e0b", !selectedNode)}
+          onMouseEnter={(e) => {
+            if (!e.target.disabled) {
+              e.target.style.transform = "translateY(-1px)";
+              e.target.style.boxShadow = "0 4px 12px rgba(245, 158, 11, 0.3)";
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = "translateY(0px)";
+            e.target.style.boxShadow = "none";
+          }}
+        >
+          ↩️ Deshacer selección
+        </button>
+
+        {/* Botón Cancelar para pasillos */}
+        <button
+          onClick={onCancel}
+          style={buttonStyle("#ef4444")}
+          onMouseEnter={(e) => {
+            e.target.style.transform = "translateY(-1px)";
+            e.target.style.boxShadow = "0 4px 12px rgba(239, 68, 68, 0.3)";
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = "translateY(0px)";
+            e.target.style.boxShadow = "none";
+          }}
+        >
+          ❌ Cancelar modo pasillo
+        </button>
+      </div>
+    );
+  }
+
+
+  // Para otros tipos (áreas, puntos, etc.) - MANTENER IGUAL
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+      {/* Botón Guardar Área (para polígonos) */}
+      {tipoActual !== AREA_TYPES.PASILLO && tipoActual !== AREA_TYPES.PUNTO && (
+        <button
+          onClick={onSaveArea}
+          disabled={puntosTemporales.length < 3}
+          style={buttonStyle("#10b981", puntosTemporales.length < 3)}
+          onMouseEnter={(e) => {
+            if (!e.target.disabled) {
+              e.target.style.transform = "translateY(-1px)";
+              e.target.style.boxShadow = "0 4px 12px rgba(16, 185, 129, 0.3)";
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = "translateY(0px)";
+            e.target.style.boxShadow = "none";
+          }}
+        >
+          💾 Guardar área ({puntosTemporales.length} puntos)
+        </button>
+      )}
+
+      {/* Botón Guardar Puntos */}
+      {tipoActual === AREA_TYPES.PUNTO && (
+        <button
+          onClick={onSavePoints}
+          disabled={puntosTemporales.length === 0}
+          style={buttonStyle("#10b981", puntosTemporales.length === 0)}
+          onMouseEnter={(e) => {
+            if (!e.target.disabled) {
+              e.target.style.transform = "translateY(-1px)";
+              e.target.style.boxShadow = "0 4px 12px rgba(16, 185, 129, 0.3)";
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = "translateY(0px)";
+            e.target.style.boxShadow = "none";
+          }}
+        >
+          💾 Guardar {puntosTemporales.length} punto{puntosTemporales.length !== 1 ? 's' : ''}
+        </button>
+      )}
+
+      {/* Botón Deshacer (para áreas y puntos) */}
+      {tipoActual !== AREA_TYPES.PASILLO && tipoActual !== AREA_TYPES.PUNTO && (
+        <button
+          onClick={onUndo}
+          disabled={puntosTemporales.length === 0}
+          style={buttonStyle("#f59e0b", puntosTemporales.length === 0)}
+          onMouseEnter={(e) => {
+            if (!e.target.disabled) {
+              e.target.style.transform = "translateY(-1px)";
+              e.target.style.boxShadow = "0 4px 12px rgba(245, 158, 11, 0.3)";
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = "translateY(0px)";
+            e.target.style.boxShadow = "none";
+          }}
+        >
+          ↩️ Deshacer último punto
+        </button>
+      )}
+
+      {/* Botón Cancelar (para todos los tipos excepto pasillo) */}
+      <button
+        onClick={onCancel}
+        style={buttonStyle("#ef4444")}
+        onMouseEnter={(e) => {
+          e.target.style.transform = "translateY(-1px)";
+          e.target.style.boxShadow = "0 4px 12px rgba(239, 68, 68, 0.3)";
         }}
         onMouseLeave={(e) => {
           e.target.style.transform = "translateY(0px)";
           e.target.style.boxShadow = "none";
         }}
       >
-        💾 Guardar área ({puntosTemporales.length} puntos)
+        ❌ Cancelar edición
       </button>
-    )}
+    </div>
+  );
+};
 
-    {/* Botón Guardar Puntos */}
-    {tipoActual === AREA_TYPES.PUNTO && (
-      <button
-        onClick={onSavePoints}
-        disabled={puntosTemporales.length === 0}
-        style={buttonStyle("#10b981", puntosTemporales.length === 0)}
-        onMouseEnter={(e) => {
-          if (!e.target.disabled) {
-            e.target.style.transform = "translateY(-1px)";
-            e.target.style.boxShadow = "0 4px 12px rgba(16, 185, 129, 0.3)";
-          }
-        }}
-        onMouseLeave={(e) => {
-          e.target.style.transform = "translateY(0px)";
-          e.target.style.boxShadow = "none";
-        }}
-      >
-        💾 Guardar {puntosTemporales.length} punto{puntosTemporales.length !== 1 ? 's' : ''}
-      </button>
-    )}
-
-    {/* Botón Deshacer */}
-    {tipoActual !== AREA_TYPES.PASILLO && tipoActual !== AREA_TYPES.PUNTO && (
-      <button
-        onClick={onUndo}
-        disabled={puntosTemporales.length === 0}
-        style={buttonStyle("#f59e0b", puntosTemporales.length === 0)}
-        onMouseEnter={(e) => {
-          if (!e.target.disabled) {
-            e.target.style.transform = "translateY(-1px)";
-            e.target.style.boxShadow = "0 4px 12px rgba(245, 158, 11, 0.3)";
-          }
-        }}
-        onMouseLeave={(e) => {
-          e.target.style.transform = "translateY(0px)";
-          e.target.style.boxShadow = "none";
-        }}
-      >
-        ↩️ Deshacer último punto
-      </button>
-    )}
-
-    {/* Botón Cancelar */}
-    <button
-      onClick={onCancel}
-      style={buttonStyle("#ef4444")}
-      onMouseEnter={(e) => {
-        e.target.style.transform = "translateY(-1px)";
-        e.target.style.boxShadow = "0 4px 12px rgba(239, 68, 68, 0.3)";
-      }}
-      onMouseLeave={(e) => {
-        e.target.style.transform = "translateY(0px)";
-        e.target.style.boxShadow = "none";
-      }}
-    >
-      ❌ Cancelar edición
-    </button>
-  </div>
-);
-
-// Componente para el panel GPS
+// Componente para el panel GPS (mantener igual)
 const GPSPanel = ({
   origen,
   destino,
@@ -321,6 +462,8 @@ const GPSPanel = ({
   onOriginChange,
   onDestinationChange,
   onCalculateRoute,
+  onStopAnimation,
+  isRouteAnimating,
   buttonStyle
 }) => (
   <>
@@ -399,6 +542,40 @@ const GPSPanel = ({
       >
         📍 Calcular ruta más corta
       </button>
+
+      {/* Botón para parar animación */}
+      {isRouteAnimating && (
+        <button
+          onClick={onStopAnimation}
+          style={buttonStyle("#ef4444", false)}
+          onMouseEnter={(e) => {
+            e.target.style.transform = "translateY(-1px)";
+            e.target.style.boxShadow = "0 4px 12px rgba(239, 68, 68, 0.3)";
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = "translateY(0px)";
+            e.target.style.boxShadow = "none";
+          }}
+        >
+          ⏹️ Parar Animación
+        </button>
+      )}
+
+      {/* Indicador de animación */}
+      {isRouteAnimating && (
+        <div style={{
+          padding: "6px",
+          background: "#d1fae5",
+          borderRadius: "6px",
+          fontSize: "11px",
+          color: "#065f46",
+          textAlign: "center",
+          fontWeight: "600",
+          border: "1px solid #a7f3d0"
+        }}>
+          🎬 Animando ruta...
+        </div>
+      )}
     </div>
   </>
 );

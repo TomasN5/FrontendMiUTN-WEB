@@ -12,67 +12,67 @@ const SnapIndicators = ({
 
   return (
     <>
-      {/* Línea desde el punto original al punto ajustado */}
+      {/* Línea desde el punto original al punto ajustado - MÁS FINA */}
       <line
         x1={originalPoint.x}
         y1={originalPoint.y}
         x2={point.x}
         y2={point.y}
-        stroke="rgba(59, 130, 246, 0.6)"
-        strokeWidth="2"
-        strokeDasharray="4,2"
+        stroke="rgba(59, 130, 246, 0.4)"  // Más transparente
+        strokeWidth="1"                    // Más fina
+        strokeDasharray="3,2"              // Puntos más pequeños
       />
       
-      {/* Punto original (transparente) */}
+      {/* Punto original - MÁS PEQUEÑO */}
       <circle
         cx={originalPoint.x}
         cy={originalPoint.y}
-        r="4"
-        fill="rgba(59, 130, 246, 0.3)"
-        stroke="rgba(59, 130, 246, 0.6)"
-        strokeWidth="1"
+        r="2"                             // Más pequeño (antes 4)
+        fill="rgba(59, 130, 246, 0.2)"   // Más transparente
+        stroke="rgba(59, 130, 246, 0.4)" // Más transparente
+        strokeWidth="0.5"                 // Más fino
       />
       
-      {/* Punto ajustado (destacado) */}
+      {/* Punto ajustado - MÁS PEQUEÑO */}
       <circle
         cx={point.x}
         cy={point.y}
-        r="6"
-        fill="rgba(34, 197, 94, 0.8)"
+        r="3"                             // Más pequeño (antes 6)
+        fill="rgba(34, 197, 94, 0.6)"    // Más transparente
         stroke="#16a34a"
-        strokeWidth="2"
+        strokeWidth="1"                   // Más fino
       />
       
-      {/* Indicador visual del tipo de snap */}
+      {/* Indicador visual del tipo de snap - MÁS FINO */}
       {snapType.includes('horizontal') && (
         <line
-          x1={point.x - 15}
+          x1={point.x - 12}               // Más corto
           y1={point.y}
-          x2={point.x + 15}
+          x2={point.x + 12}               // Más corto
           y2={point.y}
           stroke="#16a34a"
-          strokeWidth="2"
+          strokeWidth="1"                 // Más fino
         />
       )}
       
       {snapType.includes('vertical') && (
         <line
           x1={point.x}
-          y1={point.y - 15}
+          y1={point.y - 12}               // Más corto
           x2={point.x}
-          y2={point.y + 15}
+          y2={point.y + 12}               // Más corto
           stroke="#16a34a"
-          strokeWidth="2"
+          strokeWidth="1"                 // Más fino
         />
       )}
       
-      {/* Texto indicador */}
+      {/* Texto indicador - MÁS PEQUEÑO */}
       <text
         x={point.x}
-        y={point.y - 20}
+        y={point.y - 15}                  // Más cerca
         textAnchor="middle"
         fill="#16a34a"
-        fontSize="10"
+        fontSize="8"                      // Más pequeño
         fontWeight="bold"
         style={{ pointerEvents: "none" }}
       >
