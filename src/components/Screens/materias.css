@@ -1,0 +1,205 @@
+/* Materias.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+
+/* Contenedor principal - SIN estilos globales */
+.materias-container {
+  min-height: 100vh;
+  padding-left: 280px; /* Espacio para el sidebar */
+  padding-top: 2rem;
+  padding-right: 2rem;
+  padding-bottom: 2rem;
+  background: linear-gradient(180deg, #ffffff 0%, #e6f2ff 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+/* Texto */
+.materias-container .subtitle {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 46px;
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.materias-container p {
+  color: #4a5568;
+  font-size: 24px;
+  text-align: center;
+  margin-bottom: 3rem;
+  font-weight: 400;
+}
+
+/* Grid de materias */
+.materias-container .grid {
+  margin-top: 36px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 3rem;
+  justify-items: center;
+  align-items: center;
+  width: 100%;
+  max-width: 1200px;
+  padding: 0 2rem;
+}
+
+/* Botones de materias */
+.materias-container .materia-btn {
+  width: 300px;
+  height: 180px;
+  color: white;
+  font-size: 2.3rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+
+.materias-container .materia-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.materias-container .materia-btn:hover::before {
+  opacity: 1;
+}
+
+.materias-container .materia-btn:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+}
+
+/* Colores específicos con clases */
+.materias-container .materia-btn.civil {
+  background: linear-gradient(-35deg, #228B22, #32CD32);
+}
+
+.materias-container .materia-btn.electrica {
+  background: linear-gradient(-35deg, #B22222, #ee2d54);
+}
+
+.materias-container .materia-btn.industrial {
+  background: linear-gradient(-35deg, #e79219, #ffbc5f);
+}
+
+.materias-container .materia-btn.mecanica {
+  background: linear-gradient(-35deg, #20B2AA, #40E0D0);
+}
+
+.materias-container .materia-btn.quimica {
+  background: linear-gradient(-35deg, #8A2BE2, #9370DB);
+}
+
+.materias-container .materia-btn.sistemas {
+  background: linear-gradient(-35deg, #2b75ff, #79acff);
+}
+
+/* Responsive - Mejorado para sidebar */
+@media (max-width: 1200px) {
+  .materias-container .grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+    max-width: 800px;
+  }
+  
+  .materias-container .materia-btn {
+    width: 280px;
+    height: 140px;
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 1024px) {
+  .materias-container {
+    padding-left: 260px; /* Reducir un poco el padding para sidebar */
+  }
+}
+
+@media (max-width: 900px) {
+  .materias-container {
+    padding-left: 240px;
+  }
+}
+
+@media (max-width: 768px) {
+  .materias-container {
+    padding-left: 1rem; /* Quitar padding del sidebar en móvil */
+    padding-right: 1rem;
+    padding-top: 120px; /* Espacio para header si existe */
+  }
+  
+  .materias-container .subtitle {
+    font-size: 32px;
+    margin-bottom: 0.5rem;
+  }
+  
+  .materias-container p {
+    font-size: 16px;
+    margin-bottom: 2rem;
+  }
+  
+  .materias-container .grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    padding: 0 1rem;
+  }
+  
+  .materias-container .materia-btn {
+    width: 100%;
+    max-width: 300px;
+    height: 120px;
+    font-size: 1.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .materias-container {
+    padding-top: 100px; /* Menos espacio en móviles muy pequeños */
+  }
+  
+  .materias-container .subtitle {
+    font-size: 28px;
+  }
+  
+  .materias-container p {
+    font-size: 14px;
+    margin-bottom: 1.5rem;
+  }
+  
+  .materias-container .materia-btn {
+    height: 100px;
+    font-size: 1.5rem;
+  }
+  
+  .materias-container .grid {
+    gap: 1rem;
+  }
+}
+
+/* Clase para cuando el sidebar está colapsado o en móvil */
+.materias-container.sidebar-hidden {
+  padding-left: 1rem;
+}
+
+.materias-container.sidebar-expanded {
+  padding-left: 280px;
+}

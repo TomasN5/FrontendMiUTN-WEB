@@ -1,0 +1,416 @@
+/* detalleprofesor.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+
+/* Contenedor principal */
+.docentes-container {
+  min-height: 100vh;
+  padding-left: 280px;
+  padding-top: 2rem;
+  padding-right: 2rem;
+  padding-bottom: 2rem;
+  background: linear-gradient(180deg, #ffffff 0%, #e6f2ff 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  font-family: 'Inter', sans-serif;
+  overflow-y: auto;
+  height: 100vh;
+}
+
+/* Texto */
+.subtitle {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 42px;
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+/* Header con botón */
+.docentes-header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  width: 100%;
+  max-width: 1200px;
+  margin-bottom: 2rem;
+  padding: 0 2rem;
+}
+
+/* Botón Agregar Docente */
+.agregar-btn {
+  background: #228B22;
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  white-space: nowrap;
+  width: auto;
+  min-width: 160px;
+  flex-shrink: 0;
+}
+
+.agregar-btn:hover {
+  background: #1e7b1e;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(34, 139, 34, 0.3);
+}
+
+/* CONTENEDOR DE TABLA CON SCROLL FUNCIONAL */
+.docentes-table-wrapper {
+  width: 100%;
+  max-width: 1200px;
+  max-height: 65vh;
+  overflow: hidden;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+/* Tabla de docentes */
+.docentes-table {
+  background: white;
+  border-radius: 12px;
+  width: 100%;
+  border-collapse: collapse;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.docentes-table thead {
+  background: #f8fafc;
+  border-bottom: 2px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.docentes-table tbody {
+  flex: 1;
+  overflow-y: auto;
+  max-height: calc(65vh - 60px);
+}
+
+.docentes-table tr {
+  display: grid;
+  grid-template-columns: 2fr 1fr 2fr 1.5fr;
+  align-items: center;
+  min-height: 70px;
+  padding: 0 30px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.docentes-table tr:last-child {
+  border-bottom: none;
+}
+
+.docentes-table th {
+  padding: 20px 0;
+  font-weight: 700;
+  color: #2d3748;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: left;
+}
+
+.docentes-table td {
+  padding: 20px 0;
+  color: #4a5568;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+/* Celda de nombre */
+.docentes-table td:first-child {
+  font-weight: 500;
+  color: #2d3748;
+  font-size: 16px;
+}
+
+/* Celda de acciones */
+.acciones {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-start;
+}
+
+.btn-modificar,
+.btn-eliminar {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  width: auto;
+  min-width: 100px;
+}
+
+.btn-modificar {
+  background: #feebc8;
+  color: #dd6b20;
+  border: 1px solid #fbd38d;
+}
+
+.btn-modificar:hover {
+  background: #fbd38d;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(221, 107, 32, 0.2);
+}
+
+.btn-eliminar {
+  background: #fed7d7;
+  color: #c53030;
+  border: 1px solid #feb2b2;
+}
+
+.btn-eliminar:hover {
+  background: #feb2b2;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(197, 48, 48, 0.2);
+}
+
+/* Estados de la tabla */
+.docentes-table tbody tr:nth-child(even) {
+  background: #f8fafc;
+}
+
+.docentes-table tbody tr:hover {
+  background: #edf2f7;
+}
+
+/* SCROLL PERSONALIZADO */
+.docentes-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.docentes-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.docentes-container::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 4px;
+}
+
+.docentes-container::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+.docentes-table tbody::-webkit-scrollbar {
+  width: 8px;
+}
+
+.docentes-table tbody::-webkit-scrollbar-track {
+  background: #f8fafc;
+  border-radius: 4px;
+}
+
+.docentes-table tbody::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 4px;
+  border: 2px solid #f8fafc;
+}
+
+.docentes-table tbody::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+/* Scroll para Firefox */
+.docentes-table tbody {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e0 #f8fafc;
+}
+
+/* Scroll suave */
+.docentes-table tbody {
+  scroll-behavior: smooth;
+}
+
+/* Responsive para el contenedor principal */
+@media (max-width: 1024px) {
+  .docentes-container {
+    padding-left: 240px;
+  }
+  
+  .docentes-table-wrapper {
+    max-height: 60vh;
+  }
+  
+  .docentes-table tbody {
+    max-height: calc(60vh - 60px);
+  }
+}
+
+@media (max-width: 900px) {
+  .docentes-container {
+    padding-left: 220px;
+  }
+}
+
+@media (max-width: 768px) {
+  .docentes-container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-top: 100px;
+    height: auto;
+    min-height: 100vh;
+  }
+  
+  .subtitle {
+    font-size: 32px;
+  }
+  
+  .docentes-header {
+    padding: 0 1rem;
+    justify-content: center;
+  }
+  
+  .agregar-btn {
+    width: 100%;
+    max-width: 300px;
+  }
+  
+  .docentes-table-wrapper {
+    max-height: none;
+    overflow: visible;
+  }
+  
+  .docentes-table {
+    display: block;
+    min-width: 600px;
+  }
+  
+  .docentes-table tbody {
+    max-height: none;
+    overflow: visible;
+    display: block;
+  }
+  
+  .docentes-table thead {
+    display: none;
+  }
+  
+  .docentes-table tr {
+    display: flex;
+    flex-direction: column;
+    padding: 20px 15px;
+    gap: 15px;
+    align-items: stretch;
+  }
+  
+  .docentes-table td {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .docentes-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #2d3748;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  /* Asignar labels para mobile */
+  .docentes-table td:first-child::before {
+    content: "Nombre";
+  }
+  
+  .docentes-table td:nth-child(2)::before {
+    content: "Legajo";
+  }
+  
+  .docentes-table td:nth-child(3)::before {
+    content: "Mail";
+  }
+  
+  .docentes-table td:last-child::before {
+    content: "Acciones";
+    margin-bottom: 5px;
+  }
+  
+  .acciones {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .btn-modificar,
+  .btn-eliminar {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .docentes-container {
+    padding-top: 80px;
+  }
+  
+  .subtitle {
+    font-size: 28px;
+  }
+  
+  .docentes-table tr {
+    padding: 15px 10px;
+  }
+  
+  .acciones {
+    gap: 6px;
+  }
+  
+  .btn-modificar,
+  .btn-eliminar {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+}
+
+/* Ajuste extra para pantallas muy pequeñas */
+@media (max-width: 360px) {
+  .docentes-table {
+    min-width: 100%;
+  }
+}
+
+/* Mensaje cuando no hay docentes */
+.docentes-empty {
+  text-align: center;
+  padding: 3rem;
+  color: #718096;
+  font-size: 1.1rem;
+  background: white;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+/* Estados de focus para accesibilidad */
+.agregar-btn:focus,
+.btn-modificar:focus,
+.btn-eliminar:focus {
+  outline: 2px solid #4A89FF;
+  outline-offset: 2px;
+}

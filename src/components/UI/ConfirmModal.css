@@ -1,0 +1,120 @@
+/* src/components/UI/ConfirmModal.css */
+.confirm-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  padding: 1rem;
+}
+
+.confirm-modal-content {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  max-width: 400px;
+  overflow: hidden;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.confirm-modal-header {
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #e9ecef;
+  background: linear-gradient(135deg, #0ca7e4, #006cdfff);
+}
+
+.confirm-modal-header h3 {
+  margin: 0;
+  color: white;
+  font-size: 1.3rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.confirm-modal-body {
+  padding: 2rem;
+  text-align: center;
+}
+
+.confirm-modal-body p {
+  margin: 0;
+  color: #4a5568;
+  font-size: 1.1rem;
+  line-height: 1.5;
+}
+
+.confirm-modal-actions {
+  display: flex;
+  gap: 1rem;
+  padding: 1.5rem 2rem;
+  border-top: 1px solid #e9ecef;
+  background: #f8f9fa;
+}
+
+.confirm-btn {
+  flex: 1;
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-height: 44px;
+}
+
+.confirm-btn.cancel {
+  background: #6c757d;
+  color: white;
+}
+
+.confirm-btn.cancel:hover {
+  background: #5a6268;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+}
+
+.confirm-btn.accept {
+  background: linear-gradient(135deg, #2E8BC0 0%, #145DA0 100%);
+  color: white;
+}
+
+.confirm-btn.accept:hover {
+  background: linear-gradient(135deg, #2580B3 0%, #0F4C75 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(46, 139, 192, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .confirm-modal-content {
+    max-width: 100%;
+  }
+  
+  .confirm-modal-actions {
+    flex-direction: column;
+  }
+  
+  .confirm-modal-header,
+  .confirm-modal-body,
+  .confirm-modal-actions {
+    padding: 1.25rem;
+  }
+}
