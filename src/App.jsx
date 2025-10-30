@@ -12,7 +12,7 @@ import Profesores from './components/Screens/detalleprofesor';
 import CargarProfesor from './components/Screens/Profesores/cargarprofesor';
 import ModificarProfesor from './components/Screens/Profesores/modificarprofesor';
 import PlanoViewer from './components/Screens/PlanoViewer/PlanoViewer';
-
+import plano from "./components/Screens/PlanoViewer/assets/Dibujo1-Presentación1.png";
 import './App.css';
 
 function App() {
@@ -148,28 +148,7 @@ function App() {
             } 
           />
     
-          <Route path="/planoviewer" element={<PlanoViewer/>} />
-          <Route path="/profesores/" element={ isAuthenticated ? (<ProfesorDetalle /> ) : (
-              <Navigate to="/login" replace />
-            )} />
-          <Route path="/profesores/cargarprofesor" element={ isAuthenticated ? (<CargarProfesor /> ) : (
-              <Navigate to="/login" replace />
-            )} />
-          <Route path="/profesores/modificarprofesor" element={ isAuthenticated ? (<ModificarProfesor /> ) : (
-              <Navigate to="/login" replace />
-            )} />
-          <Route path="/materias" element={ isAuthenticated ? (<Materias /> ) : (
-              <Navigate to="/login" replace />
-            )} />
-          <Route path="/materia/:nombre" element={ isAuthenticated ? (<MateriaDetalle /> ) : (
-              <Navigate to="/login" replace />
-            )} />
-          <Route path="/materia/:nombre/cargarmateria" element={ isAuthenticated ? (<CargarMateria /> ) : (
-              <Navigate to="/login" replace />
-            )} />
-          <Route path="/materia/:nombre/modificarmateria" element={ isAuthenticated ? (<ModificarMateria /> ) : (
-              <Navigate to="/login" replace />
-            )} />
+         <Route path="/planoviewer" element={<PlanoViewer src={plano} />} />
           <Route path="/" element={<Navigate to="/login" replace />} />
         </Routes>
       </div>
