@@ -3,9 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Dashboard.css';
 import { checkAuth,logout } from './CheckAuth';
+import env from '../config/env';
+
+const api_URL = env.API_BASE_URL;
 
 // URL base de la API - VERIFICA QUE ESTÉ CORRECTA
-const API_BASE_URL = 'https://8d13dfce1445.ngrok-free.app/api/v1/miUTN/publication';
+const API_BASE_URL = api_URL+'api/v1/miUTN/publication';
 
 const Dashboard = () => {
   const [currentSlide, setCurrentSlide] = useState(0);

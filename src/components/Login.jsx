@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
 import './Login.css';
+import env from '../config/env';
+
+
+
+const API_BASE = env.API_BASE_URL;
+
+
 
 const Login = ({ onLogin }) => {
   const [email, setEmail] = useState('');
@@ -7,7 +14,7 @@ const Login = ({ onLogin }) => {
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
- const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
   e.preventDefault();
 
   // Creamos el objeto con los datos del usuario
@@ -18,7 +25,7 @@ const Login = ({ onLogin }) => {
 
   try {
     // Realizamos la petición POST al endpoint de login
-    const response = await fetch('https://8d13dfce1445.ngrok-free.app/login', {
+    const response = await fetch((API_BASE+"login"), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

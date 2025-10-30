@@ -1,17 +1,20 @@
-/* Dashboard.css */
+/* Dashboard.css - Responsive para HD (1280x720) y FHD (1920x1080) */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  height: 100%;
-  overflow: hidden;
-  background: linear-gradient(180deg, #ffffff 0%, #e6f2ff 100%);
+:root {
+  /* Variables CSS con clamp para escalado fluido */
+  --header-height: clamp(60px, 5.5vh, 85px);
+  --header-padding-x: clamp(15px, 2.5vw, 45px);
+  --header-padding-y: clamp(12px, 2vh, 25px);
+  --logo-size: clamp(22px, 2.2vw, 35px);
+  --btn-padding-x: clamp(16px, 2.2vw, 32px);
+  --btn-padding-y: clamp(8px, 1.2vh, 14px);
+  --title-size: clamp(26px, 2.8vw, 45px);
+  --section-spacing: clamp(25px, 4vh, 65px);
+  --button-gap: clamp(18px, 2.5vw, 45px);
+  --arrow-size: clamp(44px, 4.5vw, 65px);
+  --card-padding: clamp(25px, 3vw, 55px);
 }
 
 .dashboard {
@@ -24,14 +27,17 @@ body {
   overflow: hidden;
 }
 
-/* Header */
+/* Header - Responsive */
 .dashboard-header {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
-  padding: 20px 40px;
+  padding: var(--header-padding-y) var(--header-padding-x);
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   flex-shrink: 0;
   width: 100%;
+  height: var(--header-height);
+  min-height: 60px;
+  box-sizing: border-box;
 }
 
 .header-content {
@@ -39,11 +45,13 @@ body {
   justify-content: space-between;
   align-items: center;
   max-width: 100%;
+  height: 100%;
+  width: 100%;
 }
 
 .logo {
   font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 32px;
+  font-size: var(--logo-size);
   font-weight: 800;
   color: #006cdfff;
   margin: 0;
@@ -53,13 +61,14 @@ body {
   background: #006cdfff;
   color: white;
   border: none;
-  padding: 12px 30px;
-  border-radius: 8px;
+  padding: var(--btn-padding-y) var(--btn-padding-x);
+  border-radius: clamp(6px, 0.8vw, 10px);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
   font-family: 'Inter', sans-serif;
-  font-size: 16px;
+  font-size: clamp(13px, 1.3vw, 18px);
+  white-space: nowrap;
 }
 
 .logout-btn:hover {
@@ -68,53 +77,55 @@ body {
   box-shadow: 0 4px 12px rgba(0, 108, 223, 0.3);
 }
 
-/* Main Content */
+/* Main Content - Responsive */
 .dashboard-main {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40px 20px;
-  overflow: hidden;
+  padding: var(--section-spacing) clamp(12px, 2vw, 30px);
+  overflow-y: auto;
+  overflow-x: hidden;
   width: 100%;
+  box-sizing: border-box;
 }
 
-/* Título Panel Principal */
+/* Título responsive */
 .panel-title {
   text-align: center;
-  margin-bottom: 60px;
+  margin-bottom: var(--section-spacing);
   width: 100%;
 }
 
 .panel-title h2 {
   font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 42px;
+  font-size: var(--title-size);
   font-weight: 700;
   color: #2d3748;
   margin: 0;
 }
 
-/* Botones Principales */
+/* Botones Principales - Responsive */
 .buttons-container {
   width: 100%;
   display: flex;
   justify-content: center;
-  margin-bottom: 80px;
+  margin-bottom: var(--section-spacing);
 }
 
 .main-buttons {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 40px;
+  gap: var(--button-gap);
   width: 100%;
-  max-width: 1200px;
-  padding: 0 20px;
+  max-width: min(92%, 1300px);
+  padding: 0 clamp(12px, 2vw, 30px);
 }
 
 .main-btn {
   border: none;
-  border-radius: 20px;
-  padding: 70px 30px;
+  border-radius: clamp(15px, 2vw, 22px);
+  padding: clamp(45px, 6vh, 75px) clamp(20px, 2.5vw, 35px);
   cursor: pointer;
   transition: all 0.3s;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
@@ -123,7 +134,7 @@ body {
   justify-content: center;
   font-family: 'Plus Jakarta Sans', sans-serif;
   width: 100%;
-  min-height: 200px;
+  min-height: clamp(140px, 18vh, 220px);
   position: relative;
   overflow: hidden;
 }
@@ -165,32 +176,38 @@ body {
 }
 
 .btn-text {
-  font-size: 32px;
+  font-size: clamp(20px, 2.2vw, 35px);
   font-weight: 700;
   position: relative;
   z-index: 1;
+  text-align: center;
 }
 
-/* Sección del Slider */
+/* Slider - Responsive */
 .slider-section {
   width: 100%;
   display: flex;
   justify-content: center;
+  flex: 1;
+  min-height: 0;
 }
 
 .slider-container {
   width: 100%;
-  max-width: 1200px;
+  max-width: min(92%, 1300px);
   position: relative;
-  padding: 0 20px;
+  padding: 0 clamp(12px, 2vw, 30px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .slider {
   overflow: hidden;
-  border-radius: 20px;
+  border-radius: clamp(15px, 2vw, 22px);
   box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
-  background: white;
-  margin-bottom: 30px;
+  background: #fafafa;
+  margin-bottom: clamp(20px, 2.5vh, 35px);
 }
 
 .slider-track {
@@ -204,22 +221,23 @@ body {
 }
 
 .announcement-card {
-  background: linear-gradient(135deg, #f8fafc, #ffffff);
-  padding: 50px;
+  background: #fafafa;
+  padding: var(--card-padding);
   display: flex;
   flex-direction: column;
   justify-content: center;
-  min-height: 220px;
-  border-left: 8px solid #006cdfff;
+  min-height: clamp(160px, 20vh, 240px);
+  border-top: clamp(5px, 0.7vw, 10px) solid #006cdfff;
   position: relative;
   transition: all 0.3s ease;
 }
 
-/* Estilos para anuncios importantes */
+.announcement-content {
+  position: relative;
+}
+
 .announcement-card.important {
-  border-left-color: #e53e3e;
-  background: linear-gradient(135deg, #fff5f5, #fed7d7);
-  box-shadow: 0 8px 25px rgba(229, 62, 62, 0.15);
+  border-top-color: #e53e3e;
 }
 
 .announcement-card.important .announcement-content h3 {
@@ -232,13 +250,13 @@ body {
 
 .important-badge {
   position: absolute;
-  top: 20px;
-  right: 20px;
+  top: clamp(12px, 2vh, 25px);
+  right: clamp(12px, 2vw, 25px);
   background: #e53e3e;
   color: white;
-  padding: 8px 16px;
+  padding: clamp(5px, 0.7vh, 10px) clamp(10px, 1.8vw, 20px);
   border-radius: 20px;
-  font-size: 12px;
+  font-size: clamp(10px, 1.1vw, 14px);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -257,58 +275,57 @@ body {
   }
 }
 
-.announcement-content {
-  position: relative;
-}
-
 .announcement-content h3 {
   font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 28px;
+  font-size: clamp(20px, 2.3vw, 32px);
   color: #1a202c;
-  margin-bottom: 20px;
+  margin-bottom: clamp(12px, 2vh, 25px);
   font-weight: 700;
 }
 
 .announcement-content p {
   color: #4a5568;
   line-height: 1.6;
-  margin-bottom: 25px;
-  font-size: 18px;
+  margin-bottom: clamp(15px, 2.5vh, 30px);
+  font-size: clamp(15px, 1.6vw, 20px);
 }
 
 .announcement-date {
   background: #006cdfff;
   color: white;
-  padding: 8px 16px;
+  padding: clamp(6px, 0.8vh, 12px) clamp(12px, 1.8vw, 20px);
   border-radius: 25px;
-  font-size: 14px;
+  font-size: clamp(12px, 1.3vw, 16px);
   font-weight: 600;
   align-self: flex-start;
 }
 
-/* Controles del Slider */
+/* Controles del Slider - Responsive */
 .slider-controls {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 40px;
+  gap: clamp(25px, 3.5vw, 50px);
 }
 
 .slider-arrow {
   background: white;
   border: 2px solid #e2e8f0;
   border-radius: 50%;
-  width: 60px;
-  height: 60px;
+  width: var(--arrow-size);
+  height: var(--arrow-size);
+  min-width: 44px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.3s;
   color: #006cdfff;
-  font-size: 24px;
+  font-size: clamp(18px, 2.2vw, 28px);
   font-weight: bold;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
 }
 
 .slider-arrow:hover {
@@ -321,17 +338,20 @@ body {
 
 .slider-indicators {
   display: flex;
-  gap: 12px;
+  gap: clamp(8px, 1.2vw, 16px);
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .indicator {
-  width: 14px;
-  height: 14px;
+  width: clamp(10px, 1.3vw, 16px);
+  height: clamp(10px, 1.3vw, 16px);
   border-radius: 50%;
   border: none;
   background: #cbd5e0;
   cursor: pointer;
   transition: all 0.3s;
+  flex-shrink: 0;
 }
 
 .indicator.active {
@@ -343,168 +363,67 @@ body {
   background: #006cdfff;
 }
 
-/* Responsive */
-@media (max-width: 1200px) {
-  .main-buttons {
-    max-width: 1000px;
-    gap: 30px;
-  }
-  
-  .main-btn {
-    padding: 60px 25px;
-    min-height: 180px;
-  }
-  
-  .btn-text {
-    font-size: 28px;
-  }
-  
-  .panel-title h2 {
-    font-size: 36px;
-  }
-}
+/* ============================================= */
+/* MEDIA QUERIES ADICIONALES PARA AJUSTES FINOS */
+/* ============================================= */
 
-@media (max-width: 768px) {
-  .dashboard-header {
-    padding: 15px 20px;
-  }
-  
-  .logo {
-    font-size: 28px;
-  }
-  
-  .logout-btn {
-    padding: 10px 20px;
-    font-size: 14px;
-  }
-  
-  .dashboard-main {
-    padding: 30px 15px;
-  }
-  
-  .panel-title {
-    margin-bottom: 40px;
-  }
-  
-  .panel-title h2 {
-    font-size: 32px;
-  }
-  
-  .buttons-container {
-    margin-bottom: 50px;
-  }
-  
+/* Optimización para FHD (1920x1080) */
+@media (min-width: 1920px) {
   .main-buttons {
-    grid-template-columns: 1fr;
-    gap: 25px;
-    max-width: 500px;
-  }
-  
-  .main-btn {
-    padding: 50px 20px;
-    min-height: 150px;
-  }
-  
-  .btn-text {
-    font-size: 26px;
+    max-width: 1400px;
   }
   
   .slider-container {
-    max-width: 100%;
-  }
-  
-  .announcement-card {
-    padding: 35px;
-    min-height: 200px;
-  }
-  
-  .announcement-card.important {
-    padding: 35px 35px 35px 30px;
-  }
-  
-  .announcement-content h3 {
-    font-size: 24px;
-  }
-  
-  .announcement-content p {
-    font-size: 16px;
-  }
-  
-  .important-badge {
-    top: 15px;
-    right: 15px;
-    font-size: 11px;
-    padding: 6px 12px;
-  }
-  
-  .slider-controls {
-    gap: 25px;
-  }
-  
-  .slider-arrow {
-    width: 50px;
-    height: 50px;
-    font-size: 20px;
+    max-width: 1400px;
   }
 }
 
-@media (max-width: 480px) {
-  .dashboard-header {
-    padding: 12px 15px;
-  }
-  
-  .logo {
-    font-size: 24px;
-  }
-  
-  .dashboard-main {
-    padding: 20px 10px;
-  }
-  
-  .panel-title h2 {
-    font-size: 28px;
+/* Optimización específica para HD (1280x720) */
+@media (min-width: 1280px) and (max-width: 1366px) {
+  /* Mayor separación entre título y botones */
+  .panel-title {
+    margin-bottom: 60px;
   }
   
   .main-buttons {
-    gap: 20px;
-    max-width: 400px;
+    margin-top: 20px;
+    max-width: min(90%, 1000px);
   }
   
-  .main-btn {
-    padding: 40px 15px;
-    min-height: 120px;
+  .slider-container {
+    max-width: min(90%, 1000px);
   }
   
-  .btn-text {
-    font-size: 22px;
-  }
-  
+  /* Slider más pequeño en 1280px */
   .announcement-card {
-    padding: 25px;
-    min-height: 180px;
-  }
-  
-  .announcement-card.important {
-    padding: 25px 25px 25px 20px;
+    padding: 25px 28px;
+    min-height: 140px;
   }
   
   .announcement-content h3 {
     font-size: 20px;
+    margin-bottom: 12px;
   }
   
   .announcement-content p {
     font-size: 14px;
+    margin-bottom: 15px;
+  }
+  
+  .announcement-date {
+    padding: 5px 14px;
+    font-size: 12px;
   }
   
   .important-badge {
     top: 10px;
     right: 10px;
+    padding: 4px 12px;
     font-size: 10px;
-    padding: 5px 10px;
   }
   
-  .slider-controls {
-    gap: 20px;
+  .slider {
+    margin-bottom: 20px;
   }
   
   .slider-arrow {
@@ -512,13 +431,176 @@ body {
     height: 45px;
     font-size: 18px;
   }
+  
+  .indicator {
+    width: 10px;
+    height: 10px;
+  }
+  
+  .slider-controls {
+    gap: 25px;
+  }
 }
 
-/* Prevenir scroll */
+/* Tablets y pantallas medianas */
+@media (max-width: 1024px) {
+  .main-buttons {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 700px;
+    gap: clamp(15px, 3vw, 25px);
+  }
+  
+  .main-btn {
+    min-height: clamp(120px, 15vh, 160px);
+  }
+  
+  .dashboard-main {
+    padding: clamp(20px, 3vh, 35px) clamp(12px, 2vw, 25px);
+  }
+}
+
+/* Tablets pequeñas y móviles grandes */
+@media (max-width: 768px) {
+  .dashboard-header {
+    padding: clamp(10px, 1.5vh, 18px) clamp(12px, 2.5vw, 25px);
+  }
+  
+  .dashboard-main {
+    padding: clamp(15px, 2.5vh, 30px) clamp(10px, 2vw, 20px);
+  }
+  
+  .panel-title {
+    margin-bottom: clamp(20px, 3vh, 40px);
+  }
+  
+  .buttons-container {
+    margin-bottom: clamp(20px, 3vh, 40px);
+  }
+  
+  .main-buttons {
+    grid-template-columns: 1fr;
+    max-width: 550px;
+    gap: clamp(12px, 2vh, 20px);
+  }
+  
+  .main-btn {
+    min-height: clamp(100px, 12vh, 140px);
+    padding: clamp(30px, 4vh, 50px) clamp(15px, 2vw, 25px);
+  }
+  
+  .slider-controls {
+    gap: clamp(20px, 4vw, 35px);
+  }
+}
+
+/* Móviles */
+@media (max-width: 480px) {
+  .dashboard-header {
+    padding: clamp(8px, 1.2vh, 15px) clamp(10px, 3vw, 20px);
+  }
+  
+  .announcement-card {
+    padding: clamp(18px, 4vw, 30px);
+    min-height: clamp(140px, 18vh, 180px);
+  }
+  
+  .slider-controls {
+    gap: clamp(15px, 5vw, 30px);
+  }
+}
+
+/* Pantallas con altura pequeña (landscape móvil, etc.) */
+@media (max-height: 700px) {
+  .dashboard-main {
+    padding-top: clamp(10px, 1.5vh, 20px);
+    padding-bottom: clamp(10px, 1.5vh, 20px);
+  }
+  
+  .panel-title {
+    margin-bottom: clamp(15px, 2vh, 25px);
+  }
+  
+  .buttons-container {
+    margin-bottom: clamp(15px, 2vh, 30px);
+  }
+  
+  .main-btn {
+    min-height: clamp(90px, 12vh, 130px);
+    padding: clamp(20px, 3vh, 35px) clamp(15px, 2vw, 25px);
+  }
+  
+  .announcement-card {
+    min-height: clamp(120px, 15vh, 160px);
+    padding: clamp(20px, 3vw, 35px);
+  }
+}
+
+/* Mensajes de carga y error - Responsive */
+.loading-message,
+.error-message,
+.no-announcements {
+  text-align: center;
+  padding: var(--card-padding);
+  color: #4a5568;
+}
+
+.loading-message p,
+.error-message p,
+.no-announcements p {
+  font-size: clamp(14px, 1.6vw, 20px);
+  margin-top: clamp(10px, 1.5vh, 20px);
+}
+
+.error-icon,
+.no-data-icon {
+  font-size: clamp(45px, 5.5vw, 70px);
+  margin-bottom: clamp(10px, 1.5vh, 20px);
+}
+
+.retry-btn,
+.continue-btn,
+.create-announcement-btn {
+  padding: clamp(8px, 1.2vh, 14px) clamp(16px, 2.2vw, 28px);
+  font-size: clamp(12px, 1.3vw, 17px);
+  margin: clamp(8px, 1vh, 12px) clamp(5px, 1vw, 8px);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.error-message h4 {
+  font-size: clamp(20px, 2.2vw, 28px);
+  margin: clamp(8px, 1.2vh, 15px) 0;
+}
+
+/* Prevenir scroll en body */
 body {
   overflow: hidden;
 }
 
-.dashboard, .dashboard-main {
+.dashboard {
   overflow: hidden !important;
+}
+
+/* Ajuste para mejorar el scroll interno si es necesario */
+.dashboard-main {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 108, 223, 0.3) transparent;
+}
+
+.dashboard-main::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dashboard-main::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dashboard-main::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 108, 223, 0.3);
+  border-radius: 4px;
+}
+
+.dashboard-main::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 108, 223, 0.5);
 }
