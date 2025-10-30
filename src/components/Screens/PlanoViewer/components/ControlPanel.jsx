@@ -1,5 +1,5 @@
 import React from 'react';
-import { CONTROL_PANEL_STYLE, AREA_TYPES } from '../utils/constants';
+import { AREA_TYPES } from '../utils/constants';
 
 const ControlPanel = ({
   modoEdicion,
@@ -8,8 +8,23 @@ const ControlPanel = ({
   puntosTemporales,
   origen,
   destino,
-  areas,
-  points,
+  areas = [],
+  points = [],
+  zoomScale,
+  isSnapEnabled,
+  showDebugEdges,
+  edgesCount,
+  isRouteAnimating,
+  selectedNode,
+  floorTransitions = [],
+  todosLosDatos = {},
+  rutaActual = [],
+  carreraActual = 'general',
+  planoActual,
+  planosCarreraActual = [],
+  infoPlanoActual,
+  carrerasDisponibles = [],
+  onSavePasillo,
   onToggleEdit,
   onChangeType,
   onChangeName,
@@ -19,206 +34,555 @@ const ControlPanel = ({
   onCancel,
   onCalculateRoute,
   onOriginChange,
-  onDestinationChange
+  onDestinationChange,
+  onToggleSnap,
+  onToggleDebugEdges,
+  onStopAnimation,
+  onCambiarPlano,
+  onCambiarCarrera,
+  onAvanzarPlano,
+  onRetrocederPlano
 }) => {
-  const nodes = [...areas.filter(a => a.tipo !== AREA_TYPES.PASILLO), ...points];
+  const panelStyle = {
+    position: "absolute",
+    top: 20,
+    left: 20,
+    background: "rgba(255,255,255,0.85)",
+    backdropFilter: "blur(8px)",
+    padding: "20px",
+    borderRadius: "16px",
+    boxShadow: "0 10px 30px rgba(15, 23, 42, 0.12)",
+    zIndex: 10,
+    display: "flex",
+    flexDirection: "column",
+    gap: "14px",
+    width: "320px",
+    fontFamily: "Inter, Arial, sans-serif",
+  };
+
+  // OBTENER TODOS LOS NODOS DE TODOS LOS PLANOS
+  const getAllNodes = () => {
+    const allAreas = [];
+    const allPoints = [];
+    
+    Object.values(todosLosDatos).forEach(planoData => {
+      if (planoData.areas) allAreas.push(...planoData.areas);
+      if (planoData.points) allPoints.push(...planoData.points);
+    });
+    
+    return [...allAreas, ...allPoints];
+  };
+
+  const todosLosNodos = getAllNodes();
 
   return (
-    <div style={CONTROL_PANEL_STYLE}>
-      <h3 style={{ margin: 0, fontSize: "18px", fontWeight: 700, color: "#0f172a" }}>
-        Acciones
+    <div style={panelStyle}>
+      <h3 style={{ margin: "0 0 10px 0", color: "#1f2937" }}>
+        🗺️ Navegación GPS Multi-Piso
       </h3>
+      
+      {/* Selector de Carrera y Plano */}
+      <div style={{ 
+        padding: "12px", 
+        background: "rgba(248, 250, 252, 0.8)", 
+        borderRadius: "8px",
+        border: "1px solid rgba(226, 232, 240, 0.8)",
+        marginBottom: "12px"
+      }}>
+        <div style={{ fontSize: "12px", fontWeight: "600", color: "#475569", marginBottom: "8px" }}>
+          🏢 Navegación entre Planos
+        </div>
+        
+        {/* Selector de Carrera */}
+        <div style={{ marginBottom: "8px" }}>
+          <label style={{ display: "block", fontSize: "11px", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>
+            Carrera:
+          </label>
+          <select
+            value={carreraActual}
+            onChange={(e) => onCambiarCarrera && onCambiarCarrera(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "6px 8px",
+              borderRadius: "6px",
+              border: "1px solid #e2e8f0",
+              fontSize: "11px",
+              background: "white"
+            }}
+          >
+            <option value="general">Planta Principal</option>
+            {Array.isArray(carrerasDisponibles) && carrerasDisponibles.map(carrera => (
+              <option key={carrera} value={carrera}>
+                {carrera.charAt(0).toUpperCase() + carrera.slice(1)}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      <div style={{ display: "flex", gap: "10px" }}>
-        <select
-          value={tipoActual}
-          onChange={(e) => onChangeType(e.target.value)}
-          disabled={!modoEdicion}
-          style={selectStyle(!modoEdicion)}
-        >
-          <option value={AREA_TYPES.AULA}>Aula</option>
-          <option value={AREA_TYPES.SALON}>Salón</option>
-          <option value={AREA_TYPES.HALL}>Hall</option>
-          <option value={AREA_TYPES.BANO}>Baño</option>
-          <option value={AREA_TYPES.PUNTO}>Punto</option>
-          <option value={AREA_TYPES.PASILLO}>Pasillo</option>
-        </select>
-
-        {modoEdicion && tipoActual !== AREA_TYPES.PASILLO && (
-          <input
-            type="text"
-            placeholder="Nombre"
-            value={nombreArea}
-            onChange={(e) => onChangeName(e.target.value)}
-            style={inputStyle}
-          />
+        {/* Selector de Plano */}
+        {Array.isArray(planosCarreraActual) && planosCarreraActual.length > 0 && (
+          <div>
+            <label style={{ display: "block", fontSize: "11px", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>
+              Plano Actual:
+            </label>
+            <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
+              <button
+                onClick={onRetrocederPlano}
+                disabled={!infoPlanoActual?.tieneAnterior}
+                style={{
+                  padding: "4px 8px",
+                  background: infoPlanoActual?.tieneAnterior ? "#3b82f6" : "#cbd5e1",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  fontSize: "10px",
+                  cursor: infoPlanoActual?.tieneAnterior ? "pointer" : "not-allowed"
+                }}
+                title="Plano anterior"
+              >
+                ◀
+              </button>
+              
+              <select
+                value={planoActual?.id || ''}
+                onChange={(e) => onCambiarPlano && onCambiarPlano(e.target.value)}
+                style={{
+                  flex: 1,
+                  padding: "6px 8px",
+                  borderRadius: "6px",
+                  border: "1px solid #e2e8f0",
+                  fontSize: "11px",
+                  background: "white"
+                }}
+              >
+                {planosCarreraActual.map(plano => (
+                  <option key={plano.id} value={plano.id}>
+                    {plano.nombre}
+                  </option>
+                ))}
+              </select>
+              
+              <button
+                onClick={onAvanzarPlano}
+                disabled={!infoPlanoActual?.tieneSiguiente}
+                style={{
+                  padding: "4px 8px",
+                  background: infoPlanoActual?.tieneSiguiente ? "#3b82f6" : "#cbd5e1",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  fontSize: "10px",
+                  cursor: infoPlanoActual?.tieneSiguiente ? "pointer" : "not-allowed"
+                }}
+                title="Siguiente plano"
+              >
+                ▶
+              </button>
+            </div>
+            
+            {/* Información del plano actual */}
+            {infoPlanoActual && (
+              <div style={{ 
+                fontSize: "10px", 
+                color: "#64748b", 
+                marginTop: "6px",
+                textAlign: "center"
+              }}>
+                Plano {infoPlanoActual.numero} de {infoPlanoActual.total}
+              </div>
+            )}
+          </div>
         )}
       </div>
 
+      {/* CONTROLES DE EDICIÓN */}
       {!modoEdicion ? (
-        <button onClick={onToggleEdit} style={buttonStyle("#2563eb")}>
-          ✏️ Entrar en edición
-        </button>
+        /* Botón para activar modo edición */
+        <div style={{ 
+          padding: "12px", 
+          background: "rgba(59, 130, 246, 0.1)", 
+          borderRadius: "8px",
+          border: "1px solid rgba(59, 130, 246, 0.3)",
+          textAlign: "center"
+        }}>
+          <button
+            onClick={onToggleEdit}
+            style={{
+              padding: "10px 16px",
+              background: "#3b82f6",
+              color: "white",
+              border: "none",
+              borderRadius: "8px",
+              fontSize: "12px",
+              fontWeight: "600",
+              cursor: "pointer",
+              width: "100%"
+            }}
+          >
+            ✏️ Activar Modo Edición
+          </button>
+          <div style={{ fontSize: "10px", color: "#64748b", marginTop: "6px" }}>
+            Para agregar áreas, puntos y pasillos
+          </div>
+        </div>
       ) : (
-        <EditModeActions
-          tipoActual={tipoActual}
-          puntosTemporales={puntosTemporales}
-          onSaveArea={onSaveArea}
-          onSavePoints={onSavePoints}
-          onUndo={onUndo}
-          onCancel={onCancel}
-        />
+        /* Controles de edición activos */
+        <div style={{ 
+          padding: "12px", 
+          background: "rgba(34, 197, 94, 0.1)", 
+          borderRadius: "8px",
+          border: "1px solid rgba(34, 197, 94, 0.3)"
+        }}>
+          <div style={{ fontSize: "12px", fontWeight: "600", color: "#16a34a", marginBottom: "8px" }}>
+            ✏️ Modo Edición Activo
+          </div>
+          
+          {/* Selector de tipo de área */}
+          <div style={{ marginBottom: "8px" }}>
+            <label style={{ display: "block", fontSize: "11px", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>
+              Tipo de Elemento:
+            </label>
+            <select
+              value={tipoActual}
+              onChange={(e) => onChangeType && onChangeType(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "6px 8px",
+                borderRadius: "6px",
+                border: "1px solid #e2e8f0",
+                fontSize: "11px",
+                background: "white"
+              }}
+            >
+              <option value={AREA_TYPES.AULA}>Aula</option>
+              <option value={AREA_TYPES.SALON}>Salón</option>
+              <option value={AREA_TYPES.HALL}>Hall</option>
+              <option value={AREA_TYPES.BANO}>Baño</option>
+              <option value={AREA_TYPES.ESCALERA}>Escalera</option>
+              <option value={AREA_TYPES.PUNTO}>Punto</option>
+              <option value={AREA_TYPES.PASILLO}>Pasillo</option>
+            </select>
+          </div>
+
+          {/* Nombre del área */}
+          <div style={{ marginBottom: "8px" }}>
+            <label style={{ display: "block", fontSize: "11px", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>
+              Nombre:
+            </label>
+            <input
+              type="text"
+              value={nombreArea || ''}
+              onChange={(e) => onChangeName && onChangeName(e.target.value)}
+              placeholder="Nombre del área..."
+              style={{
+                width: "100%",
+                padding: "6px 8px",
+                borderRadius: "6px",
+                border: "1px solid #e2e8f0",
+                fontSize: "11px",
+                background: "white"
+              }}
+            />
+          </div>
+
+          {/* Botones de acción de edición */}
+          <div style={{ display: "flex", gap: "6px", marginBottom: "8px" }}>
+            {tipoActual === AREA_TYPES.PUNTO ? (
+              <button
+                onClick={onSavePoints}
+                disabled={!puntosTemporales || puntosTemporales.length === 0}
+                style={{
+                  flex: 1,
+                  padding: "8px",
+                  background: puntosTemporales?.length > 0 ? "#10b981" : "#cbd5e1",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "6px",
+                  fontSize: "11px",
+                  fontWeight: "600",
+                  cursor: puntosTemporales?.length > 0 ? "pointer" : "not-allowed"
+                }}
+              >
+                💾 Guardar Puntos
+              </button>
+            ) : tipoActual === AREA_TYPES.PASILLO ? (
+              <button
+                onClick={onSavePasillo}
+                disabled={!selectedNode}
+                style={{
+                  flex: 1,
+                  padding: "8px",
+                  background: selectedNode ? "#f59e0b" : "#cbd5e1",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "6px",
+                  fontSize: "11px",
+                  fontWeight: "600",
+                  cursor: selectedNode ? "pointer" : "not-allowed"
+                }}
+              >
+                🔗 {selectedNode ? `Conectar ${selectedNode.nombre}` : 'Selecciona un nodo'}
+              </button>
+            ) : (
+              <button
+                onClick={onSaveArea}
+                disabled={!puntosTemporales || puntosTemporales.length < 3}
+                style={{
+                  flex: 1,
+                  padding: "8px",
+                  background: puntosTemporales?.length >= 3 ? "#10b981" : "#cbd5e1",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "6px",
+                  fontSize: "11px",
+                  fontWeight: "600",
+                  cursor: puntosTemporales?.length >= 3 ? "pointer" : "not-allowed"
+                }}
+              >
+                💾 Guardar Área
+              </button>
+            )}
+            
+            <button
+              onClick={onUndo}
+              disabled={!puntosTemporales || puntosTemporales.length === 0}
+              style={{
+                padding: "8px 12px",
+                background: puntosTemporales?.length > 0 ? "#ef4444" : "#cbd5e1",
+                color: "white",
+                border: "none",
+                borderRadius: "6px",
+                fontSize: "11px",
+                fontWeight: "600",
+                cursor: puntosTemporales?.length > 0 ? "pointer" : "not-allowed"
+              }}
+            >
+              ↩️
+            </button>
+          </div>
+
+          {/* Información de edición */}
+          <div style={{ fontSize: "10px", color: "#64748b", textAlign: "center" }}>
+            {tipoActual === AREA_TYPES.PUNTO && "Haz clic para agregar puntos"}
+            {tipoActual === AREA_TYPES.PASILLO && "Haz clic en dos nodos para conectar"}
+            {tipoActual !== AREA_TYPES.PUNTO && tipoActual !== AREA_TYPES.PASILLO && "Haz clic para crear el polígono"}
+            {puntosTemporales && puntosTemporales.length > 0 && ` • Puntos: ${puntosTemporales.length}`}
+          </div>
+
+          {/* Botón cancelar edición */}
+          <button
+            onClick={onCancel}
+            style={{
+              width: "100%",
+              padding: "6px",
+              background: "#ef4444",
+              color: "white",
+              border: "none",
+              borderRadius: "6px",
+              fontSize: "10px",
+              fontWeight: "600",
+              cursor: "pointer",
+              marginTop: "6px"
+            }}
+          >
+            ❌ Cancelar Edición
+          </button>
+        </div>
       )}
 
-      <GPSPanel
-        origen={origen}
-        destino={destino}
-        nodes={nodes}
-        onOriginChange={onOriginChange}
-        onDestinationChange={onDestinationChange}
-        onCalculateRoute={onCalculateRoute}
-      />
+      {/* Controles de Navegación GPS */}
+      <div>
+        <div style={{ fontSize: "11px", fontWeight: "600", color: "#475569", marginBottom: "8px", textAlign: "center" }}>
+          🌍 Navegación Multi-Piso
+        </div>
+
+        <label style={{ display: "block", fontSize: "11px", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>
+          Origen:
+        </label>
+        <select
+          value={origen || ''}
+          onChange={(e) => onOriginChange && onOriginChange(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "6px 8px",
+            borderRadius: "6px",
+            border: "1px solid #e2e8f0",
+            fontSize: "11px",
+            background: "white",
+            marginBottom: "8px"
+          }}
+        >
+          <option value="">Seleccionar origen</option>
+          {todosLosNodos.map(node => (
+            <option key={node.id} value={node.id}>
+              {node.nombre} ({node.carrera} {node.piso})
+            </option>
+          ))}
+        </select>
+
+        <label style={{ display: "block", fontSize: "11px", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>
+          Destino:
+        </label>
+        <select
+          value={destino || ''}
+          onChange={(e) => onDestinationChange && onDestinationChange(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "6px 8px",
+            borderRadius: "6px",
+            border: "1px solid #e2e8f0",
+            fontSize: "11px",
+            background: "white",
+            marginBottom: "8px"
+          }}
+        >
+          <option value="">Seleccionar destino</option>
+          {todosLosNodos.map(node => (
+            <option key={node.id} value={node.id}>
+              {node.nombre} ({node.carrera} {node.piso})
+            </option>
+          ))}
+        </select>
+
+        <button
+          onClick={onCalculateRoute}
+          disabled={!origen || !destino}
+          style={{
+            width: "100%",
+            padding: "8px",
+            background: origen && destino ? "#10b981" : "#cbd5e1",
+            color: "white",
+            border: "none",
+            borderRadius: "6px",
+            fontSize: "11px",
+            fontWeight: "600",
+            cursor: origen && destino ? "pointer" : "not-allowed"
+          }}
+        >
+          🚀 Calcular Ruta Multi-Piso
+        </button>
+
+        {isRouteAnimating && (
+          <button
+            onClick={onStopAnimation}
+            style={{
+              width: "100%",
+              padding: "6px",
+              background: "#ef4444",
+              color: "white",
+              border: "none",
+              borderRadius: "6px",
+              fontSize: "10px",
+              fontWeight: "600",
+              cursor: "pointer",
+              marginTop: "4px"
+            }}
+          >
+            ⏹️ Detener Animación
+          </button>
+        )}
+
+        {/* Información de la ruta calculada */}
+        {rutaActual && rutaActual.length > 0 && (
+          <div style={{ 
+            padding: "8px", 
+            background: "rgba(34, 197, 94, 0.1)", 
+            borderRadius: "6px",
+            border: "1px solid rgba(34, 197, 94, 0.3)",
+            marginTop: "8px"
+          }}>
+            <div style={{ fontSize: "10px", fontWeight: "600", color: "#16a34a", marginBottom: "4px" }}>
+              🗺️ Ruta Calculada
+            </div>
+            <div style={{ fontSize: "9px", color: "#64748b" }}>
+              {rutaActual.length} pasos • Ruta multi-piso lista
+            </div>
+          </div>
+        )}
+
+        {/* Información de transiciones entre pisos */}
+        {floorTransitions && floorTransitions.length > 0 && (
+          <div style={{ 
+            padding: "8px", 
+            background: "rgba(59, 130, 246, 0.1)", 
+            borderRadius: "6px",
+            border: "1px solid rgba(59, 130, 246, 0.3)",
+            marginTop: "8px"
+          }}>
+            <div style={{ fontSize: "10px", fontWeight: "600", color: "#1e40af", marginBottom: "4px" }}>
+              🏢 Cambios de Piso
+            </div>
+            {floorTransitions.map((transition, index) => (
+              <div key={index} style={{ fontSize: "9px", color: "#374151" }}>
+                {transition.fromFloor} → {transition.toFloor}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Información de Debug */}
+      <div style={{ 
+        padding: "8px", 
+        background: "rgba(248, 250, 252, 0.8)", 
+        borderRadius: "6px",
+        border: "1px solid rgba(226, 232, 240, 0.8)"
+      }}>
+        <div style={{ fontSize: "10px", color: "#64748b" }}>
+          🔍 Bordes detectados: {edgesCount || 0}
+        </div>
+        <div style={{ fontSize: "10px", color: "#64748b" }}>
+          📏 Zoom: {Math.round(zoomScale * 100)}%
+        </div>
+        <div style={{ fontSize: "10px", color: "#64748b" }}>
+          🧲 Snap: {isSnapEnabled ? "Activado" : "Desactivado"}
+        </div>
+        <div style={{ fontSize: "10px", color: "#64748b" }}>
+          🎬 Animación: {isRouteAnimating ? "Activa" : "Inactiva"}
+        </div>
+        <div style={{ fontSize: "10px", color: "#64748b" }}>
+          📍 Nodos totales: {todosLosNodos.length}
+        </div>
+      </div>
+
+      {/* Botones de Configuración */}
+      <div style={{ display: "flex", gap: "6px" }}>
+        <button
+          onClick={onToggleSnap}
+          style={{
+            flex: 1,
+            padding: "6px",
+            background: isSnapEnabled ? "#10b981" : "#ef4444",
+            color: "white",
+            border: "none",
+            borderRadius: "6px",
+            fontSize: "10px",
+            fontWeight: "600",
+            cursor: "pointer"
+          }}
+        >
+          🧲 {isSnapEnabled ? "Snap ON" : "Snap OFF"}
+        </button>
+        
+        <button
+          onClick={onToggleDebugEdges}
+          style={{
+            flex: 1,
+            padding: "6px",
+            background: showDebugEdges ? "#f59e0b" : "#6b7280",
+            color: "white",
+            border: "none",
+            borderRadius: "6px",
+            fontSize: "10px",
+            fontWeight: "600",
+            cursor: "pointer"
+          }}
+        >
+          🐛 {showDebugEdges ? "Debug ON" : "Debug OFF"}
+        </button>
+      </div>
     </div>
   );
 };
-
-const EditModeActions = ({
-  tipoActual,
-  puntosTemporales,
-  onSaveArea,
-  onSavePoints,
-  onUndo,
-  onCancel
-}) => (
-  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-    {tipoActual !== AREA_TYPES.PASILLO && tipoActual !== AREA_TYPES.PUNTO && (
-      <button
-        onClick={onSaveArea}
-        disabled={puntosTemporales.length < 3}
-        style={buttonStyle(
-          puntosTemporales.length < 3 ? "#94a3b8" : "#10b981",
-          puntosTemporales.length < 3
-        )}
-      >
-        💾 Guardar área
-      </button>
-    )}
-
-    {tipoActual === AREA_TYPES.PUNTO && (
-      <button
-        onClick={onSavePoints}
-        disabled={puntosTemporales.length === 0}
-        style={buttonStyle(
-          puntosTemporales.length === 0 ? "#94a3b8" : "#10b981",
-          puntosTemporales.length === 0
-        )}
-      >
-        💾 Guardar puntos
-      </button>
-    )}
-
-    {tipoActual !== AREA_TYPES.PASILLO && tipoActual !== AREA_TYPES.PUNTO && (
-      <button
-        onClick={onUndo}
-        disabled={puntosTemporales.length === 0}
-        style={buttonStyle(
-          puntosTemporales.length === 0 ? "#94a3b8" : "#f59e0b",
-          puntosTemporales.length === 0
-        )}
-      >
-        ↩️ Deshacer punto
-      </button>
-    )}
-
-    <button onClick={onCancel} style={buttonStyle("#ef4444")}>
-      ❌ Cancelar
-    </button>
-  </div>
-);
-
-const GPSPanel = ({
-  origen,
-  destino,
-  nodes,
-  onOriginChange,
-  onDestinationChange,
-  onCalculateRoute
-}) => (
-  <>
-    <h3 style={{ margin: "6px 0 0 0", fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>
-      GPS
-    </h3>
-    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-      <select
-        value={origen}
-        onChange={(e) => onOriginChange(e.target.value)}
-        style={selectStyle(false)}
-      >
-        <option value="">Origen</option>
-        {nodes.map((n) => (
-          <option key={n.id} value={n.id}>
-            {n.nombre}
-          </option>
-        ))}
-      </select>
-
-      <select
-        value={destino}
-        onChange={(e) => onDestinationChange(e.target.value)}
-        style={selectStyle(false)}
-      >
-        <option value="">Destino</option>
-        {nodes.map((n) => (
-          <option key={n.id} value={n.id}>
-            {n.nombre}
-          </option>
-        ))}
-      </select>
-
-      <button
-        onClick={onCalculateRoute}
-        disabled={!origen || !destino}
-        style={buttonStyle(
-          !origen || !destino ? "#94a3b8" : "#0ea5e9",
-          !origen || !destino
-        )}
-      >
-        📍 Calcular ruta
-      </button>
-    </div>
-  </>
-);
-
-// Estilos reutilizables
-const selectStyle = (disabled) => ({
-  flex: 1,
-  padding: "8px",
-  borderRadius: "10px",
-  border: "1px solid #e6e9ef",
-  background: disabled ? "#f3f4f6" : "white",
-  color: "#0f172a",
-  appearance: "none",
-  WebkitAppearance: "none",
-  MozAppearance: "none",
-});
-
-const inputStyle = {
-  flex: 1,
-  padding: "8px",
-  borderRadius: "10px",
-  border: "1px solid #e6e9ef",
-  background: "white",
-  color: "#0f172a"
-};
-
-const buttonStyle = (backgroundColor, disabled = false) => ({
-  padding: "10px",
-  background: backgroundColor,
-  color: "white",
-  border: "none",
-  borderRadius: "10px",
-  cursor: disabled ? "not-allowed" : "pointer",
-  fontWeight: 700
-});
 
 export default ControlPanel;
