@@ -1,6 +1,7 @@
 import React from 'react';
-import { COLORS } from '../utils/constants';
+import { COLORS, AREA_TYPES } from '../utils/constants';
 import { geometryUtils } from '../utils/geometry';
+import Staircase from './Staircase';
 
 const AreaPolygon = ({ 
   area, 
@@ -9,13 +10,26 @@ const AreaPolygon = ({
   onNodeClick,
   getPolygonCenter 
 }) => {
+  // Si es una escalera, usar el componente Staircase
+  if (area.tipo === AREA_TYPES.ESCALERA) {
+    return (
+      <Staircase
+        area={area}
+        zoomScale={zoomScale}
+        isSelectable={isSelectable}
+        onNodeClick={onNodeClick}
+        getPolygonCenter={getPolygonCenter}
+      />
+    );
+  }
+
   const handleClick = () => {
     if (isSelectable && onNodeClick) {
       onNodeClick(area);
     }
   };
 
-  // Si es un punto
+  // Si es un punto - MUCHO MÁS PEQUEÑO
   if (area.tipo === "punto") {
     return (
       <g
@@ -25,17 +39,17 @@ const AreaPolygon = ({
         <circle
           cx={area.x}
           cy={area.y}
-          r="6"
+          r="3"                             // Mucho más pequeño (antes 6, luego 4, ahora 3)
           fill={COLORS.punto}
           stroke="black"
-          strokeWidth="1"
+          strokeWidth="0.5"                 // Más fino
         />
-        {zoomScale >= 2.5 && (
+        {zoomScale >= 3 && (                // Solo mostrar texto con más zoom
           <text
-            x={area.x + 10}
-            y={area.y - 10}
+            x={area.x + 6}                  // Más cerca
+            y={area.y - 6}                  // Más cerca
             fill="black"
-            fontSize="14"
+            fontSize="10"                   // Más pequeño
             fontWeight="bold"
             style={{ pointerEvents: "none" }}
           >
@@ -46,7 +60,7 @@ const AreaPolygon = ({
     );
   }
 
-  // Si es un área poligonal
+  // Si es un área poligonal normal - BORDES MÁS FINOS
   const [centerX, centerY] = getPolygonCenter(area.points);
 
   return (
@@ -58,7 +72,7 @@ const AreaPolygon = ({
         points={geometryUtils.toPointsAttr(area.points)}
         fill={COLORS[area.tipo]}
         stroke={COLORS.borde}
-        strokeWidth={2}
+        strokeWidth="1"                     // Más fino (antes 2)
       />
       {zoomScale >= 2.5 && (
         <text
@@ -66,7 +80,7 @@ const AreaPolygon = ({
           y={centerY}
           textAnchor="middle"
           fill="black"
-          fontSize="16"
+          fontSize="14"                     // Más pequeño
           fontWeight="bold"
           style={{ pointerEvents: "none" }}
         >

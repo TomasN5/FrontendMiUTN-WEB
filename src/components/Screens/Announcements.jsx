@@ -10,7 +10,6 @@ import './Announcements.css';
 import env from '../../config/env';
 
 const api_URL = env.API_BASE_URL;
-// URL base de la API
 const API_BASE_URL = api_URL + 'api/v1/miUTN/publication';
 
 const Announcements = () => {

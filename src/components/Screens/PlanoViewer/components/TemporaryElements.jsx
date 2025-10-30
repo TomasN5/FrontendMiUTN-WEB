@@ -12,39 +12,39 @@ const TemporaryElements = ({
 
   return (
     <>
-      {/* Puntos temporales para modo "punto" */}
+      {/* Puntos temporales para modo "punto" - MÁS PEQUEÑOS */}
       {tipoActual === AREA_TYPES.PUNTO && puntosTemporales.map(([x, y], i) => (
         <circle
           key={`tmp-point-${i}`}
           cx={x}
           cy={y}
-          r="6"
+          r="3"                             // Igual de pequeño que los puntos permanentes
           fill="orange"
           stroke="black"
-          strokeWidth="1"
+          strokeWidth="0.5"                 // Más fino
         />
       ))}
 
-      {/* Polígono temporal para otros tipos de áreas */}
+      {/* Polígono temporal - LÍNEAS MÁS FINAS */}
       {tipoActual !== AREA_TYPES.PUNTO && tipoActual !== AREA_TYPES.PASILLO && 
        puntosTemporales.length > 0 && (
         <polygon
           points={geometryUtils.toPointsAttr(puntosTemporales)}
-          fill="rgba(59,130,246,0.12)"
-          stroke="rgba(59,130,246,0.6)"
-          strokeWidth={2}
-          strokeDasharray="4,2"
+          fill="rgba(59,130,246,0.08)"     // Más transparente
+          stroke="rgba(59,130,246,0.4)"    // Más transparente
+          strokeWidth="1"                   // Más fino
+          strokeDasharray="3,2"             // Puntos más pequeños
         />
       )}
 
-      {/* Cursor preview */}
+      {/* Cursor preview - MÁS PEQUEÑO */}
       {cursorPos && tipoActual !== AREA_TYPES.PASILLO && (
         <circle 
           cx={cursorPos[0]} 
           cy={cursorPos[1]} 
-          r="4" 
+          r="2"                             // Más pequeño (antes 4)
           fill="#2563eb" 
-          opacity={0.9} 
+          opacity={0.7}                     // Más transparente
         />
       )}
     </>

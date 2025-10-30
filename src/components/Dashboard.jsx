@@ -17,14 +17,15 @@ const Dashboard = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-    // Cargar anuncios al montar el componente
+  // ✅ Verificación de token al entrar
   useEffect(() => {
-    if (!checkAuth()) {
-      // Si no hay token, redirigimos al login
-      logout()
+    const token = sessionStorage.getItem('token');
+    console.log(token)
+    if (!token) {
+      navigate('/login'); // si no hay token, va al login
     }
-    fetchAnnouncements();
-  }, []);
+  }, [navigate]);
+
 
   // Efecto para el slider automático (solo si hay anuncios)
   useEffect(() => {
@@ -141,6 +142,19 @@ const Dashboard = () => {
 
   const handleAnnouncementsClick = () => {
     navigate('/announcements');
+  };
+  const handleProfessorClick = () => {
+    navigate('/profesores');
+  }
+  const handleSubjectClick = () => {
+    navigate('/materias');
+  }
+
+
+  // ✅ Función para cerrar sesión
+  const handleLogout = () => {
+    sessionStorage.removeItem('token'); // elimina el token
+    navigate('/login'); // redirige al login
   };
 
   const handleMateriasClick = () => {
