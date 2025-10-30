@@ -26,6 +26,12 @@ export default function EliminarMateria({ onConfirm, onCancel }) {
         </div>
         <div className="eliminar-modal-actions">
           <button
+            className="eliminar-btn cancel"
+            onClick={onCancel}
+          >
+            Cancelar
+          </button>
+          <button
             className="eliminar-btn accept"
             style={{ 
               background: `linear-gradient(135deg, ${colorMateria} 0%, ${getDarkerColor(colorMateria)} 100%)`
@@ -33,12 +39,6 @@ export default function EliminarMateria({ onConfirm, onCancel }) {
             onClick={onConfirm}
           >
             Aceptar
-          </button>
-          <button
-            className="eliminar-btn cancel"
-            onClick={onCancel}
-          >
-            Cancelar
           </button>
         </div>
       </div>

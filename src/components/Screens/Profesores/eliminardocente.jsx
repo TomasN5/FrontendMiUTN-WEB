@@ -17,16 +17,16 @@ export default function EliminarDocente({ onConfirm, onCancel }) {
         </div>
         <div className="eliminar-modal-actions">
           <button
-            className="eliminar-btn accept"
-            onClick={onConfirm}
-          >
-            Aceptar
-          </button>
-          <button
             className="eliminar-btn cancel"
             onClick={onCancel}
           >
             Cancelar
+          </button>
+          <button
+            className="eliminar-btn accept"
+            onClick={onConfirm}
+          >
+            Aceptar
           </button>
         </div>
       </div>
