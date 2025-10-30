@@ -1,16 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
+// useRouteAnimation.js - ENFOQUE SIMPLIFICADO
+import { useState, useCallback } from 'react';
 
 export const useRouteAnimation = () => {
   const [animatedPath, setAnimatedPath] = useState([]);
   const [isAnimating, setIsAnimating] = useState(false);
   const [currentAnimation, setCurrentAnimation] = useState(null);
 
-  // Función para iniciar la animación de la ruta
-  const startRouteAnimation = useCallback((rutaCompleta, getPointCoordinates, duration = 2000) => {
-    // Limpiar animación anterior
-    if (currentAnimation) {
-      clearTimeout(currentAnimation);
-    }
+  const startRouteAnimation = useCallback((rutaCompleta, getPointCoordinates, duration = 3000) => {
+    if (currentAnimation) clearTimeout(currentAnimation);
     
     if (!rutaCompleta || rutaCompleta.length < 2) {
       setAnimatedPath([]);
@@ -18,57 +15,37 @@ export const useRouteAnimation = () => {
       return;
     }
 
+    console.log("🎬 Animando ruta:", rutaCompleta);
     setIsAnimating(true);
     setAnimatedPath([]);
 
-    // Convertir la ruta completa a coordenadas
-    const puntosCompletos = rutaCompleta.map(id => getPointCoordinates(id));
-    
-    // Animación paso a paso
-    const segmentDuration = duration / (puntosCompletos.length - 1);
-    let currentSegment = 0;
-    
-    const animateNextSegment = () => {
-      if (currentSegment < puntosCompletos.length - 1) {
-        const segmentPath = puntosCompletos.slice(0, currentSegment + 2);
-        setAnimatedPath(segmentPath);
-        currentSegment++;
+    const puntos = rutaCompleta.map(id => getPointCoordinates(id));
+    const pointDuration = duration / puntos.length;
+    let currentIndex = 0;
+
+    const animateNext = () => {
+      if (currentIndex < puntos.length) {
+        const pathSoFar = puntos.slice(0, currentIndex + 1);
+        setAnimatedPath(pathSoFar);
+        currentIndex++;
         
-        const timeoutId = setTimeout(animateNextSegment, segmentDuration);
+        const timeoutId = setTimeout(animateNext, pointDuration);
         setCurrentAnimation(timeoutId);
       } else {
         setIsAnimating(false);
       }
     };
 
-    // Iniciar con el primer punto
-    setAnimatedPath([puntosCompletos[0]]);
-    const timeoutId = setTimeout(() => {
-      animateNextSegment();
-    }, 100);
-    
-    setCurrentAnimation(timeoutId);
+    setAnimatedPath([puntos[0]]);
+    const initialTimeout = setTimeout(animateNext, 200);
+    setCurrentAnimation(initialTimeout);
   }, [currentAnimation]);
 
-  // Limpiar animación al desmontar
-  useEffect(() => {
-    return () => {
-      if (currentAnimation) {
-        clearTimeout(currentAnimation);
-      }
-    };
-  }, [currentAnimation]);
-
-  // Función para detener la animación
   const stopAnimation = useCallback(() => {
-    if (currentAnimation) {
-      clearTimeout(currentAnimation);
-      setCurrentAnimation(null);
-    }
+    if (currentAnimation) clearTimeout(currentAnimation);
     setIsAnimating(false);
   }, [currentAnimation]);
 
-  // Función para reiniciar la animación
   const resetAnimation = useCallback(() => {
     stopAnimation();
     setAnimatedPath([]);

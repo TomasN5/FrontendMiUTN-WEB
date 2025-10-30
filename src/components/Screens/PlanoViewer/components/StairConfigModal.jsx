@@ -5,7 +5,8 @@ const StairConfigModal = ({
   isOpen, 
   onClose, 
   onSave, 
-  initialData = {} 
+  initialData = {},
+  todasLasEscaleras = [] // Nueva prop: lista de todas las escaleras existentes
 }) => {
   const [config, setConfig] = useState({
     carreraActual: CARRERAS.SISTEMAS,
@@ -13,7 +14,8 @@ const StairConfigModal = ({
     carreraDestino: CARRERAS.SISTEMAS,
     pisoDestino: PISOS.PISO2,
     nombre: "Escalera",
-    direccion: "ambos"
+    direccion: "ambos",
+    escaleraConectadaId: "" // Nueva: ID de la escalera con la que se conecta
   });
 
   useEffect(() => {
@@ -24,7 +26,8 @@ const StairConfigModal = ({
         carreraDestino: initialData.carreraDestino || CARRERAS.SISTEMAS,
         pisoDestino: initialData.pisoDestino || PISOS.PISO2,
         nombre: initialData.nombre || "Escalera",
-        direccion: initialData.direccion || "ambos"
+        direccion: initialData.direccion || "ambos",
+        escaleraConectadaId: initialData.escaleraConectadaId || ""
       });
     }
   }, [initialData]);
@@ -34,6 +37,21 @@ const StairConfigModal = ({
   const handleSave = () => {
     onSave(config);
   };
+
+  // Filtrar escaleras que pueden conectarse (misma carrera, pisos opuestos)
+  const escalerasConectables = todasLasEscaleras.filter(escalera => 
+    escalera.carreraActual === config.carreraDestino &&
+    escalera.pisoActual === config.pisoDestino &&
+    escalera.carreraDestino === config.carreraActual &&
+    escalera.pisoDestino === config.pisoActual
+  );
+
+  // También incluir escaleras en el mismo destino (para conexión directa)
+  const escalerasMismoDestino = todasLasEscaleras.filter(escalera =>
+    escalera.carreraActual === config.carreraDestino &&
+    escalera.pisoActual === config.pisoDestino &&
+    escalera.id !== initialData?.id // Excluir esta misma escalera
+  );
 
   const modalStyle = {
     position: "fixed",
@@ -52,8 +70,10 @@ const StairConfigModal = ({
     background: "white",
     padding: "24px",
     borderRadius: "12px",
-    width: "450px",
+    width: "500px",
     maxWidth: "90vw",
+    maxHeight: "90vh",
+    overflowY: "auto",
     boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
     fontFamily: "Inter, Arial, sans-serif"
   };
@@ -88,7 +108,6 @@ const StairConfigModal = ({
     fontSize: "14px"
   });
 
-  // Función para obtener el nombre completo de la carrera
   const getCarreraNombre = (carreraKey) => {
     const nombres = {
       [CARRERAS.SISTEMAS]: "Sistemas",
@@ -191,6 +210,55 @@ const StairConfigModal = ({
           </div>
         </div>
 
+        {/* SELECTOR DE CONEXIÓN CON OTRA ESCALERA */}
+        <div style={{ marginBottom: "16px", padding: "12px", background: "#e0f2fe", borderRadius: "8px" }}>
+          <h4 style={{ margin: "0 0 12px 0", color: "#0369a1", fontSize: "14px" }}>🔗 Conectar con Escalera Existente</h4>
+          
+          {escalerasConectables.length > 0 ? (
+            <div>
+              <label style={labelStyle}>Escalera gemela (conexión automática):</label>
+              <select
+                value={config.escaleraConectadaId}
+                onChange={(e) => setConfig({...config, escaleraConectadaId: e.target.value})}
+                style={inputStyle}
+              >
+                <option value="">Seleccionar escalera gemela...</option>
+                {escalerasConectables.map(escalera => (
+                  <option key={escalera.id} value={escalera.id}>
+                    {escalera.nombre} ({getCarreraNombre(escalera.carreraActual)} {escalera.pisoActual})
+                  </option>
+                ))}
+              </select>
+              <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>
+                ⚡ Conexión bidireccional automática
+              </div>
+            </div>
+          ) : escalerasMismoDestino.length > 0 ? (
+            <div>
+              <label style={labelStyle}>Conectar con escalera en destino:</label>
+              <select
+                value={config.escaleraConectadaId}
+                onChange={(e) => setConfig({...config, escaleraConectadaId: e.target.value})}
+                style={inputStyle}
+              >
+                <option value="">Seleccionar escalera en destino...</option>
+                {escalerasMismoDestino.map(escalera => (
+                  <option key={escalera.id} value={escalera.id}>
+                    {escalera.nombre} ({getCarreraNombre(escalera.carreraActual)} {escalera.pisoActual})
+                  </option>
+                ))}
+              </select>
+              <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>
+                🔄 Conexión manual - verificar configuración
+              </div>
+            </div>
+          ) : (
+            <div style={{ fontSize: "12px", color: "#64748b", textAlign: "center" }}>
+              No hay escaleras disponibles para conectar en el destino
+            </div>
+          )}
+        </div>
+
         <div>
           <label style={labelStyle}>Dirección:</label>
           <select
@@ -208,12 +276,16 @@ const StairConfigModal = ({
         <div style={{ 
           marginTop: "16px", 
           padding: "12px", 
-          background: "#dbeafe", 
+          background: config.escaleraConectadaId ? "#dbeafe" : "#fef3c7", 
           borderRadius: "8px",
-          border: "1px solid #93c5fd"
+          border: config.escaleraConectadaId ? "1px solid #93c5fd" : "1px solid #fcd34d"
         }}>
-          <div style={{ fontSize: "12px", color: "#1e40af", fontWeight: "600" }}>
-            Conexión: {getCarreraNombre(config.carreraActual)} {config.pisoActual} → {getCarreraNombre(config.carreraDestino)} {config.pisoDestino}
+          <div style={{ fontSize: "12px", color: config.escaleraConectadaId ? "#1e40af" : "#92400e", fontWeight: "600" }}>
+            {config.escaleraConectadaId ? "🔗 CONEXIÓN CONFIGURADA" : "⚠️ CONEXIÓN PENDIENTE"}
+          </div>
+          <div style={{ fontSize: "11px", color: "#64748b", marginTop: "4px" }}>
+            {getCarreraNombre(config.carreraActual)} {config.pisoActual} → {getCarreraNombre(config.carreraDestino)} {config.pisoDestino}
+            {config.escaleraConectadaId && " • Conectada con escalera existente"}
           </div>
         </div>
 

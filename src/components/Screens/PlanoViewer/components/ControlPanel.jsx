@@ -1,5 +1,5 @@
 import React from 'react';
-import { CONTROL_PANEL_STYLE, AREA_TYPES } from '../utils/constants';
+import { AREA_TYPES } from '../utils/constants';
 
 const ControlPanel = ({
   modoEdicion,
@@ -8,20 +8,28 @@ const ControlPanel = ({
   puntosTemporales,
   origen,
   destino,
-  areas,
-  points,
+  areas = [],
+  points = [],
   zoomScale,
   isSnapEnabled,
   showDebugEdges,
   edgesCount,
   isRouteAnimating,
-  selectedNode,  // ← NUEVA PROP
+  selectedNode,
+  floorTransitions = [],
+  todosLosDatos = {},
+  rutaActual = [],
+  carreraActual = 'general',
+  planoActual,
+  planosCarreraActual = [],
+  infoPlanoActual,
+  carrerasDisponibles = [],
+  onSavePasillo,
   onToggleEdit,
   onChangeType,
   onChangeName,
   onSaveArea,
   onSavePoints,
-  onSavePasillo,
   onUndo,
   onCancel,
   onCalculateRoute,
@@ -29,555 +37,552 @@ const ControlPanel = ({
   onDestinationChange,
   onToggleSnap,
   onToggleDebugEdges,
-  onStopAnimation
+  onStopAnimation,
+  onCambiarPlano,
+  onCambiarCarrera,
+  onAvanzarPlano,
+  onRetrocederPlano
 }) => {
-  const nodes = [...areas.filter(a => a.tipo !== AREA_TYPES.PASILLO), ...points];
-
-  // Estilos inline
-  const selectStyle = (disabled) => ({
-    flex: 1,
-    padding: "10px 12px",
-    borderRadius: "10px",
-    border: "1px solid #e2e8f0",
-    background: disabled ? "#f8fafc" : "white",
-    color: "#0f172a",
-    fontFamily: "Inter, Arial, sans-serif",
-    fontSize: "14px",
-    cursor: disabled ? "not-allowed" : "pointer",
-    appearance: "none",
-    WebkitAppearance: "none",
-    MozAppearance: "none",
-    opacity: disabled ? 0.6 : 1
-  });
-
-  const inputStyle = {
-    flex: 1,
-    padding: "10px 12px",
-    borderRadius: "10px",
-    border: "1px solid #e2e8f0",
-    background: "white",
-    color: "#0f172a",
-    fontFamily: "Inter, Arial, sans-serif",
-    fontSize: "14px"
-  };
-
-  const buttonStyle = (backgroundColor, disabled = false) => ({
-    padding: "12px 16px",
-    background: disabled ? "#94a3b8" : backgroundColor,
-    color: "white",
-    border: "none",
-    borderRadius: "10px",
-    cursor: disabled ? "not-allowed" : "pointer",
-    fontWeight: "600",
-    fontSize: "14px",
-    fontFamily: "Inter, Arial, sans-serif",
-    transition: "all 0.2s ease",
-    opacity: disabled ? 0.6 : 1
-  });
-
   const panelStyle = {
-    ...CONTROL_PANEL_STYLE,
-    maxHeight: "90vh",
-    overflowY: "auto"
+    position: "absolute",
+    top: 20,
+    left: 20,
+    background: "rgba(255,255,255,0.85)",
+    backdropFilter: "blur(8px)",
+    padding: "20px",
+    borderRadius: "16px",
+    boxShadow: "0 10px 30px rgba(15, 23, 42, 0.12)",
+    zIndex: 10,
+    display: "flex",
+    flexDirection: "column",
+    gap: "14px",
+    width: "320px",
+    fontFamily: "Inter, Arial, sans-serif",
   };
+
+  // OBTENER TODOS LOS NODOS DE TODOS LOS PLANOS
+  const getAllNodes = () => {
+    const allAreas = [];
+    const allPoints = [];
+    
+    Object.values(todosLosDatos).forEach(planoData => {
+      if (planoData.areas) allAreas.push(...planoData.areas);
+      if (planoData.points) allPoints.push(...planoData.points);
+    });
+    
+    return [...allAreas, ...allPoints];
+  };
+
+  const todosLosNodos = getAllNodes();
 
   return (
     <div style={panelStyle}>
-      <h3 style={{ 
-        margin: 0, 
-        fontSize: "18px", 
-        fontWeight: 700, 
-        color: "#0f172a",
-        fontFamily: "Inter, Arial, sans-serif"
-      }}>
-        Editor de Planos
+      <h3 style={{ margin: "0 0 10px 0", color: "#1f2937" }}>
+        🗺️ Navegación GPS Multi-Piso
       </h3>
+      
+      {/* Selector de Carrera y Plano */}
+      <div style={{ 
+        padding: "12px", 
+        background: "rgba(248, 250, 252, 0.8)", 
+        borderRadius: "8px",
+        border: "1px solid rgba(226, 232, 240, 0.8)",
+        marginBottom: "12px"
+      }}>
+        <div style={{ fontSize: "12px", fontWeight: "600", color: "#475569", marginBottom: "8px" }}>
+          🏢 Navegación entre Planos
+        </div>
+        
+        {/* Selector de Carrera */}
+        <div style={{ marginBottom: "8px" }}>
+          <label style={{ display: "block", fontSize: "11px", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>
+            Carrera:
+          </label>
+          <select
+            value={carreraActual}
+            onChange={(e) => onCambiarCarrera && onCambiarCarrera(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "6px 8px",
+              borderRadius: "6px",
+              border: "1px solid #e2e8f0",
+              fontSize: "11px",
+              background: "white"
+            }}
+          >
+            <option value="general">Planta Principal</option>
+            {Array.isArray(carrerasDisponibles) && carrerasDisponibles.map(carrera => (
+              <option key={carrera} value={carrera}>
+                {carrera.charAt(0).toUpperCase() + carrera.slice(1)}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      <div style={{ display: "flex", gap: "10px" }}>
-        <select
-          value={tipoActual}
-          onChange={(e) => onChangeType(e.target.value)}
-          disabled={!modoEdicion}
-          style={selectStyle(!modoEdicion)}
-        >
-          <option value={AREA_TYPES.AULA}>Aula</option>
-          <option value={AREA_TYPES.SALON}>Salón</option>
-          <option value={AREA_TYPES.HALL}>Hall</option>
-          <option value={AREA_TYPES.BANO}>Baño</option>
-          <option value={AREA_TYPES.ESCALERA}>Escalera</option>
-          <option value={AREA_TYPES.PUNTO}>Punto</option>
-          <option value={AREA_TYPES.PASILLO}>Pasillo</option>
-        </select>
-
-        {modoEdicion && tipoActual !== AREA_TYPES.PASILLO && (
-          <input
-            type="text"
-            placeholder="Nombre del área"
-            value={nombreArea}
-            onChange={(e) => onChangeName(e.target.value)}
-            style={inputStyle}
-          />
+        {/* Selector de Plano */}
+        {Array.isArray(planosCarreraActual) && planosCarreraActual.length > 0 && (
+          <div>
+            <label style={{ display: "block", fontSize: "11px", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>
+              Plano Actual:
+            </label>
+            <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
+              <button
+                onClick={onRetrocederPlano}
+                disabled={!infoPlanoActual?.tieneAnterior}
+                style={{
+                  padding: "4px 8px",
+                  background: infoPlanoActual?.tieneAnterior ? "#3b82f6" : "#cbd5e1",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  fontSize: "10px",
+                  cursor: infoPlanoActual?.tieneAnterior ? "pointer" : "not-allowed"
+                }}
+                title="Plano anterior"
+              >
+                ◀
+              </button>
+              
+              <select
+                value={planoActual?.id || ''}
+                onChange={(e) => onCambiarPlano && onCambiarPlano(e.target.value)}
+                style={{
+                  flex: 1,
+                  padding: "6px 8px",
+                  borderRadius: "6px",
+                  border: "1px solid #e2e8f0",
+                  fontSize: "11px",
+                  background: "white"
+                }}
+              >
+                {planosCarreraActual.map(plano => (
+                  <option key={plano.id} value={plano.id}>
+                    {plano.nombre}
+                  </option>
+                ))}
+              </select>
+              
+              <button
+                onClick={onAvanzarPlano}
+                disabled={!infoPlanoActual?.tieneSiguiente}
+                style={{
+                  padding: "4px 8px",
+                  background: infoPlanoActual?.tieneSiguiente ? "#3b82f6" : "#cbd5e1",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  fontSize: "10px",
+                  cursor: infoPlanoActual?.tieneSiguiente ? "pointer" : "not-allowed"
+                }}
+                title="Siguiente plano"
+              >
+                ▶
+              </button>
+            </div>
+            
+            {/* Información del plano actual */}
+            {infoPlanoActual && (
+              <div style={{ 
+                fontSize: "10px", 
+                color: "#64748b", 
+                marginTop: "6px",
+                textAlign: "center"
+              }}>
+                Plano {infoPlanoActual.numero} de {infoPlanoActual.total}
+              </div>
+            )}
+          </div>
         )}
       </div>
 
-      {/* Info de zoom y estado */}
-      <div style={{
-        padding: "8px 12px",
-        background: modoEdicion ? "#dbeafe" : "#f1f5f9",
-        borderRadius: "8px",
-        fontSize: "12px",
-        color: modoEdicion ? "#1e40af" : "#475569",
-        textAlign: "center",
-        fontFamily: "Inter, Arial, sans-serif",
-        border: modoEdicion ? "1px solid #93c5fd" : "1px solid #e2e8f0"
-      }}>
-        <div>Zoom: {Math.round(zoomScale * 100)}%</div>
-        <div>
-          {modoEdicion ? "✏️ Modo edición activo" : "📍 Modo navegación"} • 
-          {modoEdicion ? " Pasillos visibles" : " Pasillos ocultos"}
-        </div>
-      </div>
-
-      {/* Control de Snap y Debug - Solo visible en modo edición */}
-      {modoEdicion && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {/* Snap Control */}
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '10px', 
-            padding: '8px 12px', 
-            background: '#f8fafc', 
-            borderRadius: '8px', 
-            border: '1px solid #e2e8f0' 
-          }}>
-            <button
-              onClick={onToggleSnap}
-              style={{
-                padding: '8px 12px',
-                background: isSnapEnabled ? '#10b981' : '#ef4444',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '12px',
-                fontWeight: '600',
-                flex: 1,
-                transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.transform = "translateY(-1px)";
-                e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.transform = "translateY(0px)";
-                e.target.style.boxShadow = "none";
-              }}
-            >
-              {isSnapEnabled ? '🔗 Snap: ON' : '🔓 Snap: OFF'}
-            </button>
-            <div style={{
-              fontSize: '10px',
-              color: '#64748b',
-              textAlign: 'center',
-              flex: 1
-            }}>
-              {isSnapEnabled ? 'Imantación activa' : 'Imantación desactivada'}
-            </div>
-          </div>
-
-          {/* Debug Control */}
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '10px', 
-            padding: '8px 12px', 
-            background: showDebugEdges ? '#fef3c7' : '#f8fafc', 
-            borderRadius: '8px', 
-            border: showDebugEdges ? '1px solid #f59e0b' : '1px solid #e2e8f0' 
-          }}>
-            <button
-              onClick={onToggleDebugEdges}
-              style={{
-                padding: '8px 12px',
-                background: showDebugEdges ? '#f59e0b' : '#6b7280',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '12px',
-                fontWeight: '600',
-                flex: 1,
-                transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.transform = "translateY(-1px)";
-                e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.transform = "translateY(0px)";
-                e.target.style.boxShadow = "none";
-              }}
-            >
-              {showDebugEdges ? '🔴 Debug ON' : '⚪ Debug OFF'}
-            </button>
-            <div style={{
-              fontSize: '10px',
-              color: showDebugEdges ? '#92400e' : '#64748b',
-              textAlign: 'center',
-              flex: 1
-            }}>
-              {edgesCount} bordes detectados
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* BOTÓN PARA ENTRAR EN MODO EDICIÓN */}
+      {/* CONTROLES DE EDICIÓN */}
       {!modoEdicion ? (
-        <button
-          onClick={onToggleEdit}
-          style={buttonStyle("#2563eb")}
-          onMouseEnter={(e) => {
-            if (!e.target.disabled) {
-              e.target.style.transform = "translateY(-1px)";
-              e.target.style.boxShadow = "0 4px 12px rgba(37, 99, 235, 0.3)";
-            }
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.transform = "translateY(0px)";
-            e.target.style.boxShadow = "none";
-          }}
-        >
-          ✏️ Entrar en modo edición
-        </button>
+        /* Botón para activar modo edición */
+        <div style={{ 
+          padding: "12px", 
+          background: "rgba(59, 130, 246, 0.1)", 
+          borderRadius: "8px",
+          border: "1px solid rgba(59, 130, 246, 0.3)",
+          textAlign: "center"
+        }}>
+          <button
+            onClick={onToggleEdit}
+            style={{
+              padding: "10px 16px",
+              background: "#3b82f6",
+              color: "white",
+              border: "none",
+              borderRadius: "8px",
+              fontSize: "12px",
+              fontWeight: "600",
+              cursor: "pointer",
+              width: "100%"
+            }}
+          >
+            ✏️ Activar Modo Edición
+          </button>
+          <div style={{ fontSize: "10px", color: "#64748b", marginTop: "6px" }}>
+            Para agregar áreas, puntos y pasillos
+          </div>
+        </div>
       ) : (
-       <EditModeActions
-          tipoActual={tipoActual}
-          puntosTemporales={puntosTemporales}
-          selectedNode={selectedNode}
-          onSaveArea={onSaveArea}
-          onSavePoints={onSavePoints}
-          onSavePasillo={onSavePasillo}  // ← NUEVA PROP
-          onUndo={onUndo}
-          onCancel={onCancel}
-          buttonStyle={buttonStyle}
-        />
+        /* Controles de edición activos */
+        <div style={{ 
+          padding: "12px", 
+          background: "rgba(34, 197, 94, 0.1)", 
+          borderRadius: "8px",
+          border: "1px solid rgba(34, 197, 94, 0.3)"
+        }}>
+          <div style={{ fontSize: "12px", fontWeight: "600", color: "#16a34a", marginBottom: "8px" }}>
+            ✏️ Modo Edición Activo
+          </div>
+          
+          {/* Selector de tipo de área */}
+          <div style={{ marginBottom: "8px" }}>
+            <label style={{ display: "block", fontSize: "11px", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>
+              Tipo de Elemento:
+            </label>
+            <select
+              value={tipoActual}
+              onChange={(e) => onChangeType && onChangeType(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "6px 8px",
+                borderRadius: "6px",
+                border: "1px solid #e2e8f0",
+                fontSize: "11px",
+                background: "white"
+              }}
+            >
+              <option value={AREA_TYPES.AULA}>Aula</option>
+              <option value={AREA_TYPES.SALON}>Salón</option>
+              <option value={AREA_TYPES.HALL}>Hall</option>
+              <option value={AREA_TYPES.BANO}>Baño</option>
+              <option value={AREA_TYPES.ESCALERA}>Escalera</option>
+              <option value={AREA_TYPES.PUNTO}>Punto</option>
+              <option value={AREA_TYPES.PASILLO}>Pasillo</option>
+            </select>
+          </div>
+
+          {/* Nombre del área */}
+          <div style={{ marginBottom: "8px" }}>
+            <label style={{ display: "block", fontSize: "11px", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>
+              Nombre:
+            </label>
+            <input
+              type="text"
+              value={nombreArea || ''}
+              onChange={(e) => onChangeName && onChangeName(e.target.value)}
+              placeholder="Nombre del área..."
+              style={{
+                width: "100%",
+                padding: "6px 8px",
+                borderRadius: "6px",
+                border: "1px solid #e2e8f0",
+                fontSize: "11px",
+                background: "white"
+              }}
+            />
+          </div>
+
+          {/* Botones de acción de edición */}
+          <div style={{ display: "flex", gap: "6px", marginBottom: "8px" }}>
+            {tipoActual === AREA_TYPES.PUNTO ? (
+              <button
+                onClick={onSavePoints}
+                disabled={!puntosTemporales || puntosTemporales.length === 0}
+                style={{
+                  flex: 1,
+                  padding: "8px",
+                  background: puntosTemporales?.length > 0 ? "#10b981" : "#cbd5e1",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "6px",
+                  fontSize: "11px",
+                  fontWeight: "600",
+                  cursor: puntosTemporales?.length > 0 ? "pointer" : "not-allowed"
+                }}
+              >
+                💾 Guardar Puntos
+              </button>
+            ) : tipoActual === AREA_TYPES.PASILLO ? (
+              <button
+                onClick={onSavePasillo}
+                disabled={!selectedNode}
+                style={{
+                  flex: 1,
+                  padding: "8px",
+                  background: selectedNode ? "#f59e0b" : "#cbd5e1",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "6px",
+                  fontSize: "11px",
+                  fontWeight: "600",
+                  cursor: selectedNode ? "pointer" : "not-allowed"
+                }}
+              >
+                🔗 {selectedNode ? `Conectar ${selectedNode.nombre}` : 'Selecciona un nodo'}
+              </button>
+            ) : (
+              <button
+                onClick={onSaveArea}
+                disabled={!puntosTemporales || puntosTemporales.length < 3}
+                style={{
+                  flex: 1,
+                  padding: "8px",
+                  background: puntosTemporales?.length >= 3 ? "#10b981" : "#cbd5e1",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "6px",
+                  fontSize: "11px",
+                  fontWeight: "600",
+                  cursor: puntosTemporales?.length >= 3 ? "pointer" : "not-allowed"
+                }}
+              >
+                💾 Guardar Área
+              </button>
+            )}
+            
+            <button
+              onClick={onUndo}
+              disabled={!puntosTemporales || puntosTemporales.length === 0}
+              style={{
+                padding: "8px 12px",
+                background: puntosTemporales?.length > 0 ? "#ef4444" : "#cbd5e1",
+                color: "white",
+                border: "none",
+                borderRadius: "6px",
+                fontSize: "11px",
+                fontWeight: "600",
+                cursor: puntosTemporales?.length > 0 ? "pointer" : "not-allowed"
+              }}
+            >
+              ↩️
+            </button>
+          </div>
+
+          {/* Información de edición */}
+          <div style={{ fontSize: "10px", color: "#64748b", textAlign: "center" }}>
+            {tipoActual === AREA_TYPES.PUNTO && "Haz clic para agregar puntos"}
+            {tipoActual === AREA_TYPES.PASILLO && "Haz clic en dos nodos para conectar"}
+            {tipoActual !== AREA_TYPES.PUNTO && tipoActual !== AREA_TYPES.PASILLO && "Haz clic para crear el polígono"}
+            {puntosTemporales && puntosTemporales.length > 0 && ` • Puntos: ${puntosTemporales.length}`}
+          </div>
+
+          {/* Botón cancelar edición */}
+          <button
+            onClick={onCancel}
+            style={{
+              width: "100%",
+              padding: "6px",
+              background: "#ef4444",
+              color: "white",
+              border: "none",
+              borderRadius: "6px",
+              fontSize: "10px",
+              fontWeight: "600",
+              cursor: "pointer",
+              marginTop: "6px"
+            }}
+          >
+            ❌ Cancelar Edición
+          </button>
+        </div>
       )}
 
-      <GPSPanel
-        origen={origen}
-        destino={destino}
-        nodes={nodes}
-        onOriginChange={onOriginChange}
-        onDestinationChange={onDestinationChange}
-        onCalculateRoute={onCalculateRoute}
-        onStopAnimation={onStopAnimation}
-        isRouteAnimating={isRouteAnimating}
-        buttonStyle={buttonStyle}
-      />
-    </div>
-  );
-};
-
-const EditModeActions = ({
-  tipoActual,
-  puntosTemporales,
-  selectedNode,
-  onSaveArea,
-  onSavePoints,
-  onSavePasillo,  // ← NUEVA PROP
-  onUndo,
-  onCancel,
-  buttonStyle
-}) => {
-  // Para pasillos, mostrar controles específicos
-  if (tipoActual === "pasillo") {
-    return (
-      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-        {/* Estado del modo pasillo */}
-        <div style={{
-          padding: "8px 12px",
-          background: selectedNode ? "#fef3c7" : "#f1f5f9",
-          borderRadius: "8px",
-          fontSize: "12px",
-          color: selectedNode ? "#92400e" : "#475569",
-          textAlign: "center",
-          border: selectedNode ? "1px solid #f59e0b" : "1px solid #e2e8f0"
-        }}>
-          {selectedNode 
-            ? `🔗 Seleccionado: ${selectedNode.nombre} - Haz clic en otro nodo para conectar`
-            : "🔗 Haz clic en un nodo para iniciar la conexión"
-          }
+      {/* Controles de Navegación GPS */}
+      <div>
+        <div style={{ fontSize: "11px", fontWeight: "600", color: "#475569", marginBottom: "8px", textAlign: "center" }}>
+          🌍 Navegación Multi-Piso
         </div>
 
-        {/* NUEVO: Botón Guardar Pasillo Manual */}
-        <button
-          onClick={onSavePasillo}
-          disabled={!selectedNode}
-          style={buttonStyle("#10b981", !selectedNode)}
-          onMouseEnter={(e) => {
-            if (!e.target.disabled) {
-              e.target.style.transform = "translateY(-1px)";
-              e.target.style.boxShadow = "0 4px 12px rgba(16, 185, 129, 0.3)";
-            }
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.transform = "translateY(0px)";
-            e.target.style.boxShadow = "none";
+        <label style={{ display: "block", fontSize: "11px", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>
+          Origen:
+        </label>
+        <select
+          value={origen || ''}
+          onChange={(e) => onOriginChange && onOriginChange(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "6px 8px",
+            borderRadius: "6px",
+            border: "1px solid #e2e8f0",
+            fontSize: "11px",
+            background: "white",
+            marginBottom: "8px"
           }}
         >
-          💾 Guardar Conexión Actual
+          <option value="">Seleccionar origen</option>
+          {todosLosNodos.map(node => (
+            <option key={node.id} value={node.id}>
+              {node.nombre} ({node.carrera} {node.piso})
+            </option>
+          ))}
+        </select>
+
+        <label style={{ display: "block", fontSize: "11px", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>
+          Destino:
+        </label>
+        <select
+          value={destino || ''}
+          onChange={(e) => onDestinationChange && onDestinationChange(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "6px 8px",
+            borderRadius: "6px",
+            border: "1px solid #e2e8f0",
+            fontSize: "11px",
+            background: "white",
+            marginBottom: "8px"
+          }}
+        >
+          <option value="">Seleccionar destino</option>
+          {todosLosNodos.map(node => (
+            <option key={node.id} value={node.id}>
+              {node.nombre} ({node.carrera} {node.piso})
+            </option>
+          ))}
+        </select>
+
+        <button
+          onClick={onCalculateRoute}
+          disabled={!origen || !destino}
+          style={{
+            width: "100%",
+            padding: "8px",
+            background: origen && destino ? "#10b981" : "#cbd5e1",
+            color: "white",
+            border: "none",
+            borderRadius: "6px",
+            fontSize: "11px",
+            fontWeight: "600",
+            cursor: origen && destino ? "pointer" : "not-allowed"
+          }}
+        >
+          🚀 Calcular Ruta Multi-Piso
         </button>
 
-        {/* Botón Deshacer para pasillos */}
-        <button
-          onClick={onUndo}
-          disabled={!selectedNode}
-          style={buttonStyle("#f59e0b", !selectedNode)}
-          onMouseEnter={(e) => {
-            if (!e.target.disabled) {
-              e.target.style.transform = "translateY(-1px)";
-              e.target.style.boxShadow = "0 4px 12px rgba(245, 158, 11, 0.3)";
-            }
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.transform = "translateY(0px)";
-            e.target.style.boxShadow = "none";
-          }}
-        >
-          ↩️ Deshacer selección
-        </button>
+        {isRouteAnimating && (
+          <button
+            onClick={onStopAnimation}
+            style={{
+              width: "100%",
+              padding: "6px",
+              background: "#ef4444",
+              color: "white",
+              border: "none",
+              borderRadius: "6px",
+              fontSize: "10px",
+              fontWeight: "600",
+              cursor: "pointer",
+              marginTop: "4px"
+            }}
+          >
+            ⏹️ Detener Animación
+          </button>
+        )}
 
-        {/* Botón Cancelar para pasillos */}
+        {/* Información de la ruta calculada */}
+        {rutaActual && rutaActual.length > 0 && (
+          <div style={{ 
+            padding: "8px", 
+            background: "rgba(34, 197, 94, 0.1)", 
+            borderRadius: "6px",
+            border: "1px solid rgba(34, 197, 94, 0.3)",
+            marginTop: "8px"
+          }}>
+            <div style={{ fontSize: "10px", fontWeight: "600", color: "#16a34a", marginBottom: "4px" }}>
+              🗺️ Ruta Calculada
+            </div>
+            <div style={{ fontSize: "9px", color: "#64748b" }}>
+              {rutaActual.length} pasos • Ruta multi-piso lista
+            </div>
+          </div>
+        )}
+
+        {/* Información de transiciones entre pisos */}
+        {floorTransitions && floorTransitions.length > 0 && (
+          <div style={{ 
+            padding: "8px", 
+            background: "rgba(59, 130, 246, 0.1)", 
+            borderRadius: "6px",
+            border: "1px solid rgba(59, 130, 246, 0.3)",
+            marginTop: "8px"
+          }}>
+            <div style={{ fontSize: "10px", fontWeight: "600", color: "#1e40af", marginBottom: "4px" }}>
+              🏢 Cambios de Piso
+            </div>
+            {floorTransitions.map((transition, index) => (
+              <div key={index} style={{ fontSize: "9px", color: "#374151" }}>
+                {transition.fromFloor} → {transition.toFloor}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Información de Debug */}
+      <div style={{ 
+        padding: "8px", 
+        background: "rgba(248, 250, 252, 0.8)", 
+        borderRadius: "6px",
+        border: "1px solid rgba(226, 232, 240, 0.8)"
+      }}>
+        <div style={{ fontSize: "10px", color: "#64748b" }}>
+          🔍 Bordes detectados: {edgesCount || 0}
+        </div>
+        <div style={{ fontSize: "10px", color: "#64748b" }}>
+          📏 Zoom: {Math.round(zoomScale * 100)}%
+        </div>
+        <div style={{ fontSize: "10px", color: "#64748b" }}>
+          🧲 Snap: {isSnapEnabled ? "Activado" : "Desactivado"}
+        </div>
+        <div style={{ fontSize: "10px", color: "#64748b" }}>
+          🎬 Animación: {isRouteAnimating ? "Activa" : "Inactiva"}
+        </div>
+        <div style={{ fontSize: "10px", color: "#64748b" }}>
+          📍 Nodos totales: {todosLosNodos.length}
+        </div>
+      </div>
+
+      {/* Botones de Configuración */}
+      <div style={{ display: "flex", gap: "6px" }}>
         <button
-          onClick={onCancel}
-          style={buttonStyle("#ef4444")}
-          onMouseEnter={(e) => {
-            e.target.style.transform = "translateY(-1px)";
-            e.target.style.boxShadow = "0 4px 12px rgba(239, 68, 68, 0.3)";
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.transform = "translateY(0px)";
-            e.target.style.boxShadow = "none";
+          onClick={onToggleSnap}
+          style={{
+            flex: 1,
+            padding: "6px",
+            background: isSnapEnabled ? "#10b981" : "#ef4444",
+            color: "white",
+            border: "none",
+            borderRadius: "6px",
+            fontSize: "10px",
+            fontWeight: "600",
+            cursor: "pointer"
           }}
         >
-          ❌ Cancelar modo pasillo
+          🧲 {isSnapEnabled ? "Snap ON" : "Snap OFF"}
+        </button>
+        
+        <button
+          onClick={onToggleDebugEdges}
+          style={{
+            flex: 1,
+            padding: "6px",
+            background: showDebugEdges ? "#f59e0b" : "#6b7280",
+            color: "white",
+            border: "none",
+            borderRadius: "6px",
+            fontSize: "10px",
+            fontWeight: "600",
+            cursor: "pointer"
+          }}
+        >
+          🐛 {showDebugEdges ? "Debug ON" : "Debug OFF"}
         </button>
       </div>
-    );
-  }
-
-
-  // Para otros tipos (áreas, puntos, etc.) - MANTENER IGUAL
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-      {/* Botón Guardar Área (para polígonos) */}
-      {tipoActual !== AREA_TYPES.PASILLO && tipoActual !== AREA_TYPES.PUNTO && (
-        <button
-          onClick={onSaveArea}
-          disabled={puntosTemporales.length < 3}
-          style={buttonStyle("#10b981", puntosTemporales.length < 3)}
-          onMouseEnter={(e) => {
-            if (!e.target.disabled) {
-              e.target.style.transform = "translateY(-1px)";
-              e.target.style.boxShadow = "0 4px 12px rgba(16, 185, 129, 0.3)";
-            }
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.transform = "translateY(0px)";
-            e.target.style.boxShadow = "none";
-          }}
-        >
-          💾 Guardar área ({puntosTemporales.length} puntos)
-        </button>
-      )}
-
-      {/* Botón Guardar Puntos */}
-      {tipoActual === AREA_TYPES.PUNTO && (
-        <button
-          onClick={onSavePoints}
-          disabled={puntosTemporales.length === 0}
-          style={buttonStyle("#10b981", puntosTemporales.length === 0)}
-          onMouseEnter={(e) => {
-            if (!e.target.disabled) {
-              e.target.style.transform = "translateY(-1px)";
-              e.target.style.boxShadow = "0 4px 12px rgba(16, 185, 129, 0.3)";
-            }
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.transform = "translateY(0px)";
-            e.target.style.boxShadow = "none";
-          }}
-        >
-          💾 Guardar {puntosTemporales.length} punto{puntosTemporales.length !== 1 ? 's' : ''}
-        </button>
-      )}
-
-      {/* Botón Deshacer (para áreas y puntos) */}
-      {tipoActual !== AREA_TYPES.PASILLO && tipoActual !== AREA_TYPES.PUNTO && (
-        <button
-          onClick={onUndo}
-          disabled={puntosTemporales.length === 0}
-          style={buttonStyle("#f59e0b", puntosTemporales.length === 0)}
-          onMouseEnter={(e) => {
-            if (!e.target.disabled) {
-              e.target.style.transform = "translateY(-1px)";
-              e.target.style.boxShadow = "0 4px 12px rgba(245, 158, 11, 0.3)";
-            }
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.transform = "translateY(0px)";
-            e.target.style.boxShadow = "none";
-          }}
-        >
-          ↩️ Deshacer último punto
-        </button>
-      )}
-
-      {/* Botón Cancelar (para todos los tipos excepto pasillo) */}
-      <button
-        onClick={onCancel}
-        style={buttonStyle("#ef4444")}
-        onMouseEnter={(e) => {
-          e.target.style.transform = "translateY(-1px)";
-          e.target.style.boxShadow = "0 4px 12px rgba(239, 68, 68, 0.3)";
-        }}
-        onMouseLeave={(e) => {
-          e.target.style.transform = "translateY(0px)";
-          e.target.style.boxShadow = "none";
-        }}
-      >
-        ❌ Cancelar edición
-      </button>
     </div>
   );
 };
-
-// Componente para el panel GPS (mantener igual)
-const GPSPanel = ({
-  origen,
-  destino,
-  nodes,
-  onOriginChange,
-  onDestinationChange,
-  onCalculateRoute,
-  onStopAnimation,
-  isRouteAnimating,
-  buttonStyle
-}) => (
-  <>
-    <h3 style={{ 
-      margin: "16px 0 8px 0", 
-      fontSize: "16px", 
-      fontWeight: 700, 
-      color: "#0f172a",
-      fontFamily: "Inter, Arial, sans-serif"
-    }}>
-      🧭 Navegación GPS
-    </h3>
-    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-      <select
-        value={origen}
-        onChange={(e) => onOriginChange(e.target.value)}
-        style={{
-          padding: "10px 12px",
-          borderRadius: "10px",
-          border: "1px solid #e2e8f0",
-          background: "white",
-          color: "#0f172a",
-          fontFamily: "Inter, Arial, sans-serif",
-          fontSize: "14px",
-          appearance: "none",
-          WebkitAppearance: "none",
-          MozAppearance: "none",
-        }}
-      >
-        <option value="">📍 Origen</option>
-        {nodes.map((n) => (
-          <option key={n.id} value={n.id}>
-            {n.nombre}
-          </option>
-        ))}
-      </select>
-
-      <select
-        value={destino}
-        onChange={(e) => onDestinationChange(e.target.value)}
-        style={{
-          padding: "10px 12px",
-          borderRadius: "10px",
-          border: "1px solid #e2e8f0",
-          background: "white",
-          color: "#0f172a",
-          fontFamily: "Inter, Arial, sans-serif",
-          fontSize: "14px",
-          appearance: "none",
-          WebkitAppearance: "none",
-          MozAppearance: "none",
-        }}
-      >
-        <option value="">🎯 Destino</option>
-        {nodes.map((n) => (
-          <option key={n.id} value={n.id}>
-            {n.nombre}
-          </option>
-        ))}
-      </select>
-
-      <button
-        onClick={onCalculateRoute}
-        disabled={!origen || !destino}
-        style={buttonStyle("#0ea5e9", !origen || !destino)}
-        onMouseEnter={(e) => {
-          if (!e.target.disabled) {
-            e.target.style.transform = "translateY(-1px)";
-            e.target.style.boxShadow = "0 4px 12px rgba(14, 165, 233, 0.3)";
-          }
-        }}
-        onMouseLeave={(e) => {
-          e.target.style.transform = "translateY(0px)";
-          e.target.style.boxShadow = "none";
-        }}
-      >
-        📍 Calcular ruta más corta
-      </button>
-
-      {/* Botón para parar animación */}
-      {isRouteAnimating && (
-        <button
-          onClick={onStopAnimation}
-          style={buttonStyle("#ef4444", false)}
-          onMouseEnter={(e) => {
-            e.target.style.transform = "translateY(-1px)";
-            e.target.style.boxShadow = "0 4px 12px rgba(239, 68, 68, 0.3)";
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.transform = "translateY(0px)";
-            e.target.style.boxShadow = "none";
-          }}
-        >
-          ⏹️ Parar Animación
-        </button>
-      )}
-
-      {/* Indicador de animación */}
-      {isRouteAnimating && (
-        <div style={{
-          padding: "6px",
-          background: "#d1fae5",
-          borderRadius: "6px",
-          fontSize: "11px",
-          color: "#065f46",
-          textAlign: "center",
-          fontWeight: "600",
-          border: "1px solid #a7f3d0"
-        }}>
-          🎬 Animando ruta...
-        </div>
-      )}
-    </div>
-  </>
-);
 
 export default ControlPanel;

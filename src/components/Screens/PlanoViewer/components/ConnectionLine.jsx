@@ -25,7 +25,23 @@ const ConnectionLine = ({ area, getPolygonCenter }) => {
         strokeLinecap="round"
       />
       
-      {/* Eliminamos el borde para hacerla más limpia */}
+      {(area.from.piso !== area.to.piso) && (
+        <circle
+          cx={(from[0] + to[0]) / 2}
+          cy={(from[1] + to[1]) / 2}
+          r="8"
+          fill="#dc2626"
+          stroke="white"
+          strokeWidth="1.5"
+        >
+          <animate
+            attributeName="r"
+            values="6;8;6"
+            dur="1.5s"
+            repeatCount="indefinite"
+          />
+        </circle>
+      )}
       
       {/* Etiqueta del pasillo (opcional y más pequeña) */}
       <text

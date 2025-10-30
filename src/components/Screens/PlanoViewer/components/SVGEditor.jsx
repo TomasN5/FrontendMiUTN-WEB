@@ -1,24 +1,26 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import AreaPolygon from './AreaPolygon';
 import ConnectionLine from './ConnectionLine';
 import TemporaryElements from './TemporaryElements';
 import { COLORS } from '../utils/constants';
-import { platformUtils } from '../utils/helpers';
+import DebugGraph from './DebugGraph';
 
 const SVGEditor = ({
   src,
   naturalWidth,
   naturalHeight,
-  areas,
-  points,
+  areas = [],
+  points = [],
   modoEdicion,
   tipoActual,
   puntosTemporales,
   cursorPos,
-  rutaActual,
+  rutaActual = [],
   selectedNode,
   zoomScale,
+  floorNotifications = [],
+  floorTransitions = [],
   onZoom,
   onClickSVG,
   onMouseMove,
@@ -28,79 +30,60 @@ const SVGEditor = ({
   debugEdges,
   animatedPath,
   isRouteAnimating,
+  planoActual,
+  infoPlanoActual,
+  debugGraph,
+  todosLosDatos = {}, // ← AGREGAR ESTA PROP CON VALOR POR DEFECTO
 }) => {
   const [isDragging, setIsDragging] = useState(false);
-  const [isCtrlPressed, setIsCtrlPressed] = useState(false);
 
-  // Detectar cuando se presiona Ctrl
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Control' || e.key === 'Meta') {
-        setIsCtrlPressed(true);
+  // Helper para obtener coordenadas de un nodo de forma segura
+    const getNodeCoordinates = (nodeId) => {
+      // Buscar en áreas del plano actual
+      const areaNode = areas.find(a => a && a.id === nodeId);
+      if (areaNode) {
+        if (areaNode.tipo === "punto") {
+          return { x: areaNode.x, y: areaNode.y };
+        } else {
+          const center = getRelativeCoords.getPolygonCenter(areaNode.points);
+          return { x: center[0], y: center[1] };
+        }
       }
-    };
-
-    const handleKeyUp = (e) => {
-      if (e.key === 'Control' || e.key === 'Meta') {
-        setIsCtrlPressed(false);
+      
+      // Buscar en puntos del plano actual
+      const pointNode = points.find(p => p && p.id === nodeId);
+      if (pointNode) {
+        return { x: pointNode.x, y: pointNode.y };
       }
+      
+      // Si el nodo no está en este plano, retornar coordenadas fuera de vista
+      return { x: -1000, y: -1000 };
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    document.addEventListener('keyup', handleKeyUp);
+  // Helper para obtener info del nodo
+      const getNodeInfo = (nodeId) => {
+        // Primero buscar en el plano actual
+        const areaNode = areas.find(a => a && a.id === nodeId);
+        const pointNode = points.find(p => p && p.id === nodeId);
+        
+        if (areaNode) return areaNode;
+        if (pointNode) return pointNode;
+        
+        // Si no está en el plano actual, buscar en todos los datos
+        if (todosLosDatos) {
+          for (const planoId in todosLosDatos) {
+            const planoData = todosLosDatos[planoId];
+            const nodeInPlano = 
+              planoData.areas.find(a => a && a.id === nodeId) || 
+              planoData.points.find(p => p && p.id === nodeId);
+            if (nodeInPlano) return nodeInPlano;
+          }
+        }
+        
+        return null;
+      };
 
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      document.removeEventListener('keyup', handleKeyUp);
-    };
-  }, []);
-
-  // Determinar si el panning debe estar deshabilitado
-  const isPanningDisabled = useCallback(() => {
-    // Panning SOLO permitido cuando Ctrl está presionado
-    return !isCtrlPressed;
-  }, [isCtrlPressed]);
-
-  // Determinar si las funcionalidades de edición están deshabilitadas
-  const isEditingDisabled = useCallback(() => {
-    // Edición deshabilitada cuando Ctrl está presionado
-    return isCtrlPressed;
-  }, [isCtrlPressed]);
-
-  // Handler para clicks en el SVG
-  const handleSVGClick = useCallback((e) => {
-    // Si Ctrl está presionado, NO permitir funcionalidades de edición
-    if (isEditingDisabled()) {
-      e.preventDefault();
-      return;
-    }
-    
-    if (!isDragging || modoEdicion) {
-      onClickSVG(e);
-    }
-  }, [isEditingDisabled, isDragging, modoEdicion, onClickSVG]);
-
-  // Handler para movimiento del mouse
-  const handleSVGMouseMove = useCallback((e) => {
-    // Si Ctrl está presionado, NO permitir funcionalidades de edición
-    if (isEditingDisabled()) {
-      return;
-    }
-    
-    onMouseMove(e);
-  }, [isEditingDisabled, onMouseMove]);
-
-  // Handler para clicks en nodos
-  const handleNodeClickWrapper = useCallback((node) => {
-    // Si Ctrl está presionado, NO permitir clicks en nodos
-    if (isEditingDisabled()) {
-      return;
-    }
-    
-    onNodeClick(node);
-  }, [isEditingDisabled, onNodeClick]);
-
-  // Estilos definidos dentro del componente
+  // Estilos
   const zoomControlsStyle = {
     position: "absolute",
     top: 20,
@@ -169,6 +152,9 @@ const SVGEditor = ({
     }
   `;
 
+  // Determinar si el panning debe estar deshabilitado
+  const isPanningDisabled = zoomScale <= 1.1 && !modoEdicion;
+
   return (
     <TransformWrapper
       minScale={1}
@@ -181,7 +167,7 @@ const SVGEditor = ({
       onPanningStart={() => setIsDragging(true)}
       onPanningStop={() => setIsDragging(false)}
       panning={{
-        disabled: isPanningDisabled(),
+        disabled: isPanningDisabled,
         lockAxisX: false,
         lockAxisY: false,
         velocityDisabled: true
@@ -264,7 +250,7 @@ const SVGEditor = ({
             wrapperStyle={{ 
               width: "100%", 
               height: "100%",
-              cursor: isPanningDisabled() 
+              cursor: isPanningDisabled 
                 ? 'default' 
                 : (isDragging ? 'grabbing' : 'grab')
             }}
@@ -281,13 +267,15 @@ const SVGEditor = ({
               style={{
                 display: "block",
                 background: "#fff",
-                cursor: isPanningDisabled() 
-                  ? (modoEdicion && !isEditingDisabled() ? "crosshair" : "default")
-                  : (isDragging ? 'grabbing' : 'grab'),
+                cursor: modoEdicion ? "crosshair" : (isPanningDisabled ? 'default' : (isDragging ? 'grabbing' : 'grab')),
                 shapeRendering: "geometricPrecision"
               }}
-              onClick={handleSVGClick}
-              onMouseMove={handleSVGMouseMove}
+              onClick={(e) => {
+                if (!isDragging || modoEdicion) {
+                  onClickSVG(e);
+                }
+              }}
+              onMouseMove={onMouseMove}
             >
               <image
                 href={src}
@@ -302,9 +290,16 @@ const SVGEditor = ({
                 }}
               />
 
+              {/* DEBUG VISUAL DEL GRAFO */}
+              <DebugGraph 
+                debugGraph={debugGraph}
+                getNodeCoordinates={getNodeCoordinates}
+                isVisible={true} // Puedes hacerlo toggleable
+              />
+
               {/* Pasillos - Solo se muestran en modo edición */}
               {modoEdicion && areas
-                .filter((a) => a.tipo === "pasillo")
+                .filter((a) => a && a.tipo === "pasillo")
                 .map((a) => (
                   <ConnectionLine
                     key={a.id}
@@ -315,59 +310,75 @@ const SVGEditor = ({
 
               {/* Áreas - Siempre visibles */}
               {areas
-                .filter((a) => a.tipo !== "pasillo")
+                .filter((a) => a && a.tipo !== "pasillo")
                 .map((a) => (
                   <AreaPolygon
                     key={a.id}
                     area={a}
                     zoomScale={zoomScale}
-                    isSelectable={modoEdicion && tipoActual === "pasillo" && !isEditingDisabled()}
-                    onNodeClick={handleNodeClickWrapper}
+                    isSelectable={modoEdicion && tipoActual === "pasillo"}
+                    onNodeClick={onNodeClick}
                     getPolygonCenter={getRelativeCoords.getPolygonCenter}
                   />
                 ))}
 
               {/* Puntos - Siempre visibles */}
               {points.map((p) => (
-                <AreaPolygon
-                  key={p.id}
-                  area={p}
-                  zoomScale={zoomScale}
-                  isSelectable={modoEdicion && tipoActual === "pasillo" && !isEditingDisabled()}
-                  onNodeClick={handleNodeClickWrapper}
-                />
+                p && (
+                  <AreaPolygon
+                    key={p.id}
+                    area={p}
+                    zoomScale={zoomScale}
+                    isSelectable={modoEdicion && tipoActual === "pasillo"}
+                    onNodeClick={onNodeClick}
+                  />
+                )
               ))}
 
-              {/* Ruta Animada */}
+              {/* Ruta Animada - Solo mostrar si los puntos están en el plano actual */}
               {animatedPath && animatedPath.length > 1 && (
                 <g>
-                  <polyline
-                    points={animatedPath.map(point => `${point.x},${point.y}`).join(" ")}
-                    stroke={COLORS.ruta}
-                    strokeWidth="3"
-                    fill="none"
-                    strokeDasharray="6,3"
-                  />
+                  {/* Filtrar solo los puntos que están en el plano actual */}
+                  {(() => {
+                    const puntosEnPlanoActual = animatedPath.filter((point, index) => {
+                      if (index === 0) return true; // Siempre mostrar el primer punto
+                      
+                      const puntoAnterior = animatedPath[index - 1];
+                      // Solo mostrar línea si AMBOS puntos están en coordenadas válidas (no fuera de vista)
+                      return point.x > 0 && point.y > 0 && puntoAnterior.x > 0 && puntoAnterior.y > 0;
+                    });
+
+                    if (puntosEnPlanoActual.length > 1) {
+                      return (
+                        <polyline
+                          points={puntosEnPlanoActual.map(point => `${point.x},${point.y}`).join(" ")}
+                          stroke={COLORS.ruta}
+                          strokeWidth="4"
+                          fill="none"
+                          strokeDasharray="8,4"
+                          strokeLinecap="round"
+                        />
+                      );
+                    }
+                    return null;
+                  })()}
                   
-                  {isRouteAnimating && animatedPath.length > 0 && (
+                  {/* Punto animado solo si está en el plano actual */}
+                  {isRouteAnimating && animatedPath.length > 0 && 
+                  animatedPath[animatedPath.length - 1].x > 0 && 
+                  animatedPath[animatedPath.length - 1].y > 0 && (
                     <circle
                       cx={animatedPath[animatedPath.length - 1].x}
                       cy={animatedPath[animatedPath.length - 1].y}
-                      r="4"
+                      r="6"
                       fill="#ef4444"
                       stroke="white"
-                      strokeWidth="1.5"
+                      strokeWidth="2"
                     >
                       <animate
                         attributeName="r"
-                        values="4;6;4"
-                        dur="0.8s"
-                        repeatCount="indefinite"
-                      />
-                      <animate
-                        attributeName="opacity"
-                        values="1;0.7;1"
-                        dur="0.8s"
+                        values="4;8;4"
+                        dur="1s"
                         repeatCount="indefinite"
                       />
                     </circle>
@@ -375,25 +386,156 @@ const SVGEditor = ({
                 </g>
               )}
 
-              {/* Ruta Completa (solo si no hay animación) */}
-              {!isRouteAnimating && rutaActual && rutaActual.length > 1 && (
-                <polyline
-                  points={rutaActual.map(id => {
-                    const node = areas.find(a => a.id === id) || points.find(p => p.id === id);
-                    return node.tipo === "punto"
-                      ? `${node.x},${node.y}`
-                      : getRelativeCoords.getPolygonCenter(node.points).join(",");
-                  }).join(" ")}
-                  stroke={COLORS.ruta}
-                  strokeWidth="3"
-                  fill="none"
-                  strokeDasharray="6,3"
-                  opacity="0.6"
-                />
-              )}
+             // Ruta Completa estática - SOLO segmentos donde AMBOS nodos están en el plano actual
+            {!isRouteAnimating && rutaActual && rutaActual.length > 1 && (
+              <g>
+                {rutaActual
+                  .map((nodeId, index) => {
+                    if (index < rutaActual.length - 1) {
+                      const currentNode = getNodeInfo(nodeId);
+                      const nextNode = getNodeInfo(rutaActual[index + 1]);
+                      
+                      // SOLO mostrar línea si AMBOS nodos están en ESTE plano actual
+                      if (currentNode && nextNode && 
+                          currentNode.planoId === planoActual?.id && 
+                          nextNode.planoId === planoActual?.id) {
+                        
+                        const currentCoords = getNodeCoordinates(nodeId);
+                        const nextCoords = getNodeCoordinates(rutaActual[index + 1]);
+                        
+                        // Verificar que las coordenadas sean válidas (no fuera de vista)
+                        if (currentCoords.x > 0 && currentCoords.y > 0 && 
+                            nextCoords.x > 0 && nextCoords.y > 0) {
+                          
+                          return (
+                            <line
+                              key={`route-line-${index}`}
+                              x1={currentCoords.x}
+                              y1={currentCoords.y}
+                              x2={nextCoords.x}
+                              y2={nextCoords.y}
+                              stroke={COLORS.ruta}
+                              strokeWidth="3"
+                              strokeDasharray="6,3"
+                              opacity="0.7"
+                            />
+                          );
+                        }
+                      }
+                    }
+                    return null;
+                  })
+                  .filter(line => line !== null)}
+                
+                {/* Mostrar puntos de la ruta SOLO si están en este plano */}
+                {rutaActual.map(nodeId => {
+                  const nodeInfo = getNodeInfo(nodeId);
+                  if (nodeInfo && nodeInfo.planoId === planoActual?.id) {
+                    const coords = getNodeCoordinates(nodeId);
+                    // Solo mostrar si las coordenadas son válidas
+                    if (coords.x > 0 && coords.y > 0) {
+                      return (
+                        <circle
+                          key={`route-point-${nodeId}`}
+                          cx={coords.x}
+                          cy={coords.y}
+                          r="4"
+                          fill={COLORS.ruta}
+                          stroke="white"
+                          strokeWidth="1.5"
+                        />
+                      );
+                    }
+                  }
+                  return null;
+                }).filter(circle => circle !== null)}
+              </g>
+            )}
 
-              {/* Elementos temporales - Solo en modo edición y cuando Ctrl NO está presionado */}
-              {modoEdicion && !isEditingDisabled() && (
+              {/* NOTIFICACIONES DE CAMBIO DE PISO */}
+              {floorNotifications.map(notification => (
+                <g key={notification.id}>
+                  <rect
+                    x="20"
+                    y="100"
+                    width="400"
+                    height="40"
+                    fill="rgba(59, 130, 246, 0.9)"
+                    rx="8"
+                  />
+                  <text
+                    x="40"
+                    y="125"
+                    fill="white"
+                    fontSize="14"
+                    fontWeight="bold"
+                    style={{ pointerEvents: "none" }}
+                  >
+                    🔄 {notification.message}
+                  </text>
+                  <text
+                    x="40"
+                    y="145"
+                    fill="rgba(255,255,255,0.8)"
+                    fontSize="11"
+                    style={{ pointerEvents: "none" }}
+                  >
+                    Desde: {notification.fromFloor} → Hacia: {notification.toFloor}
+                  </text>
+                </g>
+              ))}
+
+              {/* INDICADORES DE CONEXIÓN ENTRE ESCALERAS */}
+              {floorTransitions.map((transition, index) => {
+                const stairCoords = getNodeCoordinates(transition.stairNode);
+                return (
+                  <g key={`transition-${index}`}>
+                    {/* Círculo indicador en la escalera */}
+                    <circle
+                      cx={stairCoords.x}
+                      cy={stairCoords.y}
+                      r="12"
+                      fill="rgba(239, 68, 68, 0.8)"
+                      stroke="white"
+                      strokeWidth="2"
+                    />
+                    <text
+                      x={stairCoords.x}
+                      y={stairCoords.y + 5}
+                      textAnchor="middle"
+                      fill="white"
+                      fontSize="10"
+                      fontWeight="bold"
+                      style={{ pointerEvents: "none" }}
+                    >
+                      ⬆️⬇️
+                    </text>
+                    
+                    {/* Texto informativo */}
+                    <rect
+                      x={stairCoords.x - 80}
+                      y={stairCoords.y - 50}
+                      width="160"
+                      height="30"
+                      fill="rgba(0,0,0,0.8)"
+                      rx="6"
+                    />
+                    <text
+                      x={stairCoords.x}
+                      y={stairCoords.y - 30}
+                      textAnchor="middle"
+                      fill="white"
+                      fontSize="10"
+                      style={{ pointerEvents: "none" }}
+                    >
+                      {transition.fromFloor} → {transition.toFloor}
+                    </text>
+                  </g>
+                );
+              })}
+
+              {/* Elementos temporales - Solo en modo edición */}
+              {modoEdicion && (
                 <TemporaryElements
                   tipoActual={tipoActual}
                   puntosTemporales={puntosTemporales}
@@ -402,12 +544,12 @@ const SVGEditor = ({
                 />
               )}
 
-              {/* Snap Indicators - Solo cuando Ctrl NO está presionado */}
-              {!isEditingDisabled() && snapIndicators}
+              {/* Snap Indicators - Se renderizan aquí */}
+              {snapIndicators}
               {debugEdges}
 
-              {/* Overlay informativo */}
-              {isPanningDisabled() && !modoEdicion && (
+              {/* Overlay informativo cuando el zoom es mínimo y no estamos editando */}
+              {zoomScale <= 1.1 && !modoEdicion && (
                 <rect
                   x="0"
                   y="0"
@@ -416,20 +558,40 @@ const SVGEditor = ({
                   fill="transparent"
                   style={{ pointerEvents: "none" }}
                 >
-                  <title>Presiona {platformUtils.getModifierSymbol()} para navegar por el mapa</title>
+                  <title>Haz zoom para navegar por el mapa o entra en modo edición</title>
                 </rect>
+              )}
+
+              {/* Información del plano actual */}
+              {planoActual && (
+                <text
+                  x="20"
+                  y="30"
+                  fill="#1f2937"
+                  fontSize="14"
+                  fontWeight="bold"
+                  style={{ pointerEvents: "none" }}
+                >
+                  🏢 {planoActual.nombre}
+                  {infoPlanoActual && (
+                    <tspan dx="10" fill="#64748b" fontSize="12">
+                      ({infoPlanoActual.numero}/{infoPlanoActual.total})
+                    </tspan>
+                  )}
+                </text>
               )}
             </svg>
           </TransformComponent>
 
-          {/* Mensajes informativos */}
-          {isPanningDisabled() && !modoEdicion && (
+          {/* Mensaje flotante cuando el zoom es mínimo y no estamos editando */}
+          {zoomScale <= 1.1 && !modoEdicion && (
             <div style={zoomMessageStyle}>
-              🔍 Haz zoom y presiona {platformUtils.getModifierSymbol()} para navegar
+              🔍 Haz zoom para navegar o ✏️ Entra en edición
             </div>
           )}
 
-          {isPanningDisabled() && modoEdicion && !isCtrlPressed && (
+          {/* Mensaje cuando estamos en modo edición */}
+          {modoEdicion && (
             <div style={{
               ...zoomMessageStyle,
               background: "rgba(59, 130, 246, 0.9)",
@@ -437,30 +599,6 @@ const SVGEditor = ({
               opacity: 1
             }}>
               ✏️ Modo edición activo - Haz clic para agregar puntos
-            </div>
-          )}
-
-          {/* Mensaje cuando Ctrl está presionado en modo edición */}
-          {modoEdicion && isCtrlPressed && (
-            <div style={{
-              ...zoomMessageStyle,
-              background: "rgba(139, 92, 246, 0.9)",
-              animation: "none",
-              opacity: 1
-            }}>
-              🎮 {platformUtils.getModifierSymbol()} presionado - Arrastra para mover el mapa
-            </div>
-          )}
-
-          {/* Mensaje cuando se necesita Ctrl para navegar (zoom alto) */}
-          {!modoEdicion && !isCtrlPressed && zoomScale > 1.1 && (
-            <div style={{
-              ...zoomMessageStyle,
-              background: "rgba(139, 92, 246, 0.9)",
-              animation: "none",
-              opacity: 1
-            }}>
-              🎮 Presiona {platformUtils.getModifierSymbol()} + Arrastrar para moverte por el mapa
             </div>
           )}
         </>
