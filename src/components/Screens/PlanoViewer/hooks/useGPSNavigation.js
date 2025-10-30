@@ -105,7 +105,7 @@ export const useGPSNavigation = (areas, points, todosLosDatos = {}) => {
           );
           
           // Conectar si están lo suficientemente cerca
-          if (distancia < 200) { // Radio de conexión
+          if (distancia < 1) { // Radio de conexión
             if (!graph[nodo.id]) graph[nodo.id] = {};
             if (!graph[otroNodo.id]) graph[otroNodo.id] = {};
             

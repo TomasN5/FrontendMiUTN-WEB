@@ -1,6 +1,7 @@
 import React from 'react';
 import { COLORS, AREA_TYPES } from '../utils/constants';
 import { geometryUtils } from '../utils/geometry';
+import './../styles/TemporaryElements.css';
 
 const TemporaryElements = ({ 
   tipoActual, 
@@ -11,43 +12,34 @@ const TemporaryElements = ({
   if (!modoEdicion) return null;
 
   return (
-    <>
-      {/* Puntos temporales para modo "punto" - MÁS PEQUEÑOS */}
+    <g className="temporary-elements">
       {tipoActual === AREA_TYPES.PUNTO && puntosTemporales.map(([x, y], i) => (
         <circle
           key={`tmp-point-${i}`}
           cx={x}
           cy={y}
-          r="3"                             // Igual de pequeño que los puntos permanentes
-          fill="orange"
-          stroke="black"
-          strokeWidth="0.5"                 // Más fino
+          r="3"
+          className="temporary-elements__point"
         />
       ))}
 
-      {/* Polígono temporal - LÍNEAS MÁS FINAS */}
       {tipoActual !== AREA_TYPES.PUNTO && tipoActual !== AREA_TYPES.PASILLO && 
        puntosTemporales.length > 0 && (
         <polygon
           points={geometryUtils.toPointsAttr(puntosTemporales)}
-          fill="rgba(59,130,246,0.08)"     // Más transparente
-          stroke="rgba(59,130,246,0.4)"    // Más transparente
-          strokeWidth="1"                   // Más fino
-          strokeDasharray="3,2"             // Puntos más pequeños
+          className="temporary-elements__polygon"
         />
       )}
 
-      {/* Cursor preview - MÁS PEQUEÑO */}
       {cursorPos && tipoActual !== AREA_TYPES.PASILLO && (
         <circle 
           cx={cursorPos[0]} 
           cy={cursorPos[1]} 
-          r="2"                             // Más pequeño (antes 4)
-          fill="#2563eb" 
-          opacity={0.7}                     // Más transparente
+          r="2"
+          className="temporary-elements__cursor"
         />
       )}
-    </>
+    </g>
   );
 };
 

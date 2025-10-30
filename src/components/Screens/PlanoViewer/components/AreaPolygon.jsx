@@ -2,15 +2,16 @@ import React from 'react';
 import { COLORS, AREA_TYPES } from '../utils/constants';
 import { geometryUtils } from '../utils/geometry';
 import Staircase from './Staircase';
+import './../styles/AreaPolygon.css';
 
 const AreaPolygon = ({ 
   area, 
   zoomScale, 
   isSelectable, 
   onNodeClick,
-  getPolygonCenter 
+  getPolygonCenter ,
+  tipoActual
 }) => {
-  // Si es una escalera, usar el componente Staircase
   if (area.tipo === AREA_TYPES.ESCALERA) {
     return (
       <Staircase
@@ -29,29 +30,33 @@ const AreaPolygon = ({
     }
   };
 
-  // Si es un punto - MUCHO MÁS PEQUEÑO
+    const polygonClass = `area-polygon ${
+      isSelectable ? 'area-polygon--selectable' : ''
+    } ${tipoActual === AREA_TYPES.PASILLO ? 'area-polygon--pasillo-mode' : ''}`;
+
+
   if (area.tipo === "punto") {
     return (
       <g
         onClick={handleClick}
-        style={{ cursor: isSelectable ? "pointer" : "default" }}
+        className={polygonClass}
       >
         <circle
           cx={area.x}
           cy={area.y}
-          r="3"                             // Mucho más pequeño (antes 6, luego 4, ahora 3)
-          fill={COLORS.punto}
-          stroke="black"
-          strokeWidth="0.5"                 // Más fino
+          r="3"
+          className={`area-polygon__shape area-polygon__shape--punto area-polygon__point ${
+            isSelectable ? 'area-polygon__point--selectable' : ''
+          }`}
         />
-        {zoomScale >= 3 && (                // Solo mostrar texto con más zoom
+        {zoomScale >= 3 && (
           <text
-            x={area.x + 6}                  // Más cerca
-            y={area.y - 6}                  // Más cerca
+            x={area.x + 6}
+            y={area.y - 6}
             fill="black"
-            fontSize="10"                   // Más pequeño
-            fontWeight="bold"
-            style={{ pointerEvents: "none" }}
+            className={`area-polygon__label ${
+              zoomScale >= 4 ? 'area-polygon__label--medium' : 'area-polygon__label--small'
+            }`}
           >
             {area.nombre}
           </text>
@@ -60,29 +65,25 @@ const AreaPolygon = ({
     );
   }
 
-  // Si es un área poligonal normal - BORDES MÁS FINOS
   const [centerX, centerY] = getPolygonCenter(area.points);
 
   return (
     <g
       onClick={handleClick}
-      style={{ cursor: isSelectable ? "pointer" : "default" }}
+      className={polygonClass}
     >
       <polygon
         points={geometryUtils.toPointsAttr(area.points)}
-        fill={COLORS[area.tipo]}
-        stroke={COLORS.borde}
-        strokeWidth="1"                     // Más fino (antes 2)
+        className={`area-polygon__shape area-polygon__shape--${area.tipo}`}
       />
       {zoomScale >= 2.5 && (
         <text
           x={centerX}
           y={centerY}
           textAnchor="middle"
-          fill="black"
-          fontSize="14"                     // Más pequeño
-          fontWeight="bold"
-          style={{ pointerEvents: "none" }}
+          className={`area-polygon__label ${
+            zoomScale >= 3 ? 'area-polygon__label--medium' : 'area-polygon__label--small'
+          }`}
         >
           {area.nombre}
         </text>

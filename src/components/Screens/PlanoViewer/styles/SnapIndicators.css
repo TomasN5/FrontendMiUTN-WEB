@@ -1,0 +1,40 @@
+/* SnapIndicators.css */
+.snap-indicators {
+  pointer-events: none;
+}
+
+.snap-indicators__line {
+  stroke: rgba(59, 130, 246, 0.4);
+  stroke-width: 1;
+  stroke-dasharray: 3, 2;
+}
+
+.snap-indicators__original-point {
+  fill: rgba(59, 130, 246, 0.2);
+  stroke: rgba(59, 130, 246, 0.4);
+  stroke-width: 0.5;
+}
+
+.snap-indicators__snap-point {
+  fill: rgba(34, 197, 94, 0.6);
+  stroke: #16a34a;
+  stroke-width: 1;
+}
+
+.snap-indicators__guide-line--horizontal {
+  stroke: #16a34a;
+  stroke-width: 1;
+}
+
+.snap-indicators__guide-line--vertical {
+  stroke: #16a34a;
+  stroke-width: 1;
+}
+
+.snap-indicators__label {
+  fill: #16a34a;
+  font-size: 8px;
+  font-weight: bold;
+  text-anchor: middle;
+  pointer-events: none;
+}

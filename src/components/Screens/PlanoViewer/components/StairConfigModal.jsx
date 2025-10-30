@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { CARRERAS, PISOS } from '../utils/constants';
+import './../styles/StairConfigModal.css';
 
 const StairConfigModal = ({ 
   isOpen, 
   onClose, 
   onSave, 
   initialData = {},
-  todasLasEscaleras = [] // Nueva prop: lista de todas las escaleras existentes
+  todasLasEscaleras = []
 }) => {
   const [config, setConfig] = useState({
     carreraActual: CARRERAS.SISTEMAS,
@@ -15,7 +16,7 @@ const StairConfigModal = ({
     pisoDestino: PISOS.PISO2,
     nombre: "Escalera",
     direccion: "ambos",
-    escaleraConectadaId: "" // Nueva: ID de la escalera con la que se conecta
+    escaleraConectadaId: ""
   });
 
   useEffect(() => {
@@ -38,7 +39,6 @@ const StairConfigModal = ({
     onSave(config);
   };
 
-  // Filtrar escaleras que pueden conectarse (misma carrera, pisos opuestos)
   const escalerasConectables = todasLasEscaleras.filter(escalera => 
     escalera.carreraActual === config.carreraDestino &&
     escalera.pisoActual === config.pisoDestino &&
@@ -46,67 +46,11 @@ const StairConfigModal = ({
     escalera.pisoDestino === config.pisoActual
   );
 
-  // También incluir escaleras en el mismo destino (para conexión directa)
   const escalerasMismoDestino = todasLasEscaleras.filter(escalera =>
     escalera.carreraActual === config.carreraDestino &&
     escalera.pisoActual === config.pisoDestino &&
-    escalera.id !== initialData?.id // Excluir esta misma escalera
+    escalera.id !== initialData?.id
   );
-
-  const modalStyle = {
-    position: "fixed",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    background: "rgba(0,0,0,0.5)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 1000
-  };
-
-  const contentStyle = {
-    background: "white",
-    padding: "24px",
-    borderRadius: "12px",
-    width: "500px",
-    maxWidth: "90vw",
-    maxHeight: "90vh",
-    overflowY: "auto",
-    boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
-    fontFamily: "Inter, Arial, sans-serif"
-  };
-
-  const inputStyle = {
-    width: "100%",
-    padding: "10px 12px",
-    borderRadius: "8px",
-    border: "1px solid #e2e8f0",
-    marginBottom: "12px",
-    fontFamily: "Inter, Arial, sans-serif",
-    fontSize: "14px"
-  };
-
-  const labelStyle = {
-    display: "block",
-    marginBottom: "6px",
-    fontWeight: "600",
-    color: "#374151",
-    fontSize: "14px"
-  };
-
-  const buttonStyle = (backgroundColor) => ({
-    padding: "10px 16px",
-    background: backgroundColor,
-    color: "white",
-    border: "none",
-    borderRadius: "8px",
-    cursor: "pointer",
-    fontWeight: "600",
-    marginRight: "8px",
-    fontSize: "14px"
-  });
 
   const getCarreraNombre = (carreraKey) => {
     const nombres = {
@@ -120,34 +64,37 @@ const StairConfigModal = ({
     return nombres[carreraKey] || carreraKey;
   };
 
+  const summaryClass = `stair-modal__summary ${
+    config.escaleraConectadaId ? 'stair-modal__summary--connected' : 'stair-modal__summary--pending'
+  }`;
+
   return (
-    <div style={modalStyle}>
-      <div style={contentStyle}>
-        <h3 style={{ margin: "0 0 20px 0", color: "#1f2937" }}>
+    <div className="stair-modal">
+      <div className="stair-modal__content">
+        <h3 className="stair-modal__title">
           ⬆️⬇️ Configurar Escalera
         </h3>
         
-        <div>
-          <label style={labelStyle}>Nombre de la escalera:</label>
+        <div className="stair-modal__input-group">
+          <label className="stair-modal__label">Nombre de la escalera:</label>
           <input
             type="text"
             value={config.nombre}
             onChange={(e) => setConfig({...config, nombre: e.target.value})}
-            style={inputStyle}
+            className="stair-modal__input"
             placeholder="Ej: Escalera Principal Sistemas"
           />
         </div>
 
-        {/* CONFIGURACIÓN ORIGEN */}
-        <div style={{ marginBottom: "16px", padding: "12px", background: "#f8fafc", borderRadius: "8px" }}>
-          <h4 style={{ margin: "0 0 12px 0", color: "#475569", fontSize: "14px" }}>📍 Origen</h4>
-          <div style={{ display: "flex", gap: "12px" }}>
-            <div style={{ flex: 1 }}>
-              <label style={labelStyle}>Carrera:</label>
+        <div className="stair-modal__section stair-modal__section--origin">
+          <h4 className="stair-modal__section-title">📍 Origen</h4>
+          <div className="stair-modal__row">
+            <div className="stair-modal__column">
+              <label className="stair-modal__label">Carrera:</label>
               <select
                 value={config.carreraActual}
                 onChange={(e) => setConfig({...config, carreraActual: e.target.value})}
-                style={inputStyle}
+                className="stair-modal__select"
               >
                 {Object.values(CARRERAS).map(carrera => (
                   <option key={carrera} value={carrera}>
@@ -157,12 +104,12 @@ const StairConfigModal = ({
               </select>
             </div>
             
-            <div style={{ flex: 1 }}>
-              <label style={labelStyle}>Piso:</label>
+            <div className="stair-modal__column">
+              <label className="stair-modal__label">Piso:</label>
               <select
                 value={config.pisoActual}
                 onChange={(e) => setConfig({...config, pisoActual: e.target.value})}
-                style={inputStyle}
+                className="stair-modal__select"
               >
                 {Object.values(PISOS).map(piso => (
                   <option key={piso} value={piso}>
@@ -174,16 +121,15 @@ const StairConfigModal = ({
           </div>
         </div>
 
-        {/* CONFIGURACIÓN DESTINO */}
-        <div style={{ marginBottom: "16px", padding: "12px", background: "#f8fafc", borderRadius: "8px" }}>
-          <h4 style={{ margin: "0 0 12px 0", color: "#475569", fontSize: "14px" }}>🎯 Destino</h4>
-          <div style={{ display: "flex", gap: "12px" }}>
-            <div style={{ flex: 1 }}>
-              <label style={labelStyle}>Carrera:</label>
+        <div className="stair-modal__section stair-modal__section--destination">
+          <h4 className="stair-modal__section-title">🎯 Destino</h4>
+          <div className="stair-modal__row">
+            <div className="stair-modal__column">
+              <label className="stair-modal__label">Carrera:</label>
               <select
                 value={config.carreraDestino}
                 onChange={(e) => setConfig({...config, carreraDestino: e.target.value})}
-                style={inputStyle}
+                className="stair-modal__select"
               >
                 {Object.values(CARRERAS).map(carrera => (
                   <option key={carrera} value={carrera}>
@@ -193,12 +139,12 @@ const StairConfigModal = ({
               </select>
             </div>
             
-            <div style={{ flex: 1 }}>
-              <label style={labelStyle}>Piso:</label>
+            <div className="stair-modal__column">
+              <label className="stair-modal__label">Piso:</label>
               <select
                 value={config.pisoDestino}
                 onChange={(e) => setConfig({...config, pisoDestino: e.target.value})}
-                style={inputStyle}
+                className="stair-modal__select"
               >
                 {Object.values(PISOS).map(piso => (
                   <option key={piso} value={piso}>
@@ -210,17 +156,16 @@ const StairConfigModal = ({
           </div>
         </div>
 
-        {/* SELECTOR DE CONEXIÓN CON OTRA ESCALERA */}
-        <div style={{ marginBottom: "16px", padding: "12px", background: "#e0f2fe", borderRadius: "8px" }}>
-          <h4 style={{ margin: "0 0 12px 0", color: "#0369a1", fontSize: "14px" }}>🔗 Conectar con Escalera Existente</h4>
+        <div className="stair-modal__section stair-modal__section--connection">
+          <h4 className="stair-modal__section-title">🔗 Conectar con Escalera Existente</h4>
           
           {escalerasConectables.length > 0 ? (
             <div>
-              <label style={labelStyle}>Escalera gemela (conexión automática):</label>
+              <label className="stair-modal__label">Escalera gemela (conexión automática):</label>
               <select
                 value={config.escaleraConectadaId}
                 onChange={(e) => setConfig({...config, escaleraConectadaId: e.target.value})}
-                style={inputStyle}
+                className="stair-modal__select"
               >
                 <option value="">Seleccionar escalera gemela...</option>
                 {escalerasConectables.map(escalera => (
@@ -229,17 +174,17 @@ const StairConfigModal = ({
                   </option>
                 ))}
               </select>
-              <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>
+              <div className="stair-modal__connection-info stair-modal__connection-info--success">
                 ⚡ Conexión bidireccional automática
               </div>
             </div>
           ) : escalerasMismoDestino.length > 0 ? (
             <div>
-              <label style={labelStyle}>Conectar con escalera en destino:</label>
+              <label className="stair-modal__label">Conectar con escalera en destino:</label>
               <select
                 value={config.escaleraConectadaId}
                 onChange={(e) => setConfig({...config, escaleraConectadaId: e.target.value})}
-                style={inputStyle}
+                className="stair-modal__select"
               >
                 <option value="">Seleccionar escalera en destino...</option>
                 {escalerasMismoDestino.map(escalera => (
@@ -248,23 +193,23 @@ const StairConfigModal = ({
                   </option>
                 ))}
               </select>
-              <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>
+              <div className="stair-modal__connection-info stair-modal__connection-info--warning">
                 🔄 Conexión manual - verificar configuración
               </div>
             </div>
           ) : (
-            <div style={{ fontSize: "12px", color: "#64748b", textAlign: "center" }}>
+            <div className="stair-modal__empty-state">
               No hay escaleras disponibles para conectar en el destino
             </div>
           )}
         </div>
 
-        <div>
-          <label style={labelStyle}>Dirección:</label>
+        <div className="stair-modal__input-group">
+          <label className="stair-modal__label">Dirección:</label>
           <select
             value={config.direccion}
             onChange={(e) => setConfig({...config, direccion: e.target.value})}
-            style={inputStyle}
+            className="stair-modal__select"
           >
             <option value="ambos">⬆️⬇️ Ambos sentidos</option>
             <option value="subida">⬆️ Solo subida</option>
@@ -272,33 +217,26 @@ const StairConfigModal = ({
           </select>
         </div>
 
-        {/* Resumen de la conexión */}
-        <div style={{ 
-          marginTop: "16px", 
-          padding: "12px", 
-          background: config.escaleraConectadaId ? "#dbeafe" : "#fef3c7", 
-          borderRadius: "8px",
-          border: config.escaleraConectadaId ? "1px solid #93c5fd" : "1px solid #fcd34d"
-        }}>
-          <div style={{ fontSize: "12px", color: config.escaleraConectadaId ? "#1e40af" : "#92400e", fontWeight: "600" }}>
+        <div className={summaryClass}>
+          <div>
             {config.escaleraConectadaId ? "🔗 CONEXIÓN CONFIGURADA" : "⚠️ CONEXIÓN PENDIENTE"}
           </div>
-          <div style={{ fontSize: "11px", color: "#64748b", marginTop: "4px" }}>
+          <div className="stair-modal__summary-details">
             {getCarreraNombre(config.carreraActual)} {config.pisoActual} → {getCarreraNombre(config.carreraDestino)} {config.pisoDestino}
             {config.escaleraConectadaId && " • Conectada con escalera existente"}
           </div>
         </div>
 
-        <div style={{ marginTop: "20px", display: "flex", justifyContent: "flex-end" }}>
+        <div className="stair-modal__actions">
           <button 
             onClick={onClose}
-            style={buttonStyle("#6b7280")}
+            className="stair-modal__button stair-modal__button--cancel"
           >
             Cancelar
           </button>
           <button 
             onClick={handleSave}
-            style={buttonStyle("#dc2626")}
+            className="stair-modal__button stair-modal__button--save"
           >
             💾 Guardar Escalera
           </button>

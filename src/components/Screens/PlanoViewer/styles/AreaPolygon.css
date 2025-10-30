@@ -1,0 +1,70 @@
+/* AreaPolygon.css */
+.area-polygon {
+  transition: all 0.2s ease;
+}
+
+.area-polygon--selectable {
+  cursor: pointer;
+}
+
+
+.area-polygon__shape {
+  stroke: rgba(0, 0, 0, 0.6);
+  stroke-width: 1;
+}
+
+.area-polygon__shape--aula {
+  fill: rgba(66, 135, 245, 0.28);
+}
+
+.area-polygon__shape--salon {
+  fill: rgba(255, 165, 0, 0.30);
+}
+
+.area-polygon__shape--hall {
+  fill: rgba(255, 235, 59, 0.35);
+}
+
+.area-polygon__shape--bano {
+  fill: rgba(186, 104, 200, 0.30);
+}
+
+.area-polygon__shape--escalera {
+  fill: rgba(120, 40, 40, 0.35);
+}
+
+.area-polygon__shape--punto {
+  fill: red;
+  stroke: black;
+  stroke-width: 0.5;
+}
+
+.area-polygon__label {
+  text-anchor: middle;
+  fill: black;
+  font-weight: bold;
+  pointer-events: none;
+  transition: all 0.2s ease;
+}
+
+.area-polygon__label--small {
+  font-size: 10px;
+}
+
+.area-polygon__label--medium {
+  font-size: 14px;
+}
+
+.area-polygon__point {
+  r: 3;
+  transition: all 0.2s ease;
+}
+
+.area-polygon__point--selectable:hover {
+  r: 4;
+  fill: orange;
+}
+
+.area-polygon--pasillo-mode.area-polygon--selectable {
+  cursor: pointer !important;
+}

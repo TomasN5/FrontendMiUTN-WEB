@@ -1,0 +1,319 @@
+/* SVGEditor.css */
+.svg-editor-container {
+  width: 100%;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #f5f7fa 0%, #cbd5e1 100%);
+}
+
+.svg-editor__zoom-controls {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  padding: 12px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  font-family: "Inter", Arial, sans-serif;
+}
+
+.svg-editor__zoom-button {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  color: #475569;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.svg-editor__zoom-button:hover {
+  background: #f8fafc;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.svg-editor__zoom-info {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  text-align: center;
+  margin-top: 4px;
+  font-family: "Inter", Arial, sans-serif;
+}
+
+.svg-editor__message {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 5;
+  backdrop-filter: blur(8px);
+  animation: svg-editor-fadeInOut 3s ease-in-out infinite;
+  font-family: "Inter", Arial, sans-serif;
+  pointer-events: none;
+}
+
+.svg-editor__message--edition {
+  background: rgba(59, 130, 246, 0.9);
+  animation: none;
+  opacity: 1;
+}
+
+@keyframes svg-editor-fadeInOut {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+.svg-editor__svg {
+  display: block;
+  background: #fff;
+  shape-rendering: geometricPrecision;
+}
+
+.svg-editor__svg--edition {
+  cursor: crosshair;
+}
+
+.svg-editor__svg--navigation {
+  cursor: grab;
+}
+
+.svg-editor__svg--dragging {
+  cursor: grabbing;
+}
+
+.svg-editor__image {
+  pointer-events: none;
+  user-select: none;
+}
+
+.svg-editor__route-line {
+  stroke: green;
+  stroke-width: 3;
+  stroke-dasharray: 6, 3;
+  opacity: 0.7;
+}
+
+.svg-editor__route-point {
+  fill: green;
+  stroke: white;
+  stroke-width: 1.5;
+}
+
+.svg-editor__animated-route {
+  stroke: green;
+  stroke-width: 4;
+  fill: none;
+  stroke-dasharray: 8, 4;
+  stroke-linecap: round;
+}
+
+.svg-editor__animated-point {
+  fill: #ef4444;
+  stroke: white;
+  stroke-width: 2;
+  animation: svg-editor-pulse 1s infinite;
+}
+
+@keyframes svg-editor-pulse {
+  0%, 100% { r: 4; }
+  50% { r: 8; }
+}
+
+.svg-editor__floor-notification {
+  fill: rgba(59, 130, 246, 0.9);
+  rx: 8;
+}
+
+.svg-editor__floor-notification-text {
+  fill: white;
+  font-size: 14px;
+  font-weight: bold;
+  pointer-events: none;
+}
+
+.svg-editor__floor-notification-subtext {
+  fill: rgba(255, 255, 255, 0.8);
+  font-size: 11px;
+  pointer-events: none;
+}
+
+.svg-editor__transition-indicator {
+  fill: rgba(239, 68, 68, 0.8);
+  stroke: white;
+  stroke-width: 2;
+}
+
+.svg-editor__transition-text-bg {
+  fill: rgba(0, 0, 0, 0.8);
+  rx: 6;
+}
+
+.svg-editor__transition-text {
+  fill: white;
+  font-size: 10px;
+  pointer-events: none;
+}
+
+.svg-editor__plano-info {
+  fill: #1f2937;
+  font-size: 14px;
+  font-weight: bold;
+  pointer-events: none;
+}
+
+.svg-editor__plano-subinfo {
+  fill: #64748b;
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.svg-editor__overlay {
+  fill: transparent;
+  pointer-events: none;
+}
+
+.svg-editor__svg--pasillo {
+  cursor: pointer !important; /* Forzar cursor de selección */
+}
+
+/* Asegurar que los nodos sean seleccionables en modo pasillo */
+.svg-editor__svg--pasillo .area-polygon--selectable {
+  cursor: pointer !important;
+}
+
+.svg-editor__svg--pasillo .staircase--selectable {
+  cursor: pointer !important;
+}
+
+/* Panel de zoom simplificado en inferior derecha */
+/* Panel de zoom simplificado en inferior derecha - POSICIÓN AJUSTADA */
+.svg-editor__zoom-simple {
+  position: absolute;
+  bottom: 60px;  /* 🔥 Cambiado de 20px a 60px - más arriba */
+  right: 20px;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.svg-editor__zoom-percentage {
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: bold;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Mensaje informativo (ajustado para no superponerse) */
+.svg-editor__message {
+  position: absolute;
+  bottom: 100px; /* 🔥 Más arriba también para mantener separación */
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  z-index: 1000;
+  pointer-events: none;
+  max-width: 300px;
+  text-align: center;
+}
+
+/* Animación de ruta GPS */
+.svg-editor__animated-route-container {
+  pointer-events: none;
+}
+
+.svg-editor__animated-route {
+  stroke: #00ff88;
+  stroke-width: 4;
+  stroke-dasharray: 12, 6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 10px #00ff88);
+  animation: routeGlow 1.5s ease-in-out infinite;
+}
+
+.svg-editor__animated-traveler {
+  fill: #00ff88;
+  stroke: #ffffff;
+  stroke-width: 2;
+  filter: drop-shadow(0 0 15px #00ff88);
+  animation: travelerPulse 1.2s ease-in-out infinite;
+}
+
+.svg-editor__animated-pulse {
+  fill: none;
+  stroke: #00ff88;
+  stroke-width: 2;
+  animation: pulseWave 1.5s ease-out infinite;
+}
+
+.svg-editor__animated-trail {
+  fill: #00ff88;
+}
+
+@keyframes routeGlow {
+  0%, 100% { 
+    stroke: #00ff88;
+    stroke-dashoffset: 0;
+  }
+  50% { 
+    stroke: #00cc66;
+    stroke-dashoffset: 18;
+  }
+}
+
+@keyframes travelerPulse {
+  0%, 100% { 
+    r: 7;
+    fill: #00ff88;
+  }
+  50% { 
+    r: 9;
+    fill: #00ffaa;
+  }
+}
+
+@keyframes pulseWave {
+  0% {
+    r: 8;
+    opacity: 1;
+    stroke-width: 2;
+  }
+  100% {
+    r: 20;
+    opacity: 0;
+    stroke-width: 1;
+  }
+}
+
+/* Asegurar que la animación esté por encima de otros elementos */
+.svg-editor__animated-route-container {
+  z-index: 100;
+}

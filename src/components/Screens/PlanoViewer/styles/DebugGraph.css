@@ -1,0 +1,26 @@
+/* DebugGraph.css */
+.debug-graph {
+  pointer-events: none;
+}
+
+.debug-graph__connection {
+  stroke-width: 1;
+  stroke-dasharray: 2, 2;
+  opacity: 0.6;
+}
+
+.debug-graph__connection--escalera {
+  stroke: #dc2626;
+}
+
+.debug-graph__connection--normal {
+  stroke: #3b82f6;
+}
+
+.debug-graph__node {
+  fill: #3b82f6;
+}
+
+.debug-graph__node--escalera {
+  fill: #dc2626;
+}

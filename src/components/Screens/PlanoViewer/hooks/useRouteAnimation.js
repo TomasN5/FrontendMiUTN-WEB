@@ -1,13 +1,17 @@
-// useRouteAnimation.js - ENFOQUE SIMPLIFICADO
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 
 export const useRouteAnimation = () => {
   const [animatedPath, setAnimatedPath] = useState([]);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [currentAnimation, setCurrentAnimation] = useState(null);
+  const animationRef = useRef(null);
+  const startTimeRef = useRef(null);
 
-  const startRouteAnimation = useCallback((rutaCompleta, getPointCoordinates, duration = 3000) => {
-    if (currentAnimation) clearTimeout(currentAnimation);
+  const startRouteAnimation = useCallback((rutaCompleta, getPointCoordinates, getNodeInfo, onFloorTransition, duration = 4000) => {
+    // Limpiar animación anterior
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
+    }
     
     if (!rutaCompleta || rutaCompleta.length < 2) {
       setAnimatedPath([]);
@@ -15,36 +19,73 @@ export const useRouteAnimation = () => {
       return;
     }
 
-    console.log("🎬 Animando ruta:", rutaCompleta);
+    console.log("🎬 Iniciando animación de ruta con", rutaCompleta.length, "puntos");
     setIsAnimating(true);
     setAnimatedPath([]);
 
-    const puntos = rutaCompleta.map(id => getPointCoordinates(id));
-    const pointDuration = duration / puntos.length;
-    let currentIndex = 0;
+    // Preparar todos los puntos de la ruta
+    const puntos = rutaCompleta.map(id => {
+      const coords = getPointCoordinates(id);
+      const nodeInfo = getNodeInfo ? getNodeInfo(id) : null;
+      return {
+        ...coords,
+        nodeId: id,
+        isStair: nodeInfo?.tipo === 'escalera',
+        planoId: nodeInfo?.planoId
+      };
+    }).filter(point => point.x !== -1000 && point.y !== -1000); // Filtrar puntos inválidos
 
-    const animateNext = () => {
-      if (currentIndex < puntos.length) {
-        const pathSoFar = puntos.slice(0, currentIndex + 1);
-        setAnimatedPath(pathSoFar);
-        currentIndex++;
+    if (puntos.length < 2) {
+      console.log("❌ No hay puntos válidos para animar");
+      setIsAnimating(false);
+      return;
+    }
+
+    startTimeRef.current = null;
+    const totalDuration = duration;
+
+    const animate = (currentTime) => {
+      if (!startTimeRef.current) startTimeRef.current = currentTime;
+      const elapsed = currentTime - startTimeRef.current;
+      const progress = Math.min(elapsed / totalDuration, 1);
+
+      // Calcular cuántos puntos mostrar basado en el progreso
+      const pointsToShow = Math.ceil(progress * puntos.length);
+      const currentPath = puntos.slice(0, pointsToShow);
+
+      setAnimatedPath(currentPath);
+
+      // Detectar transiciones entre pisos
+      if (pointsToShow > 1 && onFloorTransition) {
+        const previousPoint = puntos[pointsToShow - 2];
+        const currentPoint = puntos[pointsToShow - 1];
         
-        const timeoutId = setTimeout(animateNext, pointDuration);
-        setCurrentAnimation(timeoutId);
+        if (previousPoint && currentPoint && previousPoint.planoId !== currentPoint.planoId) {
+          console.log("🏢 Transición detectada:", previousPoint.planoId, "→", currentPoint.planoId);
+          onFloorTransition(previousPoint.planoId, currentPoint.planoId);
+        }
+      }
+
+      if (progress < 1) {
+        animationRef.current = requestAnimationFrame(animate);
       } else {
         setIsAnimating(false);
+        animationRef.current = null;
+        console.log("✅ Animación completada");
       }
     };
 
-    setAnimatedPath([puntos[0]]);
-    const initialTimeout = setTimeout(animateNext, 200);
-    setCurrentAnimation(initialTimeout);
-  }, [currentAnimation]);
+    // Iniciar animación
+    animationRef.current = requestAnimationFrame(animate);
+  }, []);
 
   const stopAnimation = useCallback(() => {
-    if (currentAnimation) clearTimeout(currentAnimation);
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
+    }
     setIsAnimating(false);
-  }, [currentAnimation]);
+  }, []);
 
   const resetAnimation = useCallback(() => {
     stopAnimation();

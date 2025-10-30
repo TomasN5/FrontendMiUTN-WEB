@@ -1,0 +1,36 @@
+/* DebugEdges.css */
+.debug-edges {
+  pointer-events: none;
+}
+
+.debug-edges__point--horizontal {
+  fill: rgba(255, 0, 0, 0.7);
+}
+
+.debug-edges__point--vertical {
+  fill: rgba(0, 0, 255, 0.7);
+}
+
+.debug-edges__info {
+  fill: red;
+  font-size: 12px;
+  font-weight: bold;
+  pointer-events: none;
+}
+
+.debug-edges__info--horizontal {
+  fill: red;
+}
+
+.debug-edges__info--vertical {
+  fill: blue;
+}
+
+.debug-edges__info--total {
+  fill: green;
+}
+
+.debug-edges__info--config {
+  fill: purple;
+  font-size: 10px;
+}

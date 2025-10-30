@@ -1,6 +1,7 @@
 import React from 'react';
 import { COLORS } from '../utils/constants';
 import { geometryUtils } from '../utils/geometry';
+import './../styles/ConnectionLine.css';
 
 const ConnectionLine = ({ area, getPolygonCenter }) => {
   const from = area.from.tipo === "punto"
@@ -12,17 +13,13 @@ const ConnectionLine = ({ area, getPolygonCenter }) => {
     : getPolygonCenter(area.to.points);
 
   return (
-    <g>
-      {/* Línea principal MÁS FINA y RECTA */}
+    <g className="connection-line">
       <line
         x1={from[0]}
         y1={from[1]}
         x2={to[0]}
         y2={to[1]}
-        stroke={COLORS.pasillo}
-        strokeWidth="2"                    // Más fina (antes 6)
-        fill="none"
-        strokeLinecap="round"
+        className="connection-line__path"
       />
       
       {(area.from.piso !== area.to.piso) && (
@@ -30,28 +27,15 @@ const ConnectionLine = ({ area, getPolygonCenter }) => {
           cx={(from[0] + to[0]) / 2}
           cy={(from[1] + to[1]) / 2}
           r="8"
-          fill="#dc2626"
-          stroke="white"
-          strokeWidth="1.5"
-        >
-          <animate
-            attributeName="r"
-            values="6;8;6"
-            dur="1.5s"
-            repeatCount="indefinite"
-          />
-        </circle>
+          className="connection-line__transition-indicator"
+        />
       )}
       
-      {/* Etiqueta del pasillo (opcional y más pequeña) */}
       <text
         x={(from[0] + to[0]) / 2}
         y={(from[1] + to[1]) / 2 - 8}
         textAnchor="middle"
-        fill="#1e40af"
-        fontSize="10"                      // Más pequeña
-        fontWeight="bold"
-        style={{ pointerEvents: "none" }}
+        className="connection-line__label"
       >
         {area.nombre}
       </text>

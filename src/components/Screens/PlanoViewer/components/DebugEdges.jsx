@@ -1,4 +1,5 @@
 import React from 'react';
+import './../styles/DebugEdges.css';
 
 const DebugEdges = ({ 
   edges, 
@@ -8,64 +9,49 @@ const DebugEdges = ({
     return null;
   }
 
-  // Mostrar una muestra de los bordes (cada 3 para no saturar)
   const sampleEdges = edges.filter((_, index) => index % 3 === 0);
 
   return (
-    <>
+    <g className="debug-edges">
       {sampleEdges.map((edge, index) => (
         <circle
           key={`debug-${index}`}
           cx={edge.x}
           cy={edge.y}
           r="2"
-          fill={edge.orientation === 'horizontal' ? 'rgba(255, 0, 0, 0.7)' : 'rgba(0, 0, 255, 0.7)'}
-          stroke="none"
+          className={`debug-edges__point--${edge.orientation}`}
         />
       ))}
       
-      {/* Texto informativo */}
       <text
         x="20"
         y="30"
-        fill="red"
-        fontSize="12"
-        fontWeight="bold"
-        style={{ pointerEvents: "none" }}
+        className="debug-edges__info debug-edges__info--horizontal"
       >
         🔴 Horiz: {edges.filter(e => e.orientation === 'horizontal').length}
       </text>
       <text
         x="20"
         y="45"
-        fill="blue"
-        fontSize="12"
-        fontWeight="bold"
-        style={{ pointerEvents: "none" }}
+        className="debug-edges__info debug-edges__info--vertical"
       >
         🔵 Vert: {edges.filter(e => e.orientation === 'vertical').length}
       </text>
       <text
         x="20"
         y="60"
-        fill="green"
-        fontSize="12"
-        fontWeight="bold"
-        style={{ pointerEvents: "none" }}
+        className="debug-edges__info debug-edges__info--total"
       >
         Total: {edges.length} bordes
       </text>
-      // En DebugEdges.jsx
-        <text
+      <text
         x="20"
         y="75"
-        fill="purple"
-        fontSize="10"
-        style={{ pointerEvents: "none" }}
-        >
+        className="debug-edges__info debug-edges__info--config"
+      >
         Snap: Pasillos 15-80px, radio 60px
-        </text>
-    </>
+      </text>
+    </g>
   );
 };
 

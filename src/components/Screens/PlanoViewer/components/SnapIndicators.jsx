@@ -1,4 +1,5 @@
 import React from 'react';
+import './../styles/SnapIndicators.css';
 
 const SnapIndicators = ({ 
   snapResult, 
@@ -11,74 +12,58 @@ const SnapIndicators = ({
   const { point, snapType, originalPoint } = snapResult;
 
   return (
-    <>
-      {/* Línea desde el punto original al punto ajustado - MÁS FINA */}
+    <g className="snap-indicators">
       <line
         x1={originalPoint.x}
         y1={originalPoint.y}
         x2={point.x}
         y2={point.y}
-        stroke="rgba(59, 130, 246, 0.4)"  // Más transparente
-        strokeWidth="1"                    // Más fina
-        strokeDasharray="3,2"              // Puntos más pequeños
+        className="snap-indicators__line"
       />
       
-      {/* Punto original - MÁS PEQUEÑO */}
       <circle
         cx={originalPoint.x}
         cy={originalPoint.y}
-        r="2"                             // Más pequeño (antes 4)
-        fill="rgba(59, 130, 246, 0.2)"   // Más transparente
-        stroke="rgba(59, 130, 246, 0.4)" // Más transparente
-        strokeWidth="0.5"                 // Más fino
+        r="2"
+        className="snap-indicators__original-point"
       />
       
-      {/* Punto ajustado - MÁS PEQUEÑO */}
       <circle
         cx={point.x}
         cy={point.y}
-        r="3"                             // Más pequeño (antes 6)
-        fill="rgba(34, 197, 94, 0.6)"    // Más transparente
-        stroke="#16a34a"
-        strokeWidth="1"                   // Más fino
+        r="3"
+        className="snap-indicators__snap-point"
       />
       
-      {/* Indicador visual del tipo de snap - MÁS FINO */}
       {snapType.includes('horizontal') && (
         <line
-          x1={point.x - 12}               // Más corto
+          x1={point.x - 12}
           y1={point.y}
-          x2={point.x + 12}               // Más corto
+          x2={point.x + 12}
           y2={point.y}
-          stroke="#16a34a"
-          strokeWidth="1"                 // Más fino
+          className="snap-indicators__guide-line--horizontal"
         />
       )}
       
       {snapType.includes('vertical') && (
         <line
           x1={point.x}
-          y1={point.y - 12}               // Más corto
+          y1={point.y - 12}
           x2={point.x}
-          y2={point.y + 12}               // Más corto
-          stroke="#16a34a"
-          strokeWidth="1"                 // Más fino
+          y2={point.y + 12}
+          className="snap-indicators__guide-line--vertical"
         />
       )}
       
-      {/* Texto indicador - MÁS PEQUEÑO */}
       <text
         x={point.x}
-        y={point.y - 15}                  // Más cerca
+        y={point.y - 15}
         textAnchor="middle"
-        fill="#16a34a"
-        fontSize="8"                      // Más pequeño
-        fontWeight="bold"
-        style={{ pointerEvents: "none" }}
+        className="snap-indicators__label"
       >
         {snapType === 'both' ? 'Centrado' : snapType === 'horizontal' ? 'Centro X' : 'Centro Y'}
       </text>
-    </>
+    </g>
   );
 };
 

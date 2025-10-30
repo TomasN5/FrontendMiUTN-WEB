@@ -5,13 +5,16 @@ import { useGPSNavigation } from './hooks/useGPSNavigation';
 import { useEdgeDetection } from './hooks/useEdgeDetection';
 import { useRouteAnimation } from './hooks/useRouteAnimation';
 import { usePlanoManager } from './hooks/usePlanoManager';
-import ControlPanel from './components/ControlPanel.jsx';
+import ControlPanel from './components/ControlPanel'
 import SVGEditor from './components/SVGEditor';
 import StairConfigModal from './components/StairConfigModal';
 import SnapIndicators from './components/SnapIndicators';
 import DebugEdges from './components/DebugEdges';
 import { geometryUtils } from './utils/geometry';
 import { AREA_TYPES } from './utils/constants';
+// En PlanoViewer.jsx, en la sección de imports, agrega:
+import RelationsPanel from './components/RelationsPanel';
+import './styles/PlanoViewer.css';
 
 const PlanoViewer = () => {
   const [zoomScale, setZoomScale] = useState(1);
@@ -22,8 +25,11 @@ const PlanoViewer = () => {
   const [isSnapEnabled, setIsSnapEnabled] = useState(true);
   const [showDebugEdges, setShowDebugEdges] = useState(false);
   const [floorNotifications, setFloorNotifications] = useState([]);
+  const [showRelationsPanel, setShowRelationsPanel] = useState(false);
+  const [highlightedNode, setHighlightedNode] = useState(null);
+  const [connectionLines, setConnectionLines] = useState([]);
   
-  // Hooks personalizados - ORDEN CORRECTO
+  // Hooks personalizados
   const editor = usePlanoEditor();
   const planoManager = usePlanoManager();
   const coordinates = useSVGCoordinates(planoManager.naturalWidth, planoManager.naturalHeight);
@@ -31,17 +37,17 @@ const PlanoViewer = () => {
   const edgeDetection = useEdgeDetection(planoManager.naturalWidth, planoManager.naturalHeight);
   const routeAnimation = useRouteAnimation();
 
-  // Usar useRef para valores que cambian frecuentemente
+  // Refs
   const editorRef = useRef();
   const prevRutaRef = useRef([]);
   const prevPlanoSrcRef = useRef('');
 
-  // Actualizar la ref cuando editor cambie
+  // Actualizar ref del editor
   useEffect(() => {
     editorRef.current = editor;
   });
 
-  // Inicializar planos al montar - SOLO UNA VEZ
+  // Inicializar planos
   useEffect(() => {
     planoManager.inicializarPlanosCarrera('general');
   }, []);
@@ -54,7 +60,7 @@ const PlanoViewer = () => {
     }
   }, [planoManager.planoActual, editor]);
 
-  // CORREGIDO: Detectar bordes SOLO cuando cambia el src del plano
+  // Detectar bordes
   useEffect(() => {
     const loadEdges = async () => {
       try {
@@ -74,8 +80,8 @@ const PlanoViewer = () => {
     loadEdges();
   }, [planoManager.src, edgeDetection]);
 
+  // Verificar IDs duplicados
   useEffect(() => {
-    // Verificar si hay IDs duplicados y limpiar automáticamente
     const verificarIDsUnicos = () => {
       const todosLosNodos = [];
       Object.values(editor.todosLosDatos || {}).forEach(planoData => {
@@ -96,7 +102,7 @@ const PlanoViewer = () => {
     return () => clearTimeout(timer);
   }, [editor]);
 
-  // Helper para obtener todos los nodos del editor - DEFINIR PRIMERO
+  // Helper functions
   const getAllNodesFromEditor = useCallback((editorInstance) => {
     const allAreas = [];
     const allPoints = [];
@@ -109,59 +115,47 @@ const PlanoViewer = () => {
     return { allAreas, allPoints };
   }, []);
 
-  // Función para obtener información del nodo - DEFINIR SEGUNDO
-  // Función para obtener información del nodo - DEFINIR SEGUNDO
-const getNodeInfo = useCallback((nodeId) => {
-  // Asegurarse de que nodeId sea un string
-  const nodeIdStr = typeof nodeId === 'object' ? nodeId.id : nodeId;
-  
-  const currentEditor = editorRef.current;
-  if (!currentEditor) {
-    console.warn("❌ Editor no disponible");
-    return null;
-  }
-  
-  const { allAreas, allPoints } = getAllNodesFromEditor(currentEditor);
-  const node = allAreas.find(a => a.id === nodeIdStr) || allPoints.find(p => p.id === nodeIdStr);
-  
-  if (!node) {
-    console.warn(`❌ Nodo no encontrado: ${nodeIdStr}`);
-    return null;
-  }
-  
-  return node;
-}, [getAllNodesFromEditor]);
-
-  // Función para obtener coordenadas - DEFINIR TERCERO (usa getNodeInfo)
- const getPointCoordinates = useCallback((nodeId) => {
-  // Asegurarse de que nodeId sea un string
-  const nodeIdStr = typeof nodeId === 'object' ? nodeId.id : nodeId;
-  
-  const nodeInfo = getNodeInfo(nodeIdStr);
-  
-  if (!nodeInfo) {
-    console.warn(`❌ No se pudo obtener info para nodo: ${nodeIdStr}`);
-    return { x: -1000, y: -1000 }; // Fuera de vista
-  }
-  
-  // SOLO devolver coordenadas si el nodo está en el plano actual
-  if (nodeInfo.planoId === planoManager.planoActual?.id) {
-    if (nodeInfo.tipo === "punto") {
-      return { x: nodeInfo.x, y: nodeInfo.y };
-    } else {
-      const center = geometryUtils.getPolygonCenter(nodeInfo.points);
-      return { x: center[0], y: center[1] };
+  const getNodeInfo = useCallback((nodeId) => {
+    const currentEditor = editorRef.current;
+    if (!currentEditor) {
+      console.warn("❌ Editor no disponible");
+      return null;
     }
-  } else {
-    // Nodo no está en el plano actual - fuera de vista
-    return { x: -1000, y: -1000 };
-  }
-}, [getNodeInfo, planoManager.planoActual]);
-  // Handler para transiciones entre pisos (solo notifica, no cambia plano)
+    
+    const { allAreas, allPoints } = getAllNodesFromEditor(currentEditor);
+    const node = allAreas.find(a => a.id === nodeId) || allPoints.find(p => p.id === nodeId);
+    
+    if (!node) {
+      console.warn(`❌ Nodo no encontrado: ${nodeId}`);
+      return null;
+    }
+    
+    return node;
+  }, [getAllNodesFromEditor]);
+
+  const getPointCoordinates = useCallback((nodeId) => {
+    const nodeInfo = getNodeInfo(nodeId);
+    
+    if (!nodeInfo) {
+      console.warn(`❌ No se pudo obtener info para nodo: ${nodeId}`);
+      return { x: -1000, y: -1000 };
+    }
+    
+    if (nodeInfo.planoId === planoManager.planoActual?.id) {
+      if (nodeInfo.tipo === "punto") {
+        return { x: nodeInfo.x, y: nodeInfo.y };
+      } else {
+        const center = geometryUtils.getPolygonCenter(nodeInfo.points);
+        return { x: center[0], y: center[1] };
+      }
+    } else {
+      return { x: -1000, y: -1000 };
+    }
+  }, [getNodeInfo, planoManager.planoActual]);
+
   const handleFloorTransition = useCallback((fromFloor, toFloor) => {
     console.log(`🔄 Ruta continúa en otro piso: ${fromFloor} → ${toFloor}`);
     
-    // Agregar notificación
     const notification = {
       id: Date.now(),
       message: `La ruta continúa en: ${toFloor}`,
@@ -172,41 +166,33 @@ const getNodeInfo = useCallback((nodeId) => {
     
     setFloorNotifications(prev => [...prev, notification]);
     
-    // Auto-eliminar notificación después de 5 segundos
     setTimeout(() => {
       setFloorNotifications(prev => prev.filter(n => n.id !== notification.id));
     }, 5000);
   }, []);
 
-  // Animación de ruta - DEFINIR DESPUÉS de todas las funciones que usa
- useEffect(() => {
-  if (gps.rutaActual.length > 1 && 
-      JSON.stringify(gps.rutaActual) !== JSON.stringify(prevRutaRef.current)) {
-    
-    console.log("🎬 Iniciando animación multi-piso con notificaciones");
-    
-    // Asegurar que la ruta solo contiene IDs (strings)
-    const rutaSoloIds = gps.rutaActual.map(node => 
-      typeof node === 'object' ? node.id : node
-    );
-    
-    // Función local para obtener info del nodo (usa la función ya definida)
-    const getNodeInfoForAnimation = (nodeId) => {
-      return getNodeInfo(nodeId);
-    };
+  // Animación de ruta
+  useEffect(() => {
+    if (gps.rutaActual.length > 1 && 
+        JSON.stringify(gps.rutaActual) !== JSON.stringify(prevRutaRef.current)) {
+      
+      console.log("🎬 Iniciando animación multi-piso con notificaciones");
+      
+      const getNodeInfoForAnimation = (nodeId) => {
+        return getNodeInfo(nodeId);
+      };
 
-    // Usar animación con notificaciones
-    routeAnimation.startRouteAnimation(
-      rutaSoloIds, // ← Pasar solo IDs
-      getPointCoordinates, 
-      getNodeInfoForAnimation,
-      handleFloorTransition,
-      4000
-    );
-    
-    prevRutaRef.current = gps.rutaActual;
-  }
-}, [gps.rutaActual, routeAnimation.startRouteAnimation, getPointCoordinates, getNodeInfo, handleFloorTransition]);
+      routeAnimation.startRouteAnimation(
+        gps.rutaActual, 
+        getPointCoordinates, 
+        getNodeInfoForAnimation,
+        handleFloorTransition,
+        4000
+      );
+      
+      prevRutaRef.current = gps.rutaActual;
+    }
+  }, [gps.rutaActual, routeAnimation.startRouteAnimation, getPointCoordinates, getNodeInfo, handleFloorTransition]);
 
   // Reset animation cuando la ruta se vacía
   useEffect(() => {
@@ -216,7 +202,6 @@ const getNodeInfo = useCallback((nodeId) => {
       setFloorNotifications([]);
     }
   }, [gps.rutaActual, routeAnimation.resetAnimation]);
-
 
   // Handlers
   const handleZoom = useCallback((ref) => {
@@ -350,35 +335,84 @@ const getNodeInfo = useCallback((nodeId) => {
   const handleCambiarPlano = useCallback((planoId) => {
     console.log("🎯 Cambiando a plano ID:", planoId);
     planoManager.cambiarPlano(planoId);
-    // NO limpiar la ruta - mantenerla visible
     setFloorNotifications([]);
   }, [planoManager]);
 
   const handleCambiarCarrera = useCallback((carrera) => {
     console.log("🏢 Cambiando a carrera:", carrera);
     planoManager.cambiarCarrera(carrera);
-    // NO limpiar la ruta - mantenerla visible
     setFloorNotifications([]);
   }, [planoManager]);
 
   const handleClearRoute = useCallback(() => {
+    gps.setOrigen("");
+    gps.setDestino("");
     gps.setRutaActual([]);
     routeAnimation.resetAnimation();
     setFloorNotifications([]);
-  }, [gps.setRutaActual, routeAnimation.resetAnimation]);
+  }, [gps.setOrigen, gps.setDestino, gps.setRutaActual, routeAnimation.resetAnimation]);
 
-  const containerStyle = {
-    width: "100%",
-    height: "100vh",
-    position: "relative",
-    overflow: "hidden",
-    background: "linear-gradient(135deg, #f5f7fa 0%, #cbd5e1 100%)"
-  };
+
+     // Función para encontrar conexiones de un nodo
+    const findNodeConnections = useCallback((nodeId) => {
+      const connections = [];
+      
+      Object.values(editor.todosLosDatos || {}).forEach(planoData => {
+        if (planoData.areas) {
+          planoData.areas
+            .filter(area => area.tipo === AREA_TYPES.PASILLO)
+            .forEach(pasillo => {
+              if (pasillo.from && pasillo.from.id === nodeId) {
+                connections.push({ node: pasillo.to, type: 'pasillo' });
+              }
+              if (pasillo.to && pasillo.to.id === nodeId) {
+                connections.push({ node: pasillo.from, type: 'pasillo' });
+              }
+            });
+        }
+      });
+      
+      return connections;
+    }, [editor.todosLosDatos]);
+
+
+    const handleNodeHover = useCallback((node) => {
+  // DESACTIVAR COMPLETAMENTE durante edición de pasillos
+  if (editor.modoEdicion && editor.tipoActual === AREA_TYPES.PASILLO) {
+    return;
+  }
+  
+  if (node && node.id) {
+    setHighlightedNode(node);
+    
+    const connections = findNodeConnections(node.id);
+    const lines = connections.map(conn => {
+      const fromCoords = getPointCoordinates(node.id);
+      const toCoords = getPointCoordinates(conn.node.id);
+      return { from: fromCoords, to: toCoords };
+    });
+    
+    setConnectionLines(lines);
+  }
+}, [getPointCoordinates, findNodeConnections, editor.modoEdicion, editor.tipoActual]);
+
+const handleNodeLeave = useCallback(() => {
+  // DESACTIVAR COMPLETAMENTE durante edición de pasillos
+  if (editor.modoEdicion && editor.tipoActual === AREA_TYPES.PASILLO) {
+    return;
+  }
+  
+  setHighlightedNode(null);
+  setConnectionLines([]);
+}, [editor.modoEdicion, editor.tipoActual]);
+
+
+
+ 
 
   return (
-    <div style={containerStyle}>
+    <div className="plano-viewer">
       <ControlPanel
-        // Estado del editor
         modoEdicion={editor.modoEdicion}
         tipoActual={editor.tipoActual}
         nombreArea={editor.nombreArea}
@@ -388,27 +422,23 @@ const getNodeInfo = useCallback((nodeId) => {
         selectedNode={editor.selectedNode}
         todosLosDatos={editor.todosLosDatos || {}}
         
-        // Navegación GPS
         origen={gps.origen}
         destino={gps.destino}
         rutaActual={gps.rutaActual}
         
-        // Zoom y visualización
         zoomScale={zoomScale}
         isSnapEnabled={isSnapEnabled}
         showDebugEdges={showDebugEdges}
         edgesCount={edges.length}
         isRouteAnimating={routeAnimation.isAnimating}
-        floorTransitions={[]} // routeAnimation no tiene esta propiedad
+        floorTransitions={[]}
         
-        // Sistema de planos
         carreraActual={planoManager.carreraActual}
         planoActual={planoManager.planoActual}
         planosCarreraActual={planoManager.planosCarreraActual || []}
         infoPlanoActual={planoManager.infoPlanoActual}
         carrerasDisponibles={planoManager.carrerasDisponibles || []}
         
-        // Handlers de edición
         onSavePasillo={handleSavePasillo}
         onToggleEdit={() => editor.setModoEdicion(!editor.modoEdicion)}
         onChangeType={editor.setTipoActual}
@@ -418,27 +448,31 @@ const getNodeInfo = useCallback((nodeId) => {
         onUndo={handleDeshacer}
         onCancel={handleCancelar}
         
-        // Handlers de navegación
         onCalculateRoute={handleCalcularRuta}
         onOriginChange={gps.setOrigen}
         onDestinationChange={gps.setDestino}
         onClearRoute={handleClearRoute}
         
-        // Handlers de configuración
         onToggleSnap={toggleSnap}
         onToggleDebugEdges={toggleDebugEdges}
         onStopAnimation={routeAnimation.stopAnimation}
         
-        // Handlers de planos
         onCambiarPlano={handleCambiarPlano}
         onCambiarCarrera={handleCambiarCarrera}
         onAvanzarPlano={planoManager.avanzarPlano}
         onRetrocederPlano={planoManager.retrocederPlano}
-      />
+
+        onToggleRelationsPanel={() => setShowRelationsPanel(prev => !prev)}
+        // o
+        onShowRelationsPanel={() => setShowRelationsPanel(true)}
+       
+        
+      >
+      </ControlPanel>
 
       <SVGEditor
         src={planoManager.src}
-        todosLosDatos={editor.todosLosDatos || {}} 
+        todosLosDatos={editor.todosLosDatos || {}}
         naturalWidth={planoManager.naturalWidth}
         naturalHeight={planoManager.naturalHeight}
         areas={editor.areas || []}
@@ -454,7 +488,7 @@ const getNodeInfo = useCallback((nodeId) => {
         zoomScale={zoomScale}
         debugGraph={gps.debugGraph}
         floorNotifications={floorNotifications}
-        floorTransitions={[]} // routeAnimation no tiene esta propiedad
+        floorTransitions={[]}
         planoActual={planoManager.planoActual}
         infoPlanoActual={planoManager.infoPlanoActual}
         onZoom={handleZoom}
@@ -475,6 +509,21 @@ const getNodeInfo = useCallback((nodeId) => {
           />
         }
       />
+
+      {editor.modoEdicion && (
+      <RelationsPanel
+        isVisible={showRelationsPanel}
+        onClose={() => setShowRelationsPanel(false)}
+        areas={editor.areas}
+        points={editor.points}
+        todosLosDatos={editor.todosLosDatos}
+        planoActual={planoManager.planoActual}
+        onNodeHover={handleNodeHover}
+        onNodeLeave={handleNodeLeave}
+        highlightedNode={highlightedNode}
+        connectionLines={connectionLines}
+      />
+    )}
 
       <StairConfigModal
         isOpen={showStairConfig}

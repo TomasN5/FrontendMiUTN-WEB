@@ -1,0 +1,37 @@
+/* ConnectionLine.css */
+.connection-line {
+  pointer-events: none;
+}
+
+.connection-line__path {
+  stroke: rgba(0, 0, 255, 0.8);
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  transition: all 0.3s ease;
+}
+
+.connection-line__path:hover {
+  stroke-width: 3;
+  opacity: 1;
+}
+
+.connection-line__transition-indicator {
+  fill: #dc2626;
+  stroke: white;
+  stroke-width: 1.5;
+  animation: connection-line-pulse 1.5s infinite;
+}
+
+@keyframes connection-line-pulse {
+  0%, 100% { r: 6; }
+  50% { r: 8; }
+}
+
+.connection-line__label {
+  text-anchor: middle;
+  fill: #1e40af;
+  font-size: 10px;
+  font-weight: bold;
+  pointer-events: none;
+}

@@ -1,0 +1,58 @@
+/* Staircase.css */
+.staircase {
+  transition: all 0.2s ease;
+}
+
+.staircase--selectable {
+  cursor: pointer;
+}
+
+.staircase--selectable:hover {
+  opacity: 0.8;
+}
+
+.staircase__background {
+  fill: rgba(120, 40, 40, 0.35);
+  stroke: rgba(0, 0, 0, 0.6);
+  stroke-width: 2;
+}
+
+.staircase__step {
+  stroke: rgba(120, 40, 40, 0.6);
+  stroke-width: 1;
+}
+
+.staircase__icon {
+  text-anchor: middle;
+  fill: #7f1d1d;
+  font-weight: bold;
+  pointer-events: none;
+}
+
+.staircase__icon--large {
+  font-size: 20px;
+}
+
+.staircase__icon--small {
+  font-size: 14px;
+}
+
+.staircase__label {
+  text-anchor: middle;
+  fill: #7f1d1d;
+  font-weight: bold;
+  pointer-events: none;
+}
+
+.staircase__label--main {
+  font-size: 12px;
+}
+
+.staircase__label--info {
+  font-size: 10px;
+  font-weight: normal;
+}
+
+.staircase__label--direction {
+  font-size: 8px;
+}

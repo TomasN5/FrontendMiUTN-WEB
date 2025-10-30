@@ -1,6 +1,7 @@
 import React from 'react';
 import { COLORS, CARRERAS } from '../utils/constants';
 import { geometryUtils } from '../utils/geometry';
+import './../styles/Staircase.css';
 
 const Staircase = ({ 
   area, 
@@ -17,16 +18,16 @@ const Staircase = ({
 
   const [centerX, centerY] = getPolygonCenter(area.points);
 
-  // Calcular el ancho y alto del polígono para el patrón de escaleras
   const xs = area.points.map(p => p[0]);
   const ys = area.points.map(p => p[1]);
   const width = Math.max(...xs) - Math.min(...xs);
   const height = Math.max(...ys) - Math.min(...ys);
-
-  // Determinar orientación (horizontal o vertical)
   const isHorizontal = width > height;
 
-  // Función para obtener el nombre completo de la carrera
+  const staircaseClass = `staircase ${
+    isSelectable ? 'staircase--selectable' : ''
+  }`;
+
   const getCarreraNombre = (carreraKey) => {
     const nombres = {
       [CARRERAS.SISTEMAS]: "Sistemas",
@@ -42,70 +43,54 @@ const Staircase = ({
   return (
     <g
       onClick={handleClick}
-      style={{ cursor: isSelectable ? "pointer" : "default" }}
+      className={staircaseClass}
     >
-      {/* Fondo de la escalera */}
       <polygon
         points={geometryUtils.toPointsAttr(area.points)}
-        fill={COLORS.escalera}
-        stroke={COLORS.borde}
-        strokeWidth={2}
+        className="staircase__background"
       />
 
-      {/* Patrón de escalones */}
       {generateStairPattern(area.points, isHorizontal)}
       
-      {/* Símbolo de escalera en el centro */}
       <text
         x={centerX}
         y={centerY}
         textAnchor="middle"
-        fill="#7f1d1d"
-        fontSize={Math.min(width, height) > 50 ? "20" : "14"}
-        fontWeight="bold"
-        style={{ pointerEvents: "none" }}
+        className={`staircase__icon ${
+          Math.min(width, height) > 50 ? 'staircase__icon--large' : 'staircase__icon--small'
+        }`}
       >
         ⬆️⬇️
       </text>
 
-      {/* Nombre de la escalera */}
       {zoomScale >= 2.5 && (
         <text
           x={centerX}
           y={centerY + 25}
           textAnchor="middle"
-          fill="#7f1d1d"
-          fontSize="12"
-          fontWeight="bold"
-          style={{ pointerEvents: "none" }}
+          className="staircase__label staircase__label--main"
         >
           {area.nombre}
         </text>
       )}
 
-      {/* Información de la conexión entre pisos/carreras */}
       {area.carreraActual && area.pisoActual && area.carreraDestino && area.pisoDestino && (
         <text
           x={centerX}
           y={centerY + 40}
           textAnchor="middle"
-          fill="#7f1d1d"
-          fontSize="10"
-          style={{ pointerEvents: "none" }}
+          className="staircase__label staircase__label--info"
         >
           {getCarreraNombre(area.carreraActual)} {area.pisoActual} → {getCarreraNombre(area.carreraDestino)} {area.pisoDestino}
         </text>
       )}
 
-      {/* Indicador de dirección */}
       {area.direccion && area.direccion !== "ambos" && (
         <text
           x={centerX}
           y={centerY + 55}
           textAnchor="middle"
-          fill="#7f1d1d"
-          fontSize="8"
-          style={{ pointerEvents: "none" }}
+          className="staircase__label staircase__label--direction"
         >
           {area.direccion === "subida" ? "⬆️ Solo subida" : "⬇️ Solo bajada"}
         </text>
@@ -114,7 +99,6 @@ const Staircase = ({
   );
 };
 
-// Función para generar el patrón de escalones (mantener igual)
 const generateStairPattern = (points, isHorizontal) => {
   const steps = 5;
   const elements = [];
@@ -137,8 +121,7 @@ const generateStairPattern = (points, isHorizontal) => {
           y1={minY}
           x2={x}
           y2={maxY}
-          stroke="rgba(120, 40, 40, 0.6)"
-          strokeWidth="1"
+          className="staircase__step"
         />
       );
     }
@@ -153,8 +136,7 @@ const generateStairPattern = (points, isHorizontal) => {
           y1={y}
           x2={maxX}
           y2={y}
-          stroke="rgba(120, 40, 40, 0.6)"
-          strokeWidth="1"
+          className="staircase__step"
         />
       );
     }

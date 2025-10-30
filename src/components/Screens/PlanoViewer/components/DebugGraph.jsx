@@ -1,26 +1,34 @@
-// DebugGraph.jsx - VERSIÓN CORREGIDA
 import React from 'react';
+import './../styles/DebugGraph.css';
 
-const DebugGraph = ({ debugGraph, getNodeCoordinates, isVisible }) => {
+const DebugGraph = ({ debugGraph, getNodeCoordinates, isVisible, planoActual }) => {
   if (!isVisible || !debugGraph) return null;
 
   const { graph, nodes } = debugGraph;
 
   return (
-    <g>
+    <g className="debug-graph">
       {Object.keys(graph).map(nodeId => {
         const node = nodes.find(n => n.id === nodeId);
         if (!node) return null;
 
         const nodeCoords = getNodeCoordinates(nodeId);
-        if (!nodeCoords || nodeCoords.x === undefined) return null;
+        
+        // No dibujar nodos fuera del plano actual
+        if (!nodeCoords || nodeCoords.x === -1000 || nodeCoords.y === -1000) {
+          return null;
+        }
         
         return Object.keys(graph[nodeId]).map(neighborId => {
           const neighbor = nodes.find(n => n.id === neighborId);
           if (!neighbor) return null;
 
           const neighborCoords = getNodeCoordinates(neighborId);
-          if (!neighborCoords || neighborCoords.x === undefined) return null;
+          
+          // No dibujar conexiones donde alguno de los nodos esté fuera del plano
+          if (!neighborCoords || neighborCoords.x === -1000 || neighborCoords.y === -1000) {
+            return null;
+          }
           
           return (
             <g key={`debug-${nodeId}-${neighborId}`}>
@@ -29,17 +37,18 @@ const DebugGraph = ({ debugGraph, getNodeCoordinates, isVisible }) => {
                 y1={nodeCoords.y}
                 x2={neighborCoords.x}
                 y2={neighborCoords.y}
-                stroke={neighbor.tipo === 'escalera' ? '#dc2626' : '#3b82f6'}
-                strokeWidth="1"
-                strokeDasharray="2,2"
-                opacity="0.6"
+                className={`debug-graph__connection ${
+                  neighbor.tipo === 'escalera' ? 'debug-graph__connection--escalera' : 'debug-graph__connection--normal'
+                }`}
               />
               
               <circle
                 cx={nodeCoords.x}
                 cy={nodeCoords.y}
                 r="3"
-                fill={node.tipo === 'escalera' ? '#dc2626' : '#3b82f6'}
+                className={`debug-graph__node ${
+                  node.tipo === 'escalera' ? 'debug-graph__node--escalera' : ''
+                }`}
               />
             </g>
           );
@@ -48,5 +57,4 @@ const DebugGraph = ({ debugGraph, getNodeCoordinates, isVisible }) => {
     </g>
   );
 };
-
 export default DebugGraph;

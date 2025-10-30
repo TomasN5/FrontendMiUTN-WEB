@@ -1,0 +1,194 @@
+/* StairConfigModal.css */
+.stair-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.stair-modal__content {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  width: 500px;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  font-family: "Inter", Arial, sans-serif;
+}
+
+.stair-modal__title {
+  margin: 0 0 20px 0;
+  color: #1f2937;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.stair-modal__input-group {
+  margin-bottom: 16px;
+}
+
+.stair-modal__label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: #374151;
+  font-size: 14px;
+}
+
+.stair-modal__input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 12px;
+  font-family: "Inter", Arial, sans-serif;
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+}
+
+.stair-modal__input:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.stair-modal__select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 12px;
+  font-family: "Inter", Arial, sans-serif;
+  font-size: 14px;
+  background: white;
+  transition: border-color 0.2s ease;
+}
+
+.stair-modal__select:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.stair-modal__section {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+}
+
+.stair-modal__section--origin {
+  background: #f8fafc;
+}
+
+.stair-modal__section--destination {
+  background: #f8fafc;
+}
+
+.stair-modal__section--connection {
+  background: #e0f2fe;
+  border: 1px solid #bae6fd;
+}
+
+.stair-modal__section-title {
+  margin: 0 0 12px 0;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.stair-modal__row {
+  display: flex;
+  gap: 12px;
+}
+
+.stair-modal__column {
+  flex: 1;
+}
+
+.stair-modal__connection-info {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.stair-modal__connection-info--warning {
+  color: #92400e;
+}
+
+.stair-modal__connection-info--success {
+  color: #065f46;
+}
+
+.stair-modal__summary {
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #fcd34d;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.stair-modal__summary--connected {
+  background: #dbeafe;
+  border-color: #93c5fd;
+  color: #1e40af;
+}
+
+.stair-modal__summary--pending {
+  background: #fef3c7;
+  border-color: #fcd34d;
+  color: #92400e;
+}
+
+.stair-modal__summary-details {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 4px;
+  font-weight: normal;
+}
+
+.stair-modal__actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.stair-modal__button {
+  padding: 10px 16px;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  margin-right: 8px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.stair-modal__button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.stair-modal__button--cancel {
+  background: #6b7280;
+}
+
+.stair-modal__button--save {
+  background: #dc2626;
+}
+
+.stair-modal__empty-state {
+  font-size: 12px;
+  color: #64748b;
+  text-align: center;
+  padding: 8px;
+}
