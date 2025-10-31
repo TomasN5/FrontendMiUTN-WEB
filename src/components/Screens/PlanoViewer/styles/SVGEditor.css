@@ -507,3 +507,87 @@
   0% { stroke-dashoffset: 0; }
   100% { stroke-dashoffset: 10; }
 }
+
+/* ANIMACIONES PERMANENTES PARA ORIGEN Y DESTINO */
+.svg-permanent-markers {
+  pointer-events: none;
+}
+
+/* ORIGEN - Color verde/azul */
+.svg-origin-pulse {
+  fill: rgba(0, 255, 255, 0.3);
+  animation: originPulse 2s ease-out infinite;
+}
+
+.svg-origin-main {
+  fill: #00ffff;
+  stroke: #ffffff;
+  stroke-width: 2;
+  filter: drop-shadow(0 0 10px #00ffff);
+}
+
+.svg-origin-icon {
+  font-size: 12px; /* Tamaño reducido para mejor centrado */
+  text-anchor: middle;
+  dominant-baseline: central; /* 🔥 CLAVE para centrado vertical */
+  pointer-events: none;
+  filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.8));
+}
+
+/* DESTINO - Color rojo/naranja */
+.svg-destination-pulse {
+  fill: rgba(255, 100, 0, 0.3);
+  animation: destinationPulse 2s ease-out infinite;
+}
+
+.svg-destination-main {
+  fill: #ff6440;
+  stroke: #ffffff;
+  stroke-width: 2;
+  filter: drop-shadow(0 0 10px #ff6440);
+}
+
+.svg-destination-icon {
+  font-size: 12px; /* Tamaño reducido para mejor centrado */
+  text-anchor: middle;
+  dominant-baseline: central; /* 🔥 CLAVE para centrado vertical */
+  pointer-events: none;
+  filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.8));
+}
+
+/* Animaciones específicas */
+@keyframes originPulse {
+  0% {
+    r: 8;
+    opacity: 0.8;
+  }
+  50% {
+    r: 15;
+    opacity: 0.4;
+  }
+  100% {
+    r: 20;
+    opacity: 0;
+  }
+}
+
+@keyframes destinationPulse {
+  0% {
+    r: 8;
+    opacity: 0.8;
+  }
+  50% {
+    r: 16;
+    opacity: 0.3;
+  }
+  100% {
+    r: 22;
+    opacity: 0;
+  }
+}
+
+/* Efecto adicional para hacerlos más visibles */
+.svg-origin-marker,
+.svg-destination-marker {
+  filter: drop-shadow(0 0 15px currentColor);
+}

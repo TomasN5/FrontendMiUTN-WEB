@@ -262,7 +262,7 @@ const SVGEditor = ({
                 )
               ))}
 
-             {!isRouteAnimating && rutaActual && rutaActual.length > 1 && (
+             {/*!isRouteAnimating && rutaActual && rutaActual.length > 1 && (
             <g>
               {rutaActual
                 .map((nodeId, index) => {
@@ -301,7 +301,7 @@ const SVGEditor = ({
                 })
                 .filter(line => line !== null)}
               
-                  {/* Puntos de la ruta - SOLO los del plano actual */}
+                  {/* Puntos de la ruta - SOLO los del plano actual }
                   {rutaActual.map(nodeId => {
                     const nodeInfo = getNodeInfo(nodeId);
                     if (nodeInfo && nodeInfo.planoId === planoActual?.id) {
@@ -319,7 +319,7 @@ const SVGEditor = ({
                     return null;
                   }).filter(circle => circle !== null)}
                 </g>
-              )}
+              )*/}
 
                 {floorNotifications.map(notification => (
                   <g key={notification.id}>
@@ -482,27 +482,93 @@ const SVGEditor = ({
                   .filter(line => line !== null)}
                 
                 {/* Puntos de la ruta - SOLO los del plano actual */}
-                {rutaActual.map(nodeId => {
+              {rutaActual.map(nodeId => {
                   const nodeInfo = getNodeInfo(nodeId);
                   if (nodeInfo && nodeInfo.planoId === planoActual?.id) {
                     const coords = getNodeCoordinates(nodeId);
-                    // ✅ VERIFICAR coordenadas válidas
-                    if (coords.x !== -1000 && coords.y !== -1000) {
-                      return (
-                        <circle
-                          key={`route-point-${nodeId}`}
-                          cx={coords.x}
-                          cy={coords.y}
-                          r="4"
-                          className="svg-editor__route-point"
-                        />
-                      );
+                    
+                    // Saltar origen y destino (ya tienen animación especial)
+                    if (nodeId === rutaActual[0] || nodeId === rutaActual[rutaActual.length - 1]) {
+                      return null;
                     }
+                    
+                    return (
+                      <circle
+                        key={`route-point-${nodeId}`}
+                        cx={coords.x}
+                        cy={coords.y}
+                        r="4"
+                        className="svg-editor__route-point"
+                      />
+                    );
                   }
                   return null;
                 }).filter(circle => circle !== null)}
               </g>
             )}
+
+                {rutaActual && rutaActual.length >= 2 && (
+                  <g className="svg-permanent-markers">
+                    {/* Punto ORIGEN - Primero en la ruta */}
+                    {getNodeCoordinates(rutaActual[0]) && (
+                      <g className="svg-origin-marker">
+                        {/* Círculo de pulso */}
+                        <circle
+                          cx={getNodeCoordinates(rutaActual[0]).x}
+                          cy={getNodeCoordinates(rutaActual[0]).y}
+                          r="12"
+                          className="svg-origin-pulse"
+                        />
+                        {/* Círculo principal */}
+                        <circle
+                          cx={getNodeCoordinates(rutaActual[0]).x}
+                          cy={getNodeCoordinates(rutaActual[0]).y}
+                          r="8"
+                          className="svg-origin-main"
+                        />
+                        {/* Icono de origen */}
+                        <text
+                          x={getNodeCoordinates(rutaActual[0]).x}
+                          y={getNodeCoordinates(rutaActual[0]).y + 5}
+                          textAnchor="middle"
+                          className="svg-origin-icon"
+                        >
+                          
+                        </text>
+                      </g>
+                    )}
+                    
+                    {/* Punto DESTINO - Último en la ruta */}
+                    {getNodeCoordinates(rutaActual[rutaActual.length - 1]) && (
+                      <g className="svg-destination-marker">
+                        {/* Círculo de pulso */}
+                        <circle
+                          cx={getNodeCoordinates(rutaActual[rutaActual.length - 1]).x}
+                          cy={getNodeCoordinates(rutaActual[rutaActual.length - 1]).y}
+                          r="12"
+                          className="svg-destination-pulse"
+                        />
+                        {/* Círculo principal */}
+                        <circle
+                          cx={getNodeCoordinates(rutaActual[rutaActual.length - 1]).x}
+                          cy={getNodeCoordinates(rutaActual[rutaActual.length - 1]).y}
+                          r="8"
+                          className="svg-destination-main"
+                        />
+                        {/* Icono de destino */}
+                        <text
+                          x={getNodeCoordinates(rutaActual[rutaActual.length - 1]).x}
+                          y={getNodeCoordinates(rutaActual[rutaActual.length - 1]).y + 5}
+                          textAnchor="middle"
+                          className="svg-destination-icon"
+                        >
+                          
+                        </text>
+                      </g>
+                    )}
+                  </g>
+                )}
+
 
                 {modoEdicion && (
                   <TemporaryElements
