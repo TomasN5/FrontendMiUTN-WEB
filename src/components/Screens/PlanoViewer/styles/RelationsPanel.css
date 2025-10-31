@@ -256,3 +256,127 @@
   r: 5;
   pointer-events: none;
 }
+/* Botones de eliminación */
+.relations-panel__delete-button {
+  background: #ff4444;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 12px;
+  color: white;
+  transition: background 0.2s;
+}
+
+.relations-panel__delete-button:hover {
+  background: #cc0000;
+}
+
+.relations-panel__delete-connection-button {
+  background: #ff6b6b;
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  font-size: 12px;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.relations-panel__delete-connection-button:hover {
+  background: #ff4444;
+}
+
+.relations-panel__node-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.relations-panel__node-title {
+  flex: 1;
+}
+
+.relations-panel__connection-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.relations-panel__connection-info {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Modal de confirmación */
+.relations-panel__delete-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.relations-panel__delete-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+}
+
+.relations-panel__delete-content h4 {
+  margin: 0 0 10px 0;
+  color: #333;
+}
+
+.relations-panel__delete-content p {
+  margin: 0 0 20px 0;
+  color: #666;
+}
+
+.relations-panel__delete-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.relations-panel__delete-cancel {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.relations-panel__delete-confirm {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.relations-panel__delete-cancel:hover {
+  background: #5a6268;
+}
+
+.relations-panel__delete-confirm:hover {
+  background: #c82333;
+}

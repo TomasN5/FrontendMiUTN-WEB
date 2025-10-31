@@ -13,10 +13,13 @@ const RelationsPanel = ({
   onNodeHover,
   onNodeLeave,
   highlightedNode,
-  connectionLines
+  connectionLines,
+  onDeleteNode, // 🔥 NUEVA PROP: función para eliminar nodos
+  onDeleteConnection // 🔥 NUEVA PROP: función para eliminar conexiones
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [hoveredNode, setHoveredNode] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null); // { type: 'node' | 'connection', id: string }
 
   // Combinar todos los nodos de todos los planos
   const allNodes = useMemo(() => {
@@ -45,7 +48,9 @@ const RelationsPanel = ({
                 type: 'pasillo',
                 node: pasillo.to,
                 direction: 'salida',
-                planoId: pasillo.planoId
+                planoId: pasillo.planoId,
+                connectionId: pasillo.id, // 🔥 ID de la conexión para poder eliminarla
+                connectionData: pasillo // 🔥 Datos completos de la conexión
               });
             }
             if (pasillo.to && pasillo.to.id === nodeId) {
@@ -53,7 +58,9 @@ const RelationsPanel = ({
                 type: 'pasillo',
                 node: pasillo.from,
                 direction: 'entrada',
-                planoId: pasillo.planoId
+                planoId: pasillo.planoId,
+                connectionId: pasillo.id, // 🔥 ID de la conexión
+                connectionData: pasillo // 🔥 Datos completos
               });
             }
           });
@@ -84,18 +91,61 @@ const RelationsPanel = ({
     escaleras: allNodes.filter(n => n.tipo === AREA_TYPES.ESCALERA).length
   }), [allNodes]);
 
-  const handleNodeMouseEnter = (node) => {
+      // En RelationsPanel.jsx - mejora las funciones de hover
+    const handleNodeMouseEnter = (node) => {
+      console.log("🖱️ HOVER ENTER - Nodo:", node.nombre, node.id);
       setHoveredNode(node);
       if (onNodeHover) {
         onNodeHover(node);
+      } else {
+        console.log("❌ onNodeHover no está definido");
       }
     };
 
-  const handleNodeMouseLeave = () => {
-    setHoveredNode(null);
-    if (onNodeLeave) {
-      onNodeLeave();
+    const handleNodeMouseLeave = () => {
+      console.log("🖱️ HOVER LEAVE");
+      setHoveredNode(null);
+      if (onNodeLeave) {
+        onNodeLeave();
+      } else {
+        console.log("❌ onNodeLeave no está definido");
+      }
+    };
+
+// 🔥 NUEVA FUNCIÓN: Hover en conexiones
+    const handleConnectionMouseEnter = (connection) => {
+      if (onNodeHover) {
+        // Destacar ambos nodos de la conexión
+        onNodeHover(connection.connectionData, 'connection');
+      }
+    };
+
+    const handleConnectionMouseLeave = () => {
+      if (onNodeLeave) {
+        onNodeLeave();
+      }
+    };
+  // 🔥 NUEVAS FUNCIONES PARA ELIMINAR
+  const handleDeleteNode = (nodeId) => {
+    if (onDeleteNode) {
+      onDeleteNode(nodeId);
+      setShowDeleteConfirm(null);
     }
+  };
+
+  const handleDeleteConnection = (connectionId) => {
+    if (onDeleteConnection) {
+      onDeleteConnection(connectionId);
+      setShowDeleteConfirm(null);
+    }
+  };
+
+  const confirmDelete = (type, id, name) => {
+    setShowDeleteConfirm({ type, id, name });
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteConfirm(null);
   };
 
   const getTypeDisplayName = (tipo) => {
@@ -130,6 +180,39 @@ const RelationsPanel = ({
         Explora las conexiones entre nodos. Pasa el cursor sobre cualquier elemento para ver sus relaciones en el mapa.
       </div>
 
+      {/* 🔥 MODAL DE CONFIRMACIÓN DE ELIMINACIÓN */}
+      {showDeleteConfirm && (
+        <div className="relations-panel__delete-modal">
+          <div className="relations-panel__delete-content">
+            <h4>¿Estás seguro?</h4>
+            <p>
+              {showDeleteConfirm.type === 'node' 
+                ? `Vas a eliminar el nodo "${showDeleteConfirm.name}". Esta acción no se puede deshacer.`
+                : `Vas a eliminar esta conexión. Esta acción no se puede deshacer.`
+              }
+            </p>
+            <div className="relations-panel__delete-actions">
+              <button 
+                onClick={cancelDelete}
+                className="relations-panel__delete-cancel"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={() => 
+                  showDeleteConfirm.type === 'node' 
+                    ? handleDeleteNode(showDeleteConfirm.id)
+                    : handleDeleteConnection(showDeleteConfirm.id)
+                }
+                className="relations-panel__delete-confirm"
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="relations-panel__section">
         <div className="relations-panel__section-title">
           🔍 Buscar Nodos
@@ -161,19 +244,45 @@ const RelationsPanel = ({
               
               return (
                 <div
-                key={node.id}
-                className={`relations-panel__node-item ${
-                  isHighlighted ? 'relations-panel__node-item--highlighted' : ''
-                }`}
-                onMouseEnter={() => handleNodeMouseEnter(node)}
-                onMouseLeave={handleNodeMouseLeave}
-                style={{ cursor: 'pointer' }} // Agrega cursor pointer para indicar que es interactivo
-              >
+                  key={node.id}
+                  className={`relations-panel__node-item ${
+                    isHighlighted ? 'relations-panel__node-item--highlighted' : ''
+                  }`}
+                  onMouseEnter={() => {
+                    console.log("🖱️ Hover en nodo del panel:", node.nombre);
+                    if (onNodeHover) {
+                      onNodeHover(node); // ← Esto debería activar el highlight en el mapa
+                    }
+                  }}
+                  onMouseLeave={() => {
+                    console.log("🖱️ Leave del nodo del panel");
+                    if (onNodeLeave) {
+                      onNodeLeave();
+                    }
+                  }}
+                  style={{ cursor: 'pointer' }}
+                >
                   <div className="relations-panel__node-header">
-                    <h4 className="relations-panel__node-name">{node.nombre}</h4>
-                    <span className={`relations-panel__node-type relations-panel__node-type--${node.tipo}`}>
-                      {getTypeDisplayName(node.tipo)}
-                    </span>
+                    <div className="relations-panel__node-title">
+                      <h4 className="relations-panel__node-name">{node.nombre}</h4>
+                      <span className={`relations-panel__node-type relations-panel__node-type--${node.tipo}`}>
+                        {getTypeDisplayName(node.tipo)}
+                      </span>
+                    </div>
+                    
+                    {/* 🔥 BOTÓN ELIMINAR NODO */}
+                    {onDeleteNode && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          confirmDelete('node', node.id, node.nombre);
+                        }}
+                        className="relations-panel__delete-button"
+                        title={`Eliminar ${node.nombre}`}
+                      >
+                        🗑️
+                      </button>
+                    )}
                   </div>
                   
                   <div className="relations-panel__node-info">
@@ -188,13 +297,35 @@ const RelationsPanel = ({
                       </div>
                       <div className="relations-panel__connection-list">
                         {connections.slice(0, 3).map((conn, index) => (
-                          <div key={index} className="relations-panel__connection-item">
-                            <span className="relations-panel__connection-icon">
-                              {conn.direction === 'salida' ? '➡️' : '⬅️'}
-                            </span>
-                            <span>
-                              {conn.node.nombre} ({getTypeDisplayName(conn.node.tipo)})
-                            </span>
+                          <div 
+                            key={index} 
+                            className="relations-panel__connection-item"
+                            onMouseEnter={() => handleConnectionMouseEnter(conn)}
+                            onMouseLeave={handleConnectionMouseLeave}
+                            style={{ cursor: 'pointer' }}
+                          >
+                            <div className="relations-panel__connection-info">
+                              <span className="relations-panel__connection-icon">
+                                {conn.direction === 'salida' ? '➡️' : '⬅️'}
+                              </span>
+                              <span>
+                                {conn.node.nombre} ({getTypeDisplayName(conn.node.tipo)})
+                              </span>
+                            </div>
+                            
+                            {/* Botón eliminar conexión */}
+                            {onDeleteConnection && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  confirmDelete('connection', conn.connectionId, `Conexión ${conn.node.nombre}`);
+                                }}
+                                className="relations-panel__delete-connection-button"
+                                title="Eliminar conexión"
+                              >
+                                ×
+                              </button>
+                            )}
                           </div>
                         ))}
                         {connections.length > 3 && (

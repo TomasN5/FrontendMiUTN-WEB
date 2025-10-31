@@ -213,6 +213,72 @@ export const usePlanoEditor = () => {
     }
   }, [datosPorPlano, actualizarDatosPlano]);
 
+  const handleEliminarNodo = useCallback((nodeId) => {
+  if (!planoActual) return;
+  
+  console.log("🗑️ Eliminando nodo:", nodeId);
+  
+  const datosActuales = getDatosPlanoActual();
+  
+  // Buscar y eliminar el nodo de areas o points
+  const nuevasAreas = datosActuales.areas.filter(area => area.id !== nodeId);
+  const nuevosPoints = datosActuales.points.filter(point => point.id !== nodeId);
+  
+  // También eliminar todas las conexiones (pasillos) que involucren este nodo
+  const areasFiltradas = nuevasAreas.filter(area => {
+    if (area.tipo === AREA_TYPES.PASILLO) {
+      // Eliminar pasillos que conecten con el nodo eliminado
+      return area.from?.id !== nodeId && area.to?.id !== nodeId;
+    }
+    return true;
+  });
+  
+  actualizarDatosPlano(planoActual.id, areasFiltradas, nuevosPoints);
+  console.log("✅ Nodo eliminado:", nodeId);
+  
+  // Si el nodo seleccionado era el que se eliminó, limpiar selección
+  if (selectedNode && selectedNode.id === nodeId) {
+    setSelectedNode(null);
+  }
+}, [planoActual, getDatosPlanoActual, actualizarDatosPlano, selectedNode]);
+
+    // 🔥 NUEVA FUNCIÓN: Eliminar conexión (pasillo)
+    const handleEliminarConexion = useCallback((conexionId) => {
+      if (!planoActual) return;
+      
+      console.log("🗑️ Eliminando conexión:", conexionId);
+      
+      const datosActuales = getDatosPlanoActual();
+      
+      // Eliminar la conexión (pasillo) por su ID
+      const nuevasAreas = datosActuales.areas.filter(area => 
+        area.id !== conexionId
+      );
+      
+      actualizarDatosPlano(planoActual.id, nuevasAreas, datosActuales.points);
+      console.log("✅ Conexión eliminada:", conexionId);
+    }, [planoActual, getDatosPlanoActual, actualizarDatosPlano]);
+
+    // 🔥 NUEVA FUNCIÓN: Eliminar todos los pasillos de un nodo específico
+    const handleEliminarConexionesNodo = useCallback((nodeId) => {
+      if (!planoActual) return;
+      
+      console.log("🗑️ Eliminando todas las conexiones del nodo:", nodeId);
+      
+      const datosActuales = getDatosPlanoActual();
+      
+      // Eliminar todos los pasillos que involucren este nodo
+      const nuevasAreas = datosActuales.areas.filter(area => {
+        if (area.tipo === AREA_TYPES.PASILLO) {
+          return area.from?.id !== nodeId && area.to?.id !== nodeId;
+        }
+        return true;
+      });
+      
+      actualizarDatosPlano(planoActual.id, nuevasAreas, datosActuales.points);
+      console.log("✅ Conexiones eliminadas para nodo:", nodeId);
+    }, [planoActual, getDatosPlanoActual, actualizarDatosPlano]);
+
   return {
     // Estado del plano actual
     areas,
@@ -242,6 +308,11 @@ export const usePlanoEditor = () => {
     handleCancelar,
     handleNodeClick,
     limpiarIDsDuplicados,
+    
+    // 🔥 NUEVOS HANDLERS PARA ELIMINAR
+    handleEliminarNodo,
+    handleEliminarConexion,
+    handleEliminarConexionesNodo,
 
     // Para debug - ver todos los datos
     todosLosDatos: datosPorPlano

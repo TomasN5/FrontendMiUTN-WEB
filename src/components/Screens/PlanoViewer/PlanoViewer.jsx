@@ -376,38 +376,56 @@ const PlanoViewer = () => {
     }, [editor.todosLosDatos]);
 
 
+
+
+
     const handleNodeHover = useCallback((node) => {
-  // DESACTIVAR COMPLETAMENTE durante edición de pasillos
-  if (editor.modoEdicion && editor.tipoActual === AREA_TYPES.PASILLO) {
-    return;
-  }
-  
-  if (node && node.id) {
-    setHighlightedNode(node);
-    
-    const connections = findNodeConnections(node.id);
-    const lines = connections.map(conn => {
-      const fromCoords = getPointCoordinates(node.id);
-      const toCoords = getPointCoordinates(conn.node.id);
-      return { from: fromCoords, to: toCoords };
-    });
-    
-    setConnectionLines(lines);
-  }
-}, [getPointCoordinates, findNodeConnections, editor.modoEdicion, editor.tipoActual]);
+        console.log("🎯 handleNodeHover recibió nodo:", node?.nombre);
+        
+        // Si estamos en modo edición de pasillos, no hacer nada
+        if (editor.modoEdicion && editor.tipoActual === AREA_TYPES.PASILLO) {
+          return;
+        }
+        
+        if (node && node.id) {
+          console.log("✅ Aplicando highlight en mapa para:", node.nombre);
+          setHighlightedNode(node);
+          
+          // Encontrar conexiones de este nodo
+          const connections = findNodeConnections(node.id);
+          console.log("🔗 Conexiones encontradas:", connections.length);
+          
+          // Crear líneas para las conexiones
+          const lines = connections.map(conn => {
+            const fromCoords = getPointCoordinates(node.id);
+            const toCoords = getPointCoordinates(conn.node.id);
+            return { 
+              from: fromCoords, 
+              to: toCoords,
+              isHovered: true 
+            };
+          });
+          
+          setConnectionLines(lines);
+        }
+      }, [getPointCoordinates, findNodeConnections, editor.modoEdicion, editor.tipoActual]);
 
-const handleNodeLeave = useCallback(() => {
-  // DESACTIVAR COMPLETAMENTE durante edición de pasillos
-  if (editor.modoEdicion && editor.tipoActual === AREA_TYPES.PASILLO) {
-    return;
-  }
-  
-  setHighlightedNode(null);
-  setConnectionLines([]);
-}, [editor.modoEdicion, editor.tipoActual]);
+      const handleNodeLeave = useCallback(() => {
+        console.log("🎯 handleNodeLeave - Limpiando highlight");
+        setHighlightedNode(null);
+        setConnectionLines([]);
+      }, []);
 
 
+const handleDeleteNode = useCallback((nodeId) => {
+  console.log("🗑️ Eliminando nodo desde RelationsPanel:", nodeId);
+  editor.handleEliminarNodo(nodeId);
+}, [editor.handleEliminarNodo]);
 
+const handleDeleteConnection = useCallback((connectionId) => {
+  console.log("🗑️ Eliminando conexión desde RelationsPanel:", connectionId);
+  editor.handleEliminarConexion(connectionId);
+}, [editor.handleEliminarConexion]);
  
 
   return (
@@ -522,6 +540,8 @@ const handleNodeLeave = useCallback(() => {
         onNodeLeave={handleNodeLeave}
         highlightedNode={highlightedNode}
         connectionLines={connectionLines}
+        onDeleteNode={handleDeleteNode}
+        onDeleteConnection={handleDeleteConnection}
       />
     )}
 

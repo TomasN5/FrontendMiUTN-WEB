@@ -317,3 +317,193 @@
 .svg-editor__animated-route-container {
   z-index: 100;
 }
+
+/* Efectos de highlight para relaciones */
+.relations-panel__highlight-group {
+  pointer-events: none;
+}
+
+.relations-panel__highlight-overlay--point {
+  fill: #ff4444;
+  stroke: #ffffff;
+  stroke-width: 2;
+  filter: drop-shadow(0 0 10px #ff4444);
+  animation: pointPulse 1.5s ease-in-out infinite;
+}
+
+.relations-panel__highlight-overlay--area {
+  fill: rgba(255, 68, 68, 0.3);
+  stroke: #ff4444;
+  stroke-width: 3;
+  stroke-dasharray: 5, 5;
+  filter: drop-shadow(0 0 15px #ff4444);
+  animation: areaGlow 2s ease-in-out infinite;
+}
+
+.relations-panel__highlight-pulse {
+  fill: none;
+  stroke: #ff4444;
+  stroke-width: 2;
+  opacity: 0.6;
+  animation: highlightPulse 2s ease-out infinite;
+}
+
+.relations-panel__highlight-glow {
+  fill: none;
+  stroke: #ff4444;
+  stroke-width: 8;
+  opacity: 0.3;
+  filter: blur(4px);
+}
+
+/* Líneas de conexión con hover */
+.relations-panel__connection-line--hovered {
+  stroke: #ff4444;
+  stroke-width: 4;
+  stroke-dasharray: none;
+  filter: drop-shadow(0 0 8px #ff4444);
+  animation: connectionGlow 1.5s ease-in-out infinite;
+}
+
+.relations-panel__connection-line--connection-hover {
+  stroke: #ffaa00;
+  stroke-width: 5;
+  filter: drop-shadow(0 0 12px #ffaa00);
+  animation: connectionPulse 1s ease-in-out infinite;
+}
+
+.relations-panel__connection-point--hovered {
+  fill: #ff4444;
+  stroke: #ffffff;
+  stroke-width: 2;
+  r: 6;
+  filter: drop-shadow(0 0 8px #ff4444);
+  animation: pointPulse 1s ease-in-out infinite;
+}
+
+/* Animaciones */
+@keyframes pointPulse {
+  0%, 100% { 
+    r: 6;
+    opacity: 1;
+  }
+  50% { 
+    r: 8;
+    opacity: 0.8;
+  }
+}
+
+@keyframes areaGlow {
+  0%, 100% { 
+    stroke-width: 3;
+    opacity: 1;
+  }
+  50% { 
+    stroke-width: 4;
+    opacity: 0.7;
+  }
+}
+
+@keyframes highlightPulse {
+  0% {
+    r: 10;
+    opacity: 0.8;
+  }
+  100% {
+    r: 25;
+    opacity: 0;
+  }
+}
+
+@keyframes connectionGlow {
+  0%, 100% { 
+    stroke: #ff4444;
+    stroke-width: 4;
+  }
+  50% { 
+    stroke: #ff6666;
+    stroke-width: 5;
+  }
+}
+
+@keyframes connectionPulse {
+  0%, 100% { 
+    stroke: #ffaa00;
+    stroke-width: 5;
+  }
+  50% { 
+    stroke: #ffcc00;
+    stroke-width: 6;
+  }
+}
+
+/* Efecto de transición suave */
+.relations-panel__node-item {
+  transition: all 0.3s ease;
+}
+
+.relations-panel__node-item:hover {
+  transform: translateX(5px);
+  box-shadow: 0 4px 12px rgba(255, 68, 68, 0.2);
+}
+
+/* ESTILOS PARA HIGHLIGHT EN EL MAPA (SVG) */
+.svg-highlight-group {
+  pointer-events: none;
+}
+
+.svg-highlight-point-glow {
+  fill: rgba(255, 0, 0, 0.3);
+  animation: pointPulse 1.5s infinite;
+}
+
+.svg-highlight-point {
+  fill: #ff0000;
+  stroke: #ffffff;
+  stroke-width: 2;
+  filter: drop-shadow(0 0 8px #ff0000);
+}
+
+.svg-highlight-area-glow {
+  fill: rgba(255, 0, 0, 0.2);
+  stroke: rgba(255, 0, 0, 0.5);
+  stroke-width: 6;
+  filter: blur(3px);
+}
+
+.svg-highlight-area {
+  fill: rgba(255, 0, 0, 0.3);
+  stroke: #ff0000;
+  stroke-width: 3;
+  stroke-dasharray: 5, 5;
+  animation: areaPulse 2s infinite;
+}
+
+.svg-connection-line {
+  stroke: #ff4444;
+  stroke-width: 3;
+  stroke-dasharray: 5, 5;
+  animation: lineFlow 1.5s infinite linear;
+}
+
+.svg-connection-point {
+  fill: #ff4444;
+  stroke: #ffffff;
+  stroke-width: 2;
+  filter: drop-shadow(0 0 4px #ff4444);
+}
+
+@keyframes pointPulse {
+  0%, 100% { r: 10; opacity: 0.5; }
+  50% { r: 15; opacity: 0.3; }
+}
+
+@keyframes areaPulse {
+  0%, 100% { stroke-width: 3; opacity: 1; }
+  50% { stroke-width: 4; opacity: 0.7; }
+}
+
+@keyframes lineFlow {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: 10; }
+}

@@ -516,26 +516,44 @@ const SVGEditor = ({
                 {snapIndicators}
                 {debugEdges}
 
-                {/* Highlight overlay for hovered node */}
+              {/* Highlight overlay for hovered node */}
                 {highlightedNode && (
-                  <g>
-                    {highlightedNode.tipo === "punto" ? (
+                <g className="svg-highlight-group">
+                  {highlightedNode.tipo === "punto" ? (
+                    // Si es un punto
+                    <g>
+                      <circle
+                        cx={highlightedNode.x}
+                        cy={highlightedNode.y}
+                        r="12"
+                        className="svg-highlight-point-glow"
+                      />
                       <circle
                         cx={highlightedNode.x}
                         cy={highlightedNode.y}
                         r="8"
-                        className="relations-panel__highlight-overlay"
+                        className="svg-highlight-point"
                       />
-                    ) : (
-                      <polygon
-                        points={geometryUtils.toPointsAttr(highlightedNode.points)}
-                        className="relations-panel__highlight-overlay"
-                      />
-                    )}
-                  </g>
-                )}
-
-                {/* Connection lines */}
+                    </g>
+                  ) : (
+                    // Si es un área (tiene points)
+                    highlightedNode.points && (
+                      <g>
+                        <polygon
+                          points={geometryUtils.toPointsAttr(highlightedNode.points)}
+                          className="svg-highlight-area-glow"
+                        />
+                        <polygon
+                          points={geometryUtils.toPointsAttr(highlightedNode.points)}
+                          className="svg-highlight-area"
+                        />
+                      </g>
+                    )
+                  )}
+                </g>
+              )}
+              {/* Connection lines */}
+              
                 {connectionLines && connectionLines.map((line, index) => (
                   <g key={`connection-${index}`}>
                     <line
@@ -543,20 +561,23 @@ const SVGEditor = ({
                       y1={line.from.y}
                       x2={line.to.x}
                       y2={line.to.y}
-                      className="relations-panel__connection-line"
+                      className="svg-connection-line"
                     />
                     <circle
                       cx={line.from.x}
                       cy={line.from.y}
-                      className="relations-panel__connection-point"
+                      r="5"
+                      className="svg-connection-point"
                     />
                     <circle
                       cx={line.to.x}
                       cy={line.to.y}
-                      className="relations-panel__connection-point"
+                      r="5"
+                      className="svg-connection-point"
                     />
                   </g>
                 ))}
+
 
                 {zoomScale <= 1.1 && !modoEdicion && (
                   <rect
