@@ -52,13 +52,14 @@ const Staircase = ({
 
       {generateStairPattern(area.points, isHorizontal)}
       
-      <text
+     <text
         x={centerX}
         y={centerY}
         textAnchor="middle"
         className={`staircase__icon ${
           Math.min(width, height) > 50 ? 'staircase__icon--large' : 'staircase__icon--small'
         }`}
+        fontSize={getStairIconSize(zoomScale)} // 🔥 Usar tamaño escalado
       >
         ⬆️⬇️
       </text>
@@ -98,6 +99,15 @@ const Staircase = ({
     </g>
   );
 };
+
+const getStairIconSize = (zoomScale) => {
+  if (zoomScale >= 5) return '12px';
+  if (zoomScale >= 4) return '14px';
+  if (zoomScale >= 3) return '16px';
+  if (zoomScale >= 2) return '18px';
+  return '20px';
+};
+
 
 const generateStairPattern = (points, isHorizontal) => {
   const steps = 5;

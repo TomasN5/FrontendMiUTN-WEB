@@ -98,7 +98,18 @@ export const usePlanoEditor = () => {
 
     const { x, y } = getRelativeCoords(e);
 
-    if (tipoActual === AREA_TYPES.PUNTO) {
+    // 🔥 DETECTAR SI ES UN TIPO QUE DEBE SER PUNTO, NO ÁREA
+    const esTipoPunto = [
+      AREA_TYPES.PUNTO,
+      AREA_TYPES.EXTINTOR,
+      AREA_TYPES.SALIDA_EMERGENCIA,
+      AREA_TYPES.DESFIBRILADOR,
+      AREA_TYPES.BOTIQUIN,
+      AREA_TYPES.ALARMA,
+       AREA_TYPES.TOTEM 
+    ].includes(tipoActual);
+
+    if (esTipoPunto) {
       setPuntosTemporales((prev) => [...prev, [x, y]]);
       return;
     }
@@ -115,48 +126,94 @@ export const usePlanoEditor = () => {
   }, [modoEdicion, tipoActual]);
 
   // Cuando se crea un área - GUARDAR CON ID ÚNICO
-  const handleGuardarArea = useCallback((nuevaArea, planoInfo) => {
-    if (puntosTemporales.length > 2 && planoInfo) {
-      const areaConInfo = {
-        ...nuevaArea,
-        id: generarIdUnico('area'), // ← ID único con timestamp
-        carrera: planoInfo.carrera || 'general',
-        piso: planoInfo.piso || 'planta_principal',
-        planoId: planoInfo.id
-      };
-      
-      const datosActuales = getDatosPlanoActual();
-      const nuevasAreas = [...datosActuales.areas, areaConInfo];
-      
-      actualizarDatosPlano(planoInfo.id, nuevasAreas, datosActuales.points);
-      resetEditorState();
-      
-      console.log("✅ Área creada con ID único:", areaConInfo.id);
-    }
-  }, [puntosTemporales, getDatosPlanoActual, actualizarDatosPlano, resetEditorState, generarIdUnico]);
 
+const handleGuardarArea = useCallback((nuevaArea, planoInfo) => {
+  // Si es un tipo que debe ser punto, guardar como punto
+  const esTipoPunto = [
+    AREA_TYPES.PUNTO,
+    AREA_TYPES.EXTINTOR,
+    AREA_TYPES.SALIDA_EMERGENCIA,
+    AREA_TYPES.DESFIBRILADOR,
+    AREA_TYPES.BOTIQUIN,
+    AREA_TYPES.ALARMA,
+     AREA_TYPES.TOTEM 
+  ].includes(nuevaArea.tipo);
+
+  if (esTipoPunto && puntosTemporales.length > 0 && planoInfo) {
+    // Guardar como punto
+    const datosActuales = getDatosPlanoActual();
+    const nuevoPunto = {
+      id: generarIdUnico('punto'),
+      tipo: nuevaArea.tipo,
+      nombre: nuevaArea.nombre || `Nuevo ${nuevaArea.tipo}`,
+      x: puntosTemporales[0][0], // 🔥 Solo usar el primer punto
+      y: puntosTemporales[0][1],
+      carrera: planoInfo.carrera || 'general',
+      piso: planoInfo.piso || 'planta_principal',
+      planoId: planoInfo.id
+    };
+    
+    const nuevosPoints = [...datosActuales.points, nuevoPunto];
+    actualizarDatosPlano(planoInfo.id, datosActuales.areas, nuevosPoints);
+    resetEditorState();
+    
+    console.log("✅ Punto especial creado:", nuevoPunto.id);
+  } 
+  else if (puntosTemporales.length > 2 && planoInfo) {
+    // Guardar como área (para aulas, halls, baños, etc.)
+    const areaConInfo = {
+      ...nuevaArea,
+      id: generarIdUnico('area'),
+      carrera: planoInfo.carrera || 'general',
+      piso: planoInfo.piso || 'planta_principal',
+      planoId: planoInfo.id
+    };
+    
+    const datosActuales = getDatosPlanoActual();
+    const nuevasAreas = [...datosActuales.areas, areaConInfo];
+    actualizarDatosPlano(planoInfo.id, nuevasAreas, datosActuales.points);
+    resetEditorState();
+    
+    console.log("✅ Área creada:", areaConInfo.id);
+  }
+}, [puntosTemporales, getDatosPlanoActual, actualizarDatosPlano, resetEditorState, generarIdUnico]);
   // Cuando se crean puntos - GUARDAR CON IDs ÚNICOS
-  const handleGuardarPuntos = useCallback((planoInfo) => {
-    if (puntosTemporales.length > 0 && planoInfo) {
-      const datosActuales = getDatosPlanoActual();
-      const nuevosPuntos = puntosTemporales.map((pt, i) => ({
-        id: generarIdUnico('punto'), // ← ID único con timestamp
-        tipo: AREA_TYPES.PUNTO,
-        nombre: `Punto ${datosActuales.points.length + i + 1}`,
-        x: pt[0],
-        y: pt[1],
-        carrera: planoInfo.carrera || 'general',
-        piso: planoInfo.piso || 'planta_principal',
-        planoId: planoInfo.id
-      }));
-      
-      const nuevosPoints = [...datosActuales.points, ...nuevosPuntos];
-      actualizarDatosPlano(planoInfo.id, datosActuales.areas, nuevosPoints);
-      resetEditorState();
-      
-      console.log("✅ Puntos creados con IDs únicos:", nuevosPuntos.map(p => p.id));
-    }
-  }, [puntosTemporales, getDatosPlanoActual, actualizarDatosPlano, resetEditorState, generarIdUnico]);
+const handleGuardarPuntos = useCallback((planoInfo) => {
+  if (puntosTemporales.length > 0 && planoInfo) {
+    const datosActuales = getDatosPlanoActual();
+    const nuevosPuntos = puntosTemporales.map((pt, i) => ({
+      id: generarIdUnico('punto'),
+      tipo: tipoActual, // 🔥 Usar el tipo actual (punto, extintor, etc.)
+      nombre: tipoActual === AREA_TYPES.PUNTO 
+        ? `Punto ${datosActuales.points.length + i + 1}`
+        : `${getDisplayName(tipoActual)} ${datosActuales.points.filter(p => p.tipo === tipoActual).length + 1}`,
+      x: pt[0],
+      y: pt[1],
+      carrera: planoInfo.carrera || 'general',
+      piso: planoInfo.piso || 'planta_principal',
+      planoId: planoInfo.id
+    }));
+    
+    const nuevosPoints = [...datosActuales.points, ...nuevosPuntos];
+    actualizarDatosPlano(planoInfo.id, datosActuales.areas, nuevosPoints);
+    resetEditorState();
+    
+    console.log("✅ Puntos creados:", nuevosPuntos.map(p => p.id));
+  }
+}, [puntosTemporales, tipoActual, getDatosPlanoActual, actualizarDatosPlano, resetEditorState, generarIdUnico]);
+
+const getDisplayName = (tipo) => {
+  const nombres = {
+    [AREA_TYPES.PUNTO]: 'Punto',
+    [AREA_TYPES.EXTINTOR]: 'Matafuegos',
+    [AREA_TYPES.SALIDA_EMERGENCIA]: 'Salida Emergencia',
+    [AREA_TYPES.DESFIBRILADOR]: 'Desfibrilador',
+    [AREA_TYPES.BOTIQUIN]: 'Botiquín',
+    [AREA_TYPES.ALARMA]: 'Alarma',
+    [AREA_TYPES.TOTEM]: 'Tótem'
+  };
+  return nombres[tipo] || tipo;
+};
 
   const handleDeshacer = useCallback(() => {
     setPuntosTemporales((prev) => prev.slice(0, -1));
@@ -166,42 +223,42 @@ export const usePlanoEditor = () => {
     resetEditorState();
   }, [resetEditorState]);
 
-  const handleNodeClick = useCallback((node) => {
-    if (!modoEdicion || tipoActual !== AREA_TYPES.PASILLO || !planoActual) return;
+ const handleNodeClick = useCallback((node) => {
+  if (!modoEdicion || tipoActual !== AREA_TYPES.PASILLO || !planoActual) return;
+  
+  if (!selectedNode) {
+    setSelectedNode(node);
+  } else if (selectedNode.id !== node.id) {
+    const datosActuales = getDatosPlanoActual();
     
-    if (!selectedNode) {
-      setSelectedNode(node);
-    } else if (selectedNode.id !== node.id) {
-      const datosActuales = getDatosPlanoActual();
-      
-      const pasillo1 = {
-        id: generarIdUnico('pasillo'), // ← ID único con timestamp
-        tipo: AREA_TYPES.PASILLO,
-        from: selectedNode,
-        to: node,
-        nombre: `Pasillo ${selectedNode.nombre}-${node.nombre}`,
-        carrera: planoActual.carrera || 'general',
-        piso: planoActual.piso || 'planta_principal',
-        planoId: planoActual.id
-      };
-      const pasillo2 = {
-        id: generarIdUnico('pasillo'), // ← ID único con timestamp
-        tipo: AREA_TYPES.PASILLO,
-        from: node,
-        to: selectedNode,
-        nombre: `Pasillo ${node.nombre}-${selectedNode.nombre}`,
-        carrera: planoActual.carrera || 'general',
-        piso: planoActual.piso || 'planta_principal',
-        planoId: planoActual.id
-      };
-      
-      const nuevasAreas = [...datosActuales.areas, pasillo1, pasillo2];
-      actualizarDatosPlano(planoActual.id, nuevasAreas, datosActuales.points);
-      setSelectedNode(null);
-      
-      console.log("✅ Pasillos creados con IDs únicos:", pasillo1.id, pasillo2.id);
-    }
-  }, [modoEdicion, tipoActual, selectedNode, planoActual, getDatosPlanoActual, actualizarDatosPlano, generarIdUnico]);
+    const pasillo1 = {
+      id: generarIdUnico('pasillo'),
+      tipo: AREA_TYPES.PASILLO,
+      from: selectedNode,
+      to: node,
+      nombre: `Pasillo ${selectedNode.nombre}-${node.nombre}`,
+      carrera: planoActual.carrera || 'general',
+      piso: planoActual.piso || 'planta_principal',
+      planoId: planoActual.id
+    };
+    const pasillo2 = {
+      id: generarIdUnico('pasillo'),
+      tipo: AREA_TYPES.PASILLO,
+      from: node,
+      to: selectedNode,
+      nombre: `Pasillo ${node.nombre}-${selectedNode.nombre}`,
+      carrera: planoActual.carrera || 'general',
+      piso: planoActual.piso || 'planta_principal',
+      planoId: planoActual.id
+    };
+    
+    const nuevasAreas = [...datosActuales.areas, pasillo1, pasillo2];
+    actualizarDatosPlano(planoActual.id, nuevasAreas, datosActuales.points);
+    setSelectedNode(null);
+    
+    console.log("✅ Pasillos creados conectando:", selectedNode.nombre, "con", node.nombre);
+  }
+}, [modoEdicion, tipoActual, selectedNode, planoActual, getDatosPlanoActual, actualizarDatosPlano, generarIdUnico]);
 
   // Actualizar plano actual cuando cambia
   const actualizarPlanoActual = useCallback((planoInfo) => {

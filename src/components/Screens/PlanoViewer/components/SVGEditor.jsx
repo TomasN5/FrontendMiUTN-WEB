@@ -236,28 +236,28 @@ const SVGEditor = ({
                   ))}
 
                 {areas
-                .filter((a) => a && a.tipo !== "pasillo")
-                .map((a) => (
-                  <AreaPolygon
-                    key={a.id}
-                    area={a}
-                    zoomScale={zoomScale}
-                    isSelectable={modoEdicion && tipoActual === "pasillo"}
-                    onNodeClick={onNodeClick}
-                    getPolygonCenter={getRelativeCoords.getPolygonCenter}
-                    tipoActual={tipoActual} // ← AGREGAR ESTA PROP
-                  />
-                ))}
+            .filter((a) => a && a.tipo !== "pasillo")
+            .map((a) => (
+              <AreaPolygon
+                key={a.id}
+                area={a}
+                zoomScale={zoomScale}
+                isSelectable={modoEdicion && tipoActual === AREA_TYPES.PASILLO} // 🔥 IMPORTANTE
+                onNodeClick={onNodeClick}
+                getPolygonCenter={getRelativeCoords.getPolygonCenter}
+                tipoActual={tipoActual}
+              />
+            ))}
 
-              {points.map((p) => (
+            {points.map((p) => (
                 p && (
                   <AreaPolygon
                     key={p.id}
                     area={p}
                     zoomScale={zoomScale}
-                    isSelectable={modoEdicion && tipoActual === "pasillo"}
+                    isSelectable={modoEdicion && tipoActual === AREA_TYPES.PASILLO} // 🔥 IMPORTANTE
                     onNodeClick={onNodeClick}
-                    tipoActual={tipoActual} // ← AGREGAR ESTA PROP
+                    tipoActual={tipoActual}
                   />
                 )
               ))}

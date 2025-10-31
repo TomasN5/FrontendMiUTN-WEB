@@ -1,0 +1,61 @@
+/* Estilos corregidos - SIN transform que cause movimiento */
+.special-point {
+  cursor: pointer;
+  transition: filter 0.2s ease; /* 🔥 Solo transición en filter */
+}
+
+.special-point--selectable:hover {
+  filter: drop-shadow(0 0 8px currentColor);
+  /* 🔥 QUITAR transform: scale() que causa movimiento */
+}
+
+.special-point__background {
+  fill-opacity: 0.9;
+  stroke: white;
+  stroke-width: 1.2;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+  transition: filter 0.2s ease; /* 🔥 Transición suave solo para filter */
+}
+
+.special-point__icon {
+  pointer-events: none;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3));
+}
+
+.special-point__label {
+  fill: #333;
+  font-weight: 500;
+  pointer-events: none;
+  filter: drop-shadow(0 0 1px white);
+}
+
+/* Efectos de hover corregidos - SIN transform */
+.special-point--extintor:hover .special-point__background {
+  filter: drop-shadow(0 0 8px #FF4444) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+.special-point--salida_emergencia:hover .special-point__background {
+  filter: drop-shadow(0 0 8px #00AA00) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+.special-point--desfibrilador:hover .special-point__background {
+  filter: drop-shadow(0 0 8px #FFAA00) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+.special-point--botiquin:hover .special-point__background {
+  filter: drop-shadow(0 0 8px #4444FF) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+.special-point--alarma:hover .special-point__background {
+  filter: drop-shadow(0 0 8px #FF00FF) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+/* Para puntos normales */
+.special-point--punto .special-point__background {
+  fill: #607D8B;
+  stroke-width: 1;
+}
+
+.special-point--punto:hover .special-point__background {
+  filter: drop-shadow(0 0 8px #607D8B) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}

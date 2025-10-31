@@ -1,8 +1,8 @@
 import { useState, useCallback, useRef } from 'react';
-
 export const useRouteAnimation = () => {
   const [animatedPath, setAnimatedPath] = useState([]);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [finalPath, setFinalPath] = useState([]); // 🔥 NUEVO: Ruta final
   const animationRef = useRef(null);
   const startTimeRef = useRef(null);
 
@@ -15,6 +15,7 @@ export const useRouteAnimation = () => {
     
     if (!rutaCompleta || rutaCompleta.length < 2) {
       setAnimatedPath([]);
+      setFinalPath([]); // 🔥 Limpiar ruta final también
       setIsAnimating(false);
       return;
     }
@@ -22,6 +23,7 @@ export const useRouteAnimation = () => {
     console.log("🎬 Iniciando animación de ruta con", rutaCompleta.length, "puntos");
     setIsAnimating(true);
     setAnimatedPath([]);
+    setFinalPath([]); // 🔥 Limpiar ruta final al empezar
 
     // Preparar todos los puntos de la ruta
     const puntos = rutaCompleta.map(id => {
@@ -33,7 +35,7 @@ export const useRouteAnimation = () => {
         isStair: nodeInfo?.tipo === 'escalera',
         planoId: nodeInfo?.planoId
       };
-    }).filter(point => point.x !== -1000 && point.y !== -1000); // Filtrar puntos inválidos
+    }).filter(point => point.x !== -1000 && point.y !== -1000);
 
     if (puntos.length < 2) {
       console.log("❌ No hay puntos válidos para animar");
@@ -55,6 +57,15 @@ export const useRouteAnimation = () => {
 
       setAnimatedPath(currentPath);
 
+      // 🔥 GUARDAR LA RUTA COMPLETA CUANDO TERMINE
+      if (progress >= 1) {
+        setFinalPath(puntos); // 🔥 Guardar ruta completa
+        setIsAnimating(false);
+        animationRef.current = null;
+        console.log("✅ Animación completada - Ruta guardada");
+        return;
+      }
+
       // Detectar transiciones entre pisos
       if (pointsToShow > 1 && onFloorTransition) {
         const previousPoint = puntos[pointsToShow - 2];
@@ -66,13 +77,7 @@ export const useRouteAnimation = () => {
         }
       }
 
-      if (progress < 1) {
-        animationRef.current = requestAnimationFrame(animate);
-      } else {
-        setIsAnimating(false);
-        animationRef.current = null;
-        console.log("✅ Animación completada");
-      }
+      animationRef.current = requestAnimationFrame(animate);
     };
 
     // Iniciar animación
@@ -90,11 +95,13 @@ export const useRouteAnimation = () => {
   const resetAnimation = useCallback(() => {
     stopAnimation();
     setAnimatedPath([]);
+    setFinalPath([]); // 🔥 Limpiar ruta final también
   }, [stopAnimation]);
 
   return {
     animatedPath,
     isAnimating,
+    finalPath, // 🔥 EXPORTAR la ruta final
     startRouteAnimation,
     stopAnimation,
     resetAnimation

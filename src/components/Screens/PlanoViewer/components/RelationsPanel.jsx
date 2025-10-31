@@ -3,6 +3,14 @@ import { AREA_TYPES } from '../utils/constants';
 import { geometryUtils } from '../utils/geometry';
 import './../styles/RelationsPanel.css';
 
+ const isSpecialType = (tipo) => [
+        AREA_TYPES.EXTINTOR,
+        AREA_TYPES.SALIDA_EMERGENCIA,
+        AREA_TYPES.DESFIBRILADOR, 
+        AREA_TYPES.BOTIQUIN,
+        AREA_TYPES.ALARMA
+      ].includes(tipo);
+
 const RelationsPanel = ({
   isVisible,
   onClose,
@@ -83,13 +91,25 @@ const RelationsPanel = ({
   }, [allNodes, searchTerm]);
 
   // Estadísticas
-  const stats = useMemo(() => ({
-    total: allNodes.length,
-    areas: allNodes.filter(n => n.tipo !== AREA_TYPES.PUNTO && n.tipo !== AREA_TYPES.PASILLO).length,
-    puntos: allNodes.filter(n => n.tipo === AREA_TYPES.PUNTO).length,
-    pasillos: allNodes.filter(n => n.tipo === AREA_TYPES.PASILLO).length,
-    escaleras: allNodes.filter(n => n.tipo === AREA_TYPES.ESCALERA).length
-  }), [allNodes]);
+      const stats = useMemo(() => ({
+        total: allNodes.length,
+        areas: allNodes.filter(n => 
+          n.tipo !== AREA_TYPES.PUNTO && 
+          n.tipo !== AREA_TYPES.PASILLO &&
+          !isSpecialType(n.tipo) // 🔥 EXCLUIR TIPOS ESPECIALES
+        ).length,
+        puntos: allNodes.filter(n => n.tipo === AREA_TYPES.PUNTO).length,
+        pasillos: allNodes.filter(n => n.tipo === AREA_TYPES.PASILLO).length,
+        escaleras: allNodes.filter(n => n.tipo === AREA_TYPES.ESCALERA).length,
+        // 🔥 NUEVAS ESTADÍSTICAS
+        seguridad: allNodes.filter(n => isSpecialType(n.tipo)).length,
+        extintores: allNodes.filter(n => n.tipo === AREA_TYPES.EXTINTOR).length,
+        salidas: allNodes.filter(n => n.tipo === AREA_TYPES.SALIDA_EMERGENCIA).length,
+        desfibriladores: allNodes.filter(n => n.tipo === AREA_TYPES.DESFIBRILADOR).length
+      }), [allNodes]);
+
+      // Función auxiliar
+     
 
       // En RelationsPanel.jsx - mejora las funciones de hover
     const handleNodeMouseEnter = (node) => {
@@ -156,8 +176,14 @@ const RelationsPanel = ({
       [AREA_TYPES.BANO]: 'Baño',
       [AREA_TYPES.ESCALERA]: 'Escalera',
       [AREA_TYPES.PUNTO]: 'Punto',
-      [AREA_TYPES.PASILLO]: 'Pasillo'
-    };
+      [AREA_TYPES.PASILLO]: 'Pasillo',
+      [AREA_TYPES.EXTINTOR]: '🧯 Matafuegos',
+      [AREA_TYPES.SALIDA_EMERGENCIA]: '🚪 Salida Emergencia',
+      [AREA_TYPES.DESFIBRILADOR]: '💓 Desfibrilador',
+      [AREA_TYPES.BOTIQUIN]: '🩹 Botiquín',
+      [AREA_TYPES.ALARMA]: '🚨 Alarma',
+      [AREA_TYPES.TOTEM]: '📟 Tótem'
+      };
     return names[tipo] || tipo;
   };
 

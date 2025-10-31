@@ -79,6 +79,19 @@ const ControlPanel = ({
 
   const todosLosNodos = getAllNodes();
 
+  const getPointTypeName = (tipo) => {
+  const nombres = {
+    [AREA_TYPES.PUNTO]: 'Punto',
+    [AREA_TYPES.EXTINTOR]: 'Matafuegos',
+    [AREA_TYPES.SALIDA_EMERGENCIA]: 'Salida Emergencia',
+    [AREA_TYPES.DESFIBRILADOR]: 'Desfibrilador',
+    [AREA_TYPES.BOTIQUIN]: 'Botiquín',
+    [AREA_TYPES.ALARMA]: 'Alarma',
+    [AREA_TYPES.TOTEM]: 'Totem'
+  };
+  return nombres[tipo] || 'Elemento';
+};
+
   return (
     <div className={panelClass}>
       {/* Botón de toggle */}
@@ -198,18 +211,24 @@ const ControlPanel = ({
               <label className="control-panel__label">
                 Tipo de Elemento:
               </label>
-              <select
+             <select
                 value={tipoActual}
                 onChange={(e) => onChangeType && onChangeType(e.target.value)}
                 className="control-panel__select"
               >
-                <option value={AREA_TYPES.AULA}>Aula</option>
-                <option value={AREA_TYPES.SALON}>Salón</option>
-                <option value={AREA_TYPES.HALL}>Hall</option>
-                <option value={AREA_TYPES.BANO}>Baño</option>
-                <option value={AREA_TYPES.ESCALERA}>Escalera</option>
-                <option value={AREA_TYPES.PUNTO}>Punto</option>
-                <option value={AREA_TYPES.PASILLO}>Pasillo</option>
+                <option value={AREA_TYPES.AULA}>🏫 Aula</option>
+                {/* ❌ QUITAMOS SALÓN <option value={AREA_TYPES.SALON}>🏛️ Salón</option> */}
+                <option value={AREA_TYPES.HALL}>🏢 Hall</option>
+                <option value={AREA_TYPES.BANO}>🚻 Baño</option>
+                <option value={AREA_TYPES.ESCALERA}>🪜 Escalera</option>
+                <option value={AREA_TYPES.PUNTO}>📍 Punto</option>
+                <option value={AREA_TYPES.PASILLO}>🛣️ Pasillo</option>
+                <option value={AREA_TYPES.EXTINTOR}>🧯 Matafuegos</option>
+                <option value={AREA_TYPES.SALIDA_EMERGENCIA}>🚪 Salida Emergencia</option>
+                <option value={AREA_TYPES.DESFIBRILADOR}>💓 Desfibrilador</option>
+                <option value={AREA_TYPES.BOTIQUIN}>🩹 Botiquín</option>
+                <option value={AREA_TYPES.ALARMA}>🚨 Alarma</option>
+                <option value={AREA_TYPES.TOTEM}>📟 Tótem</option>
               </select>
             </div>
 
@@ -229,7 +248,13 @@ const ControlPanel = ({
 
             {/* Botones de acción de edición */}
             <div className="control-panel__button-group">
-              {tipoActual === AREA_TYPES.PUNTO ? (
+                {tipoActual === AREA_TYPES.PUNTO || 
+              tipoActual === AREA_TYPES.EXTINTOR ||
+              tipoActual === AREA_TYPES.SALIDA_EMERGENCIA ||
+              tipoActual === AREA_TYPES.DESFIBRILADOR ||
+              tipoActual === AREA_TYPES.BOTIQUIN ||
+              tipoActual === AREA_TYPES.TOTEM ||
+              tipoActual === AREA_TYPES.ALARMA ? (
                 <button
                   onClick={onSavePoints}
                   disabled={!puntosTemporales || puntosTemporales.length === 0}
@@ -237,7 +262,7 @@ const ControlPanel = ({
                     puntosTemporales?.length > 0 ? 'control-panel__button--success' : 'control-panel__button--disabled'
                   }`}
                 >
-                  💾 Guardar Puntos
+                  💾 Guardar {getPointTypeName(tipoActual)}
                 </button>
               ) : tipoActual === AREA_TYPES.PASILLO ? (
                 <button
@@ -282,10 +307,23 @@ const ControlPanel = ({
             </button>
 
             {/* Información de edición */}
-            <div className="control-panel__edit-info">
+           <div className="control-panel__edit-info">
               {tipoActual === AREA_TYPES.PUNTO && "Haz clic para agregar puntos"}
+              {(tipoActual === AREA_TYPES.EXTINTOR || 
+                tipoActual === AREA_TYPES.SALIDA_EMERGENCIA ||
+                tipoActual === AREA_TYPES.DESFIBRILADOR ||
+                tipoActual === AREA_TYPES.BOTIQUIN ||
+                tipoActual === AREA_TYPES.TOTEM ||
+                tipoActual === AREA_TYPES.ALARMA) && `Haz clic para agregar ${getPointTypeName(tipoActual).toLowerCase()}`}
               {tipoActual === AREA_TYPES.PASILLO && "Haz clic en dos nodos para conectar"}
-              {tipoActual !== AREA_TYPES.PUNTO && tipoActual !== AREA_TYPES.PASILLO && "Haz clic para crear el polígono"}
+              {tipoActual !== AREA_TYPES.PUNTO && 
+              tipoActual !== AREA_TYPES.PASILLO && 
+              tipoActual !== AREA_TYPES.EXTINTOR &&
+              tipoActual !== AREA_TYPES.SALIDA_EMERGENCIA &&
+              tipoActual !== AREA_TYPES.DESFIBRILADOR &&
+              tipoActual !== AREA_TYPES.BOTIQUIN &&
+              tipoActual !== AREA_TYPES.TOTEM &&
+              tipoActual !== AREA_TYPES.ALARMA && "Haz clic para crear el polígono"}
               {puntosTemporales && puntosTemporales.length > 0 && ` • Puntos: ${puntosTemporales.length}`}
             </div>
 

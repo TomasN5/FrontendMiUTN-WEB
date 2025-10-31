@@ -2,29 +2,42 @@ import plata_principal from "./../assets/Dibujo1-Presentación1.png";
 import sistemas_p1 from "./../assets/sistemas-piso-1.png"
 
 
-export const COLORS = {
-  aula: "rgba(66, 135, 245, 0.28)",
-  salon: "rgba(255, 165, 0, 0.30)",
-  hall: "rgba(255, 235, 59, 0.35)",
-  pasillo: "rgba(0, 0, 255, 0.8)",
-  bano: "rgba(186, 104, 200, 0.30)",
-  escalera: "rgba(120, 40, 40, 0.35)",
-  borde: "rgba(0,0,0,0.6)",
-  punto: "red",
-  ruta: "green",
-  pisoActivo: "rgba(34, 197, 94, 0.3)",
-  pisoInactivo: "rgba(148, 163, 184, 0.1)"
-};
+
 
 export const AREA_TYPES = {
-  AULA: "aula",
-  SALON: "salon", 
-  HALL: "hall",
-  BANO: "bano",
-  PUNTO: "punto",
-  PASILLO: "pasillo",
-  ESCALERA: "escalera"
+  AULA: 'aula',
+  // SALON: 'salon', // ❌ QUITAMOS SALÓN (opcional)
+  HALL: 'hall',
+  BANO: 'bano',
+  ESCALERA: 'escalera',
+  PUNTO: 'punto',
+  PASILLO: 'pasillo',
+  EXTINTOR: 'extintor',
+  SALIDA_EMERGENCIA: 'salida_emergencia',
+  DESFIBRILADOR: 'desfibrilador',
+  BOTIQUIN: 'botiquin',
+  ALARMA: 'alarma',
+  TOTEM: 'totem'
 };
+
+
+export const COLORS = {
+  [AREA_TYPES.AULA]: '#4CAF50',
+  [AREA_TYPES.SALON]: '#2196F3',
+  [AREA_TYPES.HALL]: '#FF9800',
+  [AREA_TYPES.BANO]: '#9C27B0',
+  [AREA_TYPES.ESCALERA]: '#795548',
+  [AREA_TYPES.PUNTO]: '#607D8B',
+  [AREA_TYPES.PASILLO]: '#FFC107',
+  // 🔥 NUEVOS COLORES
+  [AREA_TYPES.EXTINTOR]: '#FF4444',
+  [AREA_TYPES.SALIDA_EMERGENCIA]: '#00AA00', 
+  [AREA_TYPES.DESFIBRILADOR]: '#FFAA00',
+  [AREA_TYPES.BOTIQUIN]: '#4444FF',
+  [AREA_TYPES.ALARMA]: '#FF00FF',
+  [AREA_TYPES.TOTEM]: '#009688'
+};
+
 
 export const CARRERAS = {
   SISTEMAS: "sistemas",
@@ -43,6 +56,38 @@ export const PISOS = {
   PISO4: "Piso 4"
 };
 
+export const ICONS = {
+  // 🔥 ICONOS PARA TODOS LOS TIPOS
+  [AREA_TYPES.AULA]: '🏫',
+  // [AREA_TYPES.SALON]: '🏛️', // ❌ QUITAMOS SALÓN
+  [AREA_TYPES.HALL]: '🏢',
+  [AREA_TYPES.BANO]: '🚻',
+  [AREA_TYPES.ESCALERA]: '🪜',
+  [AREA_TYPES.PUNTO]: '📍',
+  [AREA_TYPES.PASILLO]: '🛣️',
+  [AREA_TYPES.EXTINTOR]: '🧯',
+  [AREA_TYPES.SALIDA_EMERGENCIA]: '🚪',
+  [AREA_TYPES.DESFIBRILADOR]: '💓',
+  [AREA_TYPES.BOTIQUIN]: '🩹',
+  [AREA_TYPES.ALARMA]: '🚨',
+  [AREA_TYPES.TOTEM]: '📟'
+};
+
+export const TYPE_DISPLAY_NAMES = {
+  [AREA_TYPES.AULA]: 'Aula',
+  // [AREA_TYPES.SALON]: 'Salón', // ❌ QUITAMOS SALÓN
+  [AREA_TYPES.HALL]: 'Hall',
+  [AREA_TYPES.BANO]: 'Baño',
+  [AREA_TYPES.ESCALERA]: 'Escalera',
+  [AREA_TYPES.PUNTO]: 'Punto',
+  [AREA_TYPES.PASILLO]: 'Pasillo',
+  [AREA_TYPES.EXTINTOR]: 'Matafuegos',
+  [AREA_TYPES.SALIDA_EMERGENCIA]: 'Salida Emergencia',
+  [AREA_TYPES.DESFIBRILADOR]: 'Desfibrilador',
+  [AREA_TYPES.BOTIQUIN]: 'Botiquín',
+  [AREA_TYPES.ALARMA]: 'Alarma',
+   [AREA_TYPES.TOTEM]: 'Tótem' 
+};
 export const PLANOS_CONFIG = {
   // Planta Principal
   planta_principal: {

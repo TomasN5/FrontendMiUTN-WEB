@@ -109,20 +109,20 @@
 }
 
 .svg-editor__route-line {
-  stroke: green;
+  stroke: #00ff88;
   stroke-width: 3;
   stroke-dasharray: 6, 3;
   opacity: 0.7;
 }
 
 .svg-editor__route-point {
-  fill: green;
+  fill: #00ff88;
   stroke: white;
   stroke-width: 1.5;
 }
 
 .svg-editor__animated-route {
-  stroke: green;
+  stroke: #00ff88;
   stroke-width: 4;
   fill: none;
   stroke-dasharray: 8, 4;
@@ -215,6 +215,44 @@
   right: 20px;
   z-index: 1000;
   pointer-events: none;
+}
+
+/* Animación de pulso para el camino */
+@keyframes routePulse {
+  0%, 100% {
+    stroke-width: 4;
+    opacity: 1;
+  }
+  50% {
+    stroke-width: 5;
+    opacity: 0.8;
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    r: 16;
+    opacity: 0.8;
+    stroke-width: 2;
+  }
+  50% {
+    r: 20;
+    opacity: 0.4;
+    stroke-width: 3;
+  }
+}
+
+.svg-editor__animated-route {
+  animation: routeFlow 3s ease-in-out infinite;
+}
+
+@keyframes routeFlow {
+  0% {
+    stroke-dashoffset: 1000;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
 }
 
 .svg-editor__zoom-percentage {

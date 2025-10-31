@@ -133,25 +133,35 @@ const PlanoViewer = () => {
     return node;
   }, [getAllNodesFromEditor]);
 
-  const getPointCoordinates = useCallback((nodeId) => {
-    const nodeInfo = getNodeInfo(nodeId);
-    
-    if (!nodeInfo) {
-      console.warn(`❌ No se pudo obtener info para nodo: ${nodeId}`);
-      return { x: -1000, y: -1000 };
-    }
-    
-    if (nodeInfo.planoId === planoManager.planoActual?.id) {
-      if (nodeInfo.tipo === "punto") {
-        return { x: nodeInfo.x, y: nodeInfo.y };
-      } else {
-        const center = geometryUtils.getPolygonCenter(nodeInfo.points);
-        return { x: center[0], y: center[1] };
-      }
-    } else {
-      return { x: -1000, y: -1000 };
-    }
-  }, [getNodeInfo, planoManager.planoActual]);
+      const getPointCoordinates = useCallback((nodeId) => {
+        const nodeInfo = getNodeInfo(nodeId);
+        
+        if (!nodeInfo) {
+          console.warn(`❌ No se pudo obtener info para nodo: ${nodeId}`);
+          return { x: -1000, y: -1000 };
+        }
+        
+        // 🔥 VALIDAR QUE EL NODO TENGA PUNTOS VÁLIDOS
+        if (nodeInfo.planoId === planoManager.planoActual?.id) {
+          if (nodeInfo.tipo === "punto") {
+            return { 
+              x: nodeInfo.x || -1000, 
+              y: nodeInfo.y || -1000 
+            };
+          } else {
+            // Validar que tenga points antes de calcular el centro
+            if (!nodeInfo.points || !Array.isArray(nodeInfo.points) || nodeInfo.points.length === 0) {
+              console.warn(`❌ Nodo ${nodeId} no tiene puntos válidos:`, nodeInfo);
+              return { x: -1000, y: -1000 };
+            }
+            
+            const center = geometryUtils.getPolygonCenter(nodeInfo.points);
+            return { x: center[0], y: center[1] };
+          }
+        } else {
+          return { x: -1000, y: -1000 };
+        }
+      }, [getNodeInfo, planoManager.planoActual]);
 
   const handleFloorTransition = useCallback((fromFloor, toFloor) => {
     console.log(`🔄 Ruta continúa en otro piso: ${fromFloor} → ${toFloor}`);
@@ -509,6 +519,7 @@ const handleDeleteConnection = useCallback((connectionId) => {
         floorTransitions={[]}
         planoActual={planoManager.planoActual}
         infoPlanoActual={planoManager.infoPlanoActual}
+        finalPath={routeAnimation.finalPath}
         onZoom={handleZoom}
         onClickSVG={handleClickSVG}
         onMouseMove={handleMouseMove}
