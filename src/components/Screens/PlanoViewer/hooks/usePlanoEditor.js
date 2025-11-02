@@ -1,4 +1,4 @@
-import { useState, useCallback,useEffect } from 'react';
+import { useState, useCallback,useEffect,useRef } from 'react';
 import { geometryUtils } from '../utils/geometry';
 import { AREA_TYPES } from '../utils/constants';
 
@@ -14,44 +14,95 @@ export const usePlanoEditor = () => {
   const [planoActual, setPlanoActual] = useState(null);
 
 
+    const datosPorPlanoRef = useRef(datosPorPlano);
+
 
     useEffect(() => {
-        const importarDatosAutomaticamente = async () => {
+        const cargarDatosDesdeAPI = async () => {
           try {
-            console.log("🔄 Buscando datos preguardados...");
+            console.log("🔄 Cargando datos desde API...");
             
-            const response = await fetch('/data/datos-plano.json');
+            const response = await fetch('http://localhost:8080/api/map/getPoint');
             
             if (!response.ok) {
-              if (response.status === 404) {
-                console.log("📭 Archivo datos-plano.json no encontrado, continuando sin datos preguardados");
-                return;
-              }
               throw new Error(`Error HTTP: ${response.status}`);
             }
             
             const datos = await response.json();
             
             if (!datos || !datos.planos || Object.keys(datos.planos).length === 0) {
-              console.log("📭 Archivo datos-plano.json está vacío, continuando sin datos");
+              console.log("📭 API respondió pero sin datos");
               return;
             }
             
-            console.log("✅ Datos preguardados encontrados, cargando...");
+            console.log("✅ Datos cargados desde API correctamente");
             cargarDatosEnEditor(datos);
             
           } catch (error) {
-            if (error.message.includes('404') || error.message.includes('Failed to fetch')) {
-              console.log("📭 No se encontró archivo de datos preguardados, continuando...");
-            } else {
-              console.warn('⚠️ Error al cargar datos preguardados:', error.message);
-            }
+            console.log('📭 Error cargando datos desde API:', error.message);
+            console.log('💡 Continuando sin datos preguardados...');
           }
         };
 
-        importarDatosAutomaticamente();
+        // Pequeño delay para asegurar que la app esté lista
+        setTimeout(cargarDatosDesdeAPI, 1000);
+        
       }, []);
+      
+    useEffect(() => {
+      datosPorPlanoRef.current = datosPorPlano;
+    }, [datosPorPlano]);
+        // 2️⃣ FUNCIONES DE EXPORTACIÓN (en orden de dependencia)
+  const exportarDatosJSON = useCallback(() => {
+    const datosActuales = datosPorPlanoRef.current;
+    const datosCompletos = {
+      metadata: {
+        fechaExportacion: new Date().toISOString(),
+        totalPlanos: Object.keys(datosActuales).length,
+        version: "1.0"
+      },
+      planos: {}
+    };
+    
+    Object.entries(datosActuales).forEach(([planoId, planoData]) => {
+      datosCompletos.planos[planoId] = {
+        areas: planoData.areas || [],
+        points: planoData.points || []
+      };
+    });
+    
+    console.log("=== 📋 DATOS COMPLETOS EN FORMATO JSON ===");
+    console.log(JSON.stringify(datosCompletos, null, 2));
+    
+    return datosCompletos;
+  }, [datosPorPlano]);
 
+     const guardarTodosLosDatosEnServidor = useCallback(async () => {
+          try {
+            debugger
+            const datosCompletos = exportarDatosJSON();
+            const datosStr = JSON.stringify(datosCompletos);
+            
+            const response = await fetch('http://localhost:8080/api/map/updatePoint', {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: datosStr
+            });
+            
+            if (response.ok) {
+              console.log("✅ Todos los datos guardados en servidor");
+              return true;
+            } else {
+              console.warn("⚠️ No se pudo guardar en servidor");
+              return false;
+            }
+          } catch (error) {
+            console.warn("⚠️ Error de conexión con servidor:", error.message);
+            return false;
+          }
+        }, [exportarDatosJSON]);
 
        const cargarDatosEnEditor = useCallback((datosImportados) => {
           if (!datosImportados || !datosImportados.planos) {
@@ -152,16 +203,23 @@ export const usePlanoEditor = () => {
     setSelectedNode(null);
   }, []);
 
-  const actualizarDatosPlano = useCallback((planoId, nuevasAreas, nuevosPoints) => {
-    setDatosPorPlano(prev => ({
-      ...prev,
-      [planoId]: {
-        areas: nuevasAreas || [],
-        points: nuevosPoints || []
-      }
-    }));
+ const actualizarDatosPlano = useCallback((planoId, nuevasAreas, nuevosPoints) => {
+    setDatosPorPlano(prev => {
+      const nuevosDatos = {
+        ...prev,
+        [planoId]: {
+          areas: nuevasAreas || [],
+          points: nuevosPoints || []
+        }
+      };
+      
+      console.log("🔄 Actualizando datos del plano:", planoId);
+      console.log("   Áreas:", nuevasAreas?.length || 0);
+      console.log("   Puntos:", nuevosPoints?.length || 0);
+      
+      return nuevosDatos;
+    });
   }, []);
-
   const getDisplayName = (tipo) => {
     const nombres = {
       [AREA_TYPES.PUNTO]: 'Punto',
@@ -175,29 +233,7 @@ export const usePlanoEditor = () => {
     return nombres[tipo] || tipo;
   };
 
-  // 2️⃣ FUNCIONES DE EXPORTACIÓN (en orden de dependencia)
-  const exportarDatosJSON = useCallback(() => {
-    const datosCompletos = {
-      metadata: {
-        fechaExportacion: new Date().toISOString(),
-        totalPlanos: Object.keys(datosPorPlano).length,
-        version: "1.0"
-      },
-      planos: {}
-    };
-    
-    Object.entries(datosPorPlano).forEach(([planoId, planoData]) => {
-      datosCompletos.planos[planoId] = {
-        areas: planoData.areas || [],
-        points: planoData.points || []
-      };
-    });
-    
-    console.log("=== 📋 DATOS COMPLETOS EN FORMATO JSON ===");
-    console.log(JSON.stringify(datosCompletos, null, 2));
-    
-    return datosCompletos;
-  }, [datosPorPlano]);
+
 
   const descargarJSON = useCallback(() => {
     const datosCompletos = exportarDatosJSON();
@@ -523,7 +559,7 @@ export const usePlanoEditor = () => {
     setCursorPos([x, y]);
   }, [modoEdicion, tipoActual]);
 
-  const handleGuardarArea = useCallback((nuevaArea, planoInfo) => {
+const handleGuardarArea = useCallback(async (nuevaArea, planoInfo) => {
     const esTipoPunto = [
       AREA_TYPES.PUNTO,
       AREA_TYPES.EXTINTOR,
@@ -535,6 +571,7 @@ export const usePlanoEditor = () => {
     ].includes(nuevaArea.tipo);
 
     if (esTipoPunto && puntosTemporales.length > 0 && planoInfo) {
+      // Guardar como punto
       const datosActuales = getDatosPlanoActual();
       const nuevoPunto = {
         id: generarIdUnico('punto'),
@@ -551,9 +588,14 @@ export const usePlanoEditor = () => {
       actualizarDatosPlano(planoInfo.id, datosActuales.areas, nuevosPoints);
       resetEditorState();
       
-      console.log("✅ Punto especial creado:", nuevoPunto.id);
-    } 
-    else if (puntosTemporales.length > 2 && planoInfo) {
+      console.log("✅ Punto especial creado:", nuevoPunto.nombre);
+      
+      setTimeout(async () => {
+        await guardarTodosLosDatosEnServidor();
+      }, 100);
+      
+    } else if (puntosTemporales.length > 2 && planoInfo) {
+      // Guardar como área
       const areaConInfo = {
         ...nuevaArea,
         id: generarIdUnico('area'),
@@ -567,11 +609,17 @@ export const usePlanoEditor = () => {
       actualizarDatosPlano(planoInfo.id, nuevasAreas, datosActuales.points);
       resetEditorState();
       
-      console.log("✅ Área creada:", areaConInfo.id);
+      console.log("✅ Área creada:", areaConInfo.nombre);
+      
+      setTimeout(async () => {
+        await guardarTodosLosDatosEnServidor();
+      }, 100);
     }
-  }, [puntosTemporales, getDatosPlanoActual, actualizarDatosPlano, resetEditorState, generarIdUnico]);
+  }, [puntosTemporales, getDatosPlanoActual, actualizarDatosPlano, resetEditorState, generarIdUnico, guardarTodosLosDatosEnServidor]);
 
-  const handleGuardarPuntos = useCallback((planoInfo) => {
+
+
+const handleGuardarPuntos = useCallback(async (planoInfo) => {
     if (puntosTemporales.length > 0 && planoInfo) {
       const datosActuales = getDatosPlanoActual();
       const nuevosPuntos = puntosTemporales.map((pt, i) => ({
@@ -588,12 +636,22 @@ export const usePlanoEditor = () => {
       }));
       
       const nuevosPoints = [...datosActuales.points, ...nuevosPuntos];
+      
+      // 1️⃣ ACTUALIZAR ESTADO
       actualizarDatosPlano(planoInfo.id, datosActuales.areas, nuevosPoints);
       resetEditorState();
       
-      console.log("✅ Puntos creados:", nuevosPuntos.map(p => p.id));
+      console.log("✅ Puntos creados:", nuevosPuntos.length);
+      
+      // 2️⃣ PEQUEÑO DELAY para asegurar que React actualizó el estado
+      setTimeout(async () => {
+        // 3️⃣ GUARDAR EN SERVIDOR con datos actualizados
+        await guardarTodosLosDatosEnServidor();
+      }, 100);
     }
-  }, [puntosTemporales, tipoActual, getDatosPlanoActual, actualizarDatosPlano, resetEditorState, generarIdUnico]);
+  }, [puntosTemporales, tipoActual, getDatosPlanoActual, actualizarDatosPlano, resetEditorState, generarIdUnico, guardarTodosLosDatosEnServidor]);
+
+
 
   const handleDeshacer = useCallback(() => {
     setPuntosTemporales((prev) => prev.slice(0, -1));
@@ -603,7 +661,7 @@ export const usePlanoEditor = () => {
     resetEditorState();
   }, [resetEditorState]);
 
-  const handleNodeClick = useCallback((node) => {
+const handleNodeClick = useCallback(async (node) => {
     if (!modoEdicion || tipoActual !== AREA_TYPES.PASILLO || !planoActual) return;
     
     if (!selectedNode) {
@@ -637,8 +695,12 @@ export const usePlanoEditor = () => {
       setSelectedNode(null);
       
       console.log("✅ Pasillos creados conectando:", selectedNode.nombre, "con", node.nombre);
+      
+      setTimeout(async () => {
+        await guardarTodosLosDatosEnServidor();
+      }, 100);
     }
-  }, [modoEdicion, tipoActual, selectedNode, planoActual, getDatosPlanoActual, actualizarDatosPlano, generarIdUnico]);
+  }, [modoEdicion, tipoActual, selectedNode, planoActual, getDatosPlanoActual, actualizarDatosPlano, generarIdUnico, guardarTodosLosDatosEnServidor]);
 
   const actualizarPlanoActual = useCallback((planoInfo) => {
     setPlanoActual(planoInfo);
@@ -648,7 +710,9 @@ export const usePlanoEditor = () => {
     }
   }, [datosPorPlano, actualizarDatosPlano]);
 
-  const handleEliminarNodo = useCallback((nodeId) => {
+
+
+const handleEliminarNodo = useCallback(async (nodeId) => {
     if (!planoActual) return;
     
     console.log("🗑️ Eliminando nodo:", nodeId);
@@ -671,9 +735,13 @@ export const usePlanoEditor = () => {
     if (selectedNode && selectedNode.id === nodeId) {
       setSelectedNode(null);
     }
-  }, [planoActual, getDatosPlanoActual, actualizarDatosPlano, selectedNode]);
+    
+    setTimeout(async () => {
+      await guardarTodosLosDatosEnServidor();
+    }, 100);
+  }, [planoActual, getDatosPlanoActual, actualizarDatosPlano, selectedNode, guardarTodosLosDatosEnServidor]);
 
-  const handleEliminarConexion = useCallback((conexionId) => {
+const handleEliminarConexion = useCallback(async (conexionId) => {
     if (!planoActual) return;
     
     console.log("🗑️ Eliminando conexión:", conexionId);
@@ -686,7 +754,12 @@ export const usePlanoEditor = () => {
     
     actualizarDatosPlano(planoActual.id, nuevasAreas, datosActuales.points);
     console.log("✅ Conexión eliminada:", conexionId);
-  }, [planoActual, getDatosPlanoActual, actualizarDatosPlano]);
+    
+    setTimeout(async () => {
+      await guardarTodosLosDatosEnServidor();
+    }, 100);
+  }, [planoActual, getDatosPlanoActual, actualizarDatosPlano, guardarTodosLosDatosEnServidor]);
+
 
   const handleEliminarConexionesNodo = useCallback((nodeId) => {
     if (!planoActual) return;
@@ -749,6 +822,7 @@ export const usePlanoEditor = () => {
     copiarJSONAlPortapapeles,
     simularGuardadoEnHooks,
     cargarDatosEnEditor,
+    
 
     // Para debug
     todosLosDatos: datosPorPlano
