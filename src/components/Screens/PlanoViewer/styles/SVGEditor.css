@@ -629,3 +629,101 @@
 .svg-destination-marker {
   filter: drop-shadow(0 0 15px currentColor);
 }
+
+/* SVGEditor.css - AGREGAR estos estilos para las mejoras de highlight */
+
+/* 🔥 Nuevos estilos para animaciones de highlight */
+.svg-highlight-pulse {
+  fill: rgba(59, 130, 246, 0.3);
+  stroke: #3b82f6;
+  stroke-width: 1;
+  fill-opacity: 0.5;
+}
+
+.svg-highlight-pulse-area {
+  fill: none;
+  stroke: #3b82f6;
+  stroke-width: 2;
+  stroke-opacity: 0.5;
+}
+
+/* Mejorar los efectos de glow existentes */
+.svg-highlight-point-glow {
+  fill: rgba(59, 130, 246, 0.2);
+  stroke: #3b82f6;
+  stroke-width: 1;
+  animation: highlightGlow 2s ease-in-out infinite;
+}
+
+.svg-highlight-area-glow {
+  fill: rgba(59, 130, 246, 0.1);
+  stroke: #3b82f6;
+  stroke-width: 3;
+  animation: highlightGlow 2s ease-in-out infinite;
+}
+
+@keyframes highlightGlow {
+  0%, 100% {
+    stroke-width: 2;
+    opacity: 0.7;
+  }
+  50% {
+    stroke-width: 4;
+    opacity: 1;
+  }
+}
+
+/* Estilos para notificaciones de navegación */
+.svg-editor__floor-notification-text {
+  fill: white;
+  font-size: 14px;
+  font-weight: bold;
+  font-family: Arial, sans-serif;
+}
+
+.svg-editor__floor-notification-subtext {
+  fill: #e2e8f0;
+  font-size: 12px;
+  font-family: Arial, sans-serif;
+}
+
+.svg-editor__floor-notification {
+  fill: rgba(59, 130, 246, 0.9);
+  stroke: #1e40af;
+  stroke-width: 1;
+  rx: 8;
+  ry: 8;
+}
+
+/* Mejorar conexiones hover */
+.svg-connection-line {
+  stroke: #10b981;
+  stroke-width: 3;
+  stroke-dasharray: 5, 5;
+  opacity: 0.8;
+  animation: connectionDash 1.5s linear infinite;
+}
+
+@keyframes connectionDash {
+  to {
+    stroke-dashoffset: -10;
+  }
+}
+
+.svg-connection-point {
+  fill: #10b981;
+  stroke: white;
+  stroke-width: 1;
+  animation: connectionPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes connectionPulse {
+  0%, 100% {
+    r: 5;
+    opacity: 1;
+  }
+  50% {
+    r: 7;
+    opacity: 0.7;
+  }
+}

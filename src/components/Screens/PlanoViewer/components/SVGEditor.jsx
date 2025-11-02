@@ -5,7 +5,8 @@ import ConnectionLine from './ConnectionLine';
 import TemporaryElements from './TemporaryElements';
 import { COLORS,AREA_TYPES } from '../utils/constants';
 import DebugGraph from './DebugGraph';
-import './../styles//SVGEditor.css';
+import { geometryUtils } from '../utils/geometry';
+import './../styles/SVGEditor.css';
 
 const SVGEditor = ({
   src,
@@ -39,7 +40,6 @@ const SVGEditor = ({
   connectionLines,
 }) => {
 
-
     const [isDragging, setIsDragging] = useState(false);
     const [isCtrlPressed, setIsCtrlPressed] = useState(false);
 
@@ -64,8 +64,6 @@ const SVGEditor = ({
           document.removeEventListener('keyup', handleKeyUp);
         };
       }, []);
-
-
 
    const getNodeCoordinates = (nodeId) => {
       // Buscar en áreas del plano actual
@@ -93,6 +91,7 @@ const SVGEditor = ({
       // Si el nodo no está en este plano, retornar coordenadas fuera de vista
       return { x: -1000, y: -1000 };
     };
+
    const getNodeInfo = (nodeId) => {
       // Primero buscar en el plano actual
       const areaNode = areas.find(a => a && a.id === nodeId);
@@ -117,7 +116,6 @@ const SVGEditor = ({
     };
 
     const isPanningDisabled = !isCtrlPressed || zoomScale <= 1.1;
-
 
   const svgClass = `svg-editor__svg ${
       modoEdicion 
@@ -262,65 +260,6 @@ const SVGEditor = ({
                 )
               ))}
 
-             {/*!isRouteAnimating && rutaActual && rutaActual.length > 1 && (
-            <g>
-              {rutaActual
-                .map((nodeId, index) => {
-                  if (index < rutaActual.length - 1) {
-                    const currentNode = getNodeInfo(nodeId);
-                    const nextNode = getNodeInfo(rutaActual[index + 1]);
-                    
-                    // ✅ SOLO dibujar si AMBOS están en el MISMO plano actual
-                    if (currentNode && nextNode && 
-                        currentNode.planoId === planoActual?.id && 
-                        nextNode.planoId === planoActual?.id) {
-                      
-                      const currentCoords = getNodeCoordinates(nodeId);
-                      const nextCoords = getNodeCoordinates(rutaActual[index + 1]);
-                      
-                      // 🔥 EVITAR dibujar si la conexión es entre escaleras
-                      // (incluso si están en el mismo plano)
-                      if (currentNode.tipo === "escalera" && nextNode.tipo === "escalera") {
-                        console.log(`❌ No dibujar conexión entre escaleras: ${currentNode.id} -> ${nextNode.id}`);
-                        return null;
-                      }
-                      
-                      return (
-                        <line
-                          key={`route-line-${index}`}
-                          x1={currentCoords.x}
-                          y1={currentCoords.y}
-                          x2={nextCoords.x}
-                          y2={nextCoords.y}
-                          className="svg-editor__route-line"
-                        />
-                      );
-                    }
-                  }
-                  return null;
-                })
-                .filter(line => line !== null)}
-              
-                  {/* Puntos de la ruta - SOLO los del plano actual }
-                  {rutaActual.map(nodeId => {
-                    const nodeInfo = getNodeInfo(nodeId);
-                    if (nodeInfo && nodeInfo.planoId === planoActual?.id) {
-                      const coords = getNodeCoordinates(nodeId);
-                      return (
-                        <circle
-                          key={`route-point-${nodeId}`}
-                          cx={coords.x}
-                          cy={coords.y}
-                          r="4"
-                          className="svg-editor__route-point"
-                        />
-                      );
-                    }
-                    return null;
-                  }).filter(circle => circle !== null)}
-                </g>
-              )*/}
-
                 {floorNotifications.map(notification => (
                   <g key={notification.id}>
                     <rect
@@ -335,15 +274,17 @@ const SVGEditor = ({
                       y="125"
                       className="svg-editor__floor-notification-text"
                     >
-                      🔄 {notification.message}
+                      {notification.type === 'navigation' ? '🎯' : '🔄'} {notification.message}
                     </text>
-                    <text
-                      x="40"
-                      y="145"
-                      className="svg-editor__floor-notification-subtext"
-                    >
-                      Desde: {notification.fromFloor} → Hacia: {notification.toFloor}
-                    </text>
+                    {notification.fromFloor && notification.toFloor && (
+                      <text
+                        x="40"
+                        y="145"
+                        className="svg-editor__floor-notification-subtext"
+                      >
+                        Desde: {notification.fromFloor} → Hacia: {notification.toFloor}
+                      </text>
+                    )}
                   </g>
                 ))}
 
@@ -569,7 +510,6 @@ const SVGEditor = ({
                   </g>
                 )}
 
-
                 {modoEdicion && (
                   <TemporaryElements
                     tipoActual={tipoActual}
@@ -582,7 +522,7 @@ const SVGEditor = ({
                 {snapIndicators}
                 {debugEdges}
 
-              {/* Highlight overlay for hovered node */}
+              {/* 🔥 MEJORADO: Highlight overlay for hovered node con animaciones */}
                 {highlightedNode && (
                 <g className="svg-highlight-group">
                   {highlightedNode.tipo === "punto" ? (
@@ -591,15 +531,37 @@ const SVGEditor = ({
                       <circle
                         cx={highlightedNode.x}
                         cy={highlightedNode.y}
-                        r="12"
+                        r="15"
                         className="svg-highlight-point-glow"
                       />
                       <circle
                         cx={highlightedNode.x}
                         cy={highlightedNode.y}
-                        r="8"
+                        r="10"
                         className="svg-highlight-point"
                       />
+                      {/* 🔥 AGREGAR animación de pulso */}
+                      <circle
+                        cx={highlightedNode.x}
+                        cy={highlightedNode.y}
+                        r="8"
+                        className="svg-highlight-pulse"
+                      >
+                        <animate
+                          attributeName="r"
+                          from="8"
+                          to="20"
+                          dur="1.5s"
+                          repeatCount="indefinite"
+                        />
+                        <animate
+                          attributeName="opacity"
+                          from="0.7"
+                          to="0"
+                          dur="1.5s"
+                          repeatCount="indefinite"
+                        />
+                      </circle>
                     </g>
                   ) : (
                     // Si es un área (tiene points)
@@ -613,13 +575,33 @@ const SVGEditor = ({
                           points={geometryUtils.toPointsAttr(highlightedNode.points)}
                           className="svg-highlight-area"
                         />
+                        {/* 🔥 AGREGAR animación de pulso para áreas */}
+                        <polygon
+                          points={geometryUtils.toPointsAttr(highlightedNode.points)}
+                          className="svg-highlight-pulse-area"
+                        >
+                          <animate
+                            attributeName="stroke-width"
+                            from="2"
+                            to="8"
+                            dur="2s"
+                            repeatCount="indefinite"
+                          />
+                          <animate
+                            attributeName="opacity"
+                            from="0.5"
+                            to="0"
+                            dur="2s"
+                            repeatCount="indefinite"
+                          />
+                        </polygon>
                       </g>
                     )
                   )}
                 </g>
               )}
-              {/* Connection lines */}
-              
+
+              {/* 🔥 Connection lines */}
                 {connectionLines && connectionLines.map((line, index) => (
                   <g key={`connection-${index}`}>
                     <line
@@ -643,7 +625,6 @@ const SVGEditor = ({
                     />
                   </g>
                 ))}
-
 
                 {zoomScale <= 1.1 && !modoEdicion && (
                   <rect

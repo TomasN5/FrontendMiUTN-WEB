@@ -1,4 +1,4 @@
-// RelationsPanel.jsx - VERSIÓN SIMPLIFICADA
+// RelationsPanel.jsx - VERSIÓN OPTIMIZADA
 import React, { useState, useMemo } from 'react';
 import { AREA_TYPES } from '../utils/constants';
 import './../styles/RelationsPanel.css';
@@ -20,11 +20,14 @@ const RelationsPanel = ({
   onNodeLeave,
   highlightedNode,
   onDeleteNode,
-  onDeleteConnection
+  onDeleteConnection,
+  onNavigateToNode,
+  planoActual
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState('todos');
   const [isLocating, setIsLocating] = useState(false);
+  const [navigatingNode, setNavigatingNode] = useState(null);
 
   // Combinar todos los nodos de todos los planos
   const allNodes = useMemo(() => {
@@ -121,8 +124,71 @@ const RelationsPanel = ({
     seguridad: allNodes.filter(n => isSpecialType(n.tipo)).length
   }), [allNodes]);
 
-  // Handlers simplificados
+  // 🔥 Determinar si el nodo está en el plano actual
+  const isNodeInCurrentPlano = (node) => {
+    return node.planoId === planoActual?.id;
+  };
+
+  // 🔥 NUEVA FUNCIÓN: Navegar al nodo (SOLO si está en plano actual)
+  const handleNodeClick = (node) => {
+    console.log("🎯 Navegando al nodo:", node.nombre, "en plano:", node.planoId);
+    
+    // 🔥 SOLO navegar si el nodo está en el plano actual
+    if (!isNodeInCurrentPlano(node)) {
+      console.log("⚠️ Nodo no está en el plano actual, no se puede navegar");
+      return;
+    }
+    
+    // Mostrar estado de navegación
+    setNavigatingNode(node);
+    
+    if (onNavigateToNode) {
+      onNavigateToNode(node);
+    }
+    
+    // También aplicar highlight
+    if (onNodeHover) {
+      onNodeHover(node);
+    }
+    
+    // Quitar estado de navegación después de un tiempo
+    setTimeout(() => {
+      setNavigatingNode(null);
+    }, 2000);
+  };
+
+  // 🔥 NUEVA FUNCIÓN: Navegar a conexión (SOLO si está en plano actual)
+  const handleConnectionClick = (connection) => {
+    console.log("🎯 Navegando a conexión:", connection.node.nombre);
+    
+    // 🔥 SOLO navegar si el nodo de la conexión está en el plano actual
+    if (!isNodeInCurrentPlano(connection.node)) {
+      console.log("⚠️ Nodo de conexión no está en el plano actual, no se puede navegar");
+      return;
+    }
+    
+    setNavigatingNode(connection.node);
+    
+    if (onNavigateToNode) {
+      onNavigateToNode(connection.node);
+    }
+    
+    if (onNodeHover) {
+      onNodeHover(connection.node);
+    }
+    
+    setTimeout(() => {
+      setNavigatingNode(null);
+    }, 2000);
+  };
+
+  // 🔥 OPTIMIZADO: Handlers de hover (SOLO si está en plano actual)
   const handleNodeMouseEnter = (node) => {
+    // 🔥 SOLO hacer highlight si el nodo está en el plano actual
+    if (!isNodeInCurrentPlano(node)) {
+      return;
+    }
+    
     setIsLocating(true);
     
     if (onNodeHover) {
@@ -139,6 +205,11 @@ const RelationsPanel = ({
   };
 
   const handleConnectionMouseEnter = (connection) => {
+    // 🔥 SOLO hacer highlight si el nodo de la conexión está en el plano actual
+    if (!isNodeInCurrentPlano(connection.node)) {
+      return;
+    }
+    
     setIsLocating(true);
     
     if (onNodeHover) {
@@ -219,13 +290,23 @@ const RelationsPanel = ({
 
   return (
     <div className={`relations-panel ${isLocating ? 'relations-panel--locating' : ''}`}>
+      {/* Overlay de navegación */}
+      {navigatingNode && (
+        <div className="relations-panel__location-overlay">
+          <div className="relations-panel__location-pulse"></div>
+          <div className="relations-panel__location-text">
+            🎯 Navegando a {navigatingNode.nombre}...
+          </div>
+        </div>
+      )}
+
       <div className="relations-panel__header">
         <div className="relations-panel__header-content">
           <h3 className="relations-panel__title">
             🔗 Gestor de Relaciones
           </h3>
           <p className="relations-panel__subtitle">
-            Pasa el mouse sobre los nodos para ver su ubicación en el mapa
+            👆 Haz clic en cualquier nodo para navegar a su ubicación
           </p>
         </div>
         <button
@@ -331,28 +412,49 @@ const RelationsPanel = ({
             {filteredNodes.map(node => {
               const connections = getNodeConnections(node.id);
               const isHighlighted = highlightedNode?.id === node.id;
+              const isInCurrentPlano = isNodeInCurrentPlano(node);
               
               return (
                 <div
                   key={node.id}
                   className={`relations-panel__node-item ${
-                    isHighlighted ? 'relations-panel__node-item--highlighted' : ''
-                  }`}
+                    isHighlighted && isInCurrentPlano ? 'relations-panel__node-item--highlighted' : ''
+                  } ${isInCurrentPlano ? 'relations-panel__node-item--current-plano' : 'relations-panel__node-item--other-plano'}`}
                   onMouseEnter={() => handleNodeMouseEnter(node)}
                   onMouseLeave={handleNodeMouseLeave}
+                  onClick={() => handleNodeClick(node)}
                 >
                   <div className="relations-panel__node-header">
                     <div className="relations-panel__node-icon">
                       {getTypeIcon(node.tipo)}
+                      {isInCurrentPlano ? (
+                        <span title="En plano actual" style={{marginLeft: '5px', fontSize: '12px'}}>📍</span>
+                      ) : (
+                        <span title="En otro plano" style={{marginLeft: '5px', fontSize: '12px', opacity: 0.5}}>🔗</span>
+                      )}
                     </div>
                     <div className="relations-panel__node-info">
-                      <h4 className="relations-panel__node-name">{node.nombre}</h4>
+                      <h4 className="relations-panel__node-name">
+                        {node.nombre}
+                        {isInCurrentPlano ? (
+                          <span style={{fontSize: '12px', color: '#10b981', marginLeft: '8px'}}>
+                            (en este plano)
+                          </span>
+                        ) : (
+                          <span style={{fontSize: '12px', color: '#6b7280', marginLeft: '8px'}}>
+                            (en otro plano)
+                          </span>
+                        )}
+                      </h4>
                       <div className="relations-panel__node-meta">
                         <span className={`relations-panel__node-type relations-panel__node-type--${node.tipo}`}>
                           {getTypeDisplayName(node.tipo)}
                         </span>
                         <span className="relations-panel__node-location">
                           {node.carrera && `${node.carrera} • `}{node.piso}
+                        </span>
+                        <span className="relations-panel__node-plano" style={{fontSize: '11px', color: '#6b7280'}}>
+                          Plano: {node.planoId || 'N/A'}
                         </span>
                       </div>
                     </div>
@@ -386,39 +488,54 @@ const RelationsPanel = ({
                         Conexiones ({connections.length})
                       </div>
                       <div className="relations-panel__connection-list">
-                        {connections.map((conn, index) => (
-                          <div 
-                            key={index} 
-                            className="relations-panel__connection-item"
-                            onMouseEnter={() => handleConnectionMouseEnter(conn)}
-                            onMouseLeave={handleConnectionMouseLeave}
-                          >
-                            <div className="relations-panel__connection-info">
-                              <span className="relations-panel__connection-icon">
-                                {conn.direction === 'salida' ? '➡️' : '⬅️'}
-                              </span>
-                              <span className="relations-panel__connection-node">
-                                {conn.node.nombre}
-                              </span>
-                              <span className="relations-panel__connection-type">
-                                {getTypeDisplayName(conn.node.tipo)}
-                              </span>
+                        {connections.map((conn, index) => {
+                          const isConnectionInCurrentPlano = isNodeInCurrentPlano(conn.node);
+                          
+                          return (
+                            <div 
+                              key={index} 
+                              className={`relations-panel__connection-item ${
+                                isConnectionInCurrentPlano ? '' : 'relations-panel__connection-item--other-plano'
+                              }`}
+                              onMouseEnter={() => handleConnectionMouseEnter(conn)}
+                              onMouseLeave={handleConnectionMouseLeave}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleConnectionClick(conn);
+                              }}
+                            >
+                              <div className="relations-panel__connection-info">
+                                <span className="relations-panel__connection-icon">
+                                  {conn.direction === 'salida' ? '➡️' : '⬅️'}
+                                </span>
+                                <span className="relations-panel__connection-node">
+                                  {conn.node.nombre}
+                                </span>
+                                <span className="relations-panel__connection-type">
+                                  {getTypeDisplayName(conn.node.tipo)}
+                                </span>
+                                {isConnectionInCurrentPlano ? (
+                                  <span style={{fontSize: '10px', color: '#10b981'}}>📍</span>
+                                ) : (
+                                  <span style={{fontSize: '10px', color: '#6b7280', opacity: 0.5}}>🔗</span>
+                                )}
+                              </div>
+                              
+                              {onDeleteConnection && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    confirmDelete('connection', conn.connectionId, `Conexión ${conn.node.nombre}`);
+                                  }}
+                                  className="relations-panel__delete-connection-button"
+                                  title="Eliminar conexión"
+                                >
+                                  ×
+                                </button>
+                              )}
                             </div>
-                            
-                            {onDeleteConnection && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  confirmDelete('connection', conn.connectionId, `Conexión ${conn.node.nombre}`);
-                                }}
-                                className="relations-panel__delete-connection-button"
-                                title="Eliminar conexión"
-                              >
-                                ×
-                              </button>
-                            )}
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   )}
