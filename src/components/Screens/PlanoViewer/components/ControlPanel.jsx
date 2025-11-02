@@ -44,7 +44,12 @@ const ControlPanel = ({
   onAvanzarPlano,
   onRetrocederPlano,
   onToggleRelationsPanel,
-  onClearRoute
+  onClearRoute,
+  onExportAllData,
+  onExportByType,
+  onDescargarJSON,
+  onCopiarJSON,
+  onSimularGuardado
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -457,6 +462,58 @@ const ControlPanel = ({
           </div>
         </div>
 
+          <div className="control-panel__section">
+          <div className="control-panel__section-title">
+            💾 Exportar Datos
+          </div>
+          
+          <button
+            onClick={onExportAllData}
+            className="control-panel__button control-panel__button--secondary"
+            style={{ marginBottom: '8px', width: '100%' }}
+          >
+            📊 Mostrar en Consola
+          </button>
+          
+          <button
+            onClick={onExportByType}
+            className="control-panel__button control-panel__button--secondary"
+            style={{ marginBottom: '8px', width: '100%' }}
+          >
+            🗂️ Mostrar por Tipo
+          </button>
+          
+          <button
+            onClick={onDescargarJSON}
+            className="control-panel__button control-panel__button--success"
+            style={{ marginBottom: '8px', width: '100%' }}
+          >
+            📥 Descargar JSON
+          </button>
+          
+          <button
+            onClick={onCopiarJSON}
+            className="control-panel__button control-panel__button--info"
+            style={{ marginBottom: '8px', width: '100%' }}
+          >
+            📋 Copiar JSON
+          </button>
+          
+          {/* Solo en desarrollo */}
+          {process.env.NODE_ENV === 'development' && (
+            <button
+              onClick={onSimularGuardado}
+              className="control-panel__button control-panel__button--warning"
+              style={{ marginBottom: '8px', width: '100%' }}
+            >
+              🗂️ Simular Guardado en Hooks
+            </button>
+          )}
+          
+          <div className="control-panel__info-text" style={{ fontSize: '12px', textAlign: 'center' }}>
+            Los datos se pueden descargar como archivo JSON
+          </div>
+        </div>
         {/* Botones de Configuración */}
         <div className="control-panel__config-buttons">
           <button
@@ -478,6 +535,8 @@ const ControlPanel = ({
           </button>
         </div>
       </div>
+
+      
 
     
 

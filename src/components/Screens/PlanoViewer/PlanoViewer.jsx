@@ -491,11 +491,20 @@ const handleDeleteConnection = useCallback((connectionId) => {
         onRetrocederPlano={planoManager.retrocederPlano}
 
         onToggleRelationsPanel={() => setShowRelationsPanel(prev => !prev)}
-        // o
+
+
+            onExportAllData={editor.exportarTodosLosDatos}
+            onExportByType={editor.exportarDatosPorTipo}
+            onExportJSON={editor.exportarDatosJSON}
+            onDescargarJSON={editor.descargarJSON}
+            onCopiarJSON={editor.copiarJSONAlPortapapeles}
+            onSimularGuardado={editor.simularGuardadoEnHooks}
+                // o
         onShowRelationsPanel={() => setShowRelationsPanel(true)}
        
         
       >
+        
       </ControlPanel>
 
       <SVGEditor
