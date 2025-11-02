@@ -1,33 +1,30 @@
+// RelationsPanel.jsx - VERSIÓN SIMPLIFICADA
 import React, { useState, useMemo } from 'react';
 import { AREA_TYPES } from '../utils/constants';
-import { geometryUtils } from '../utils/geometry';
 import './../styles/RelationsPanel.css';
 
- const isSpecialType = (tipo) => [
-        AREA_TYPES.EXTINTOR,
-        AREA_TYPES.SALIDA_EMERGENCIA,
-        AREA_TYPES.DESFIBRILADOR, 
-        AREA_TYPES.BOTIQUIN,
-        AREA_TYPES.ALARMA
-      ].includes(tipo);
+// Función auxiliar para tipos especiales
+const isSpecialType = (tipo) => [
+  AREA_TYPES.EXTINTOR,
+  AREA_TYPES.SALIDA_EMERGENCIA,
+  AREA_TYPES.DESFIBRILADOR, 
+  AREA_TYPES.BOTIQUIN,
+  AREA_TYPES.ALARMA
+].includes(tipo);
 
 const RelationsPanel = ({
   isVisible,
   onClose,
-  areas = [],
-  points = [],
   todosLosDatos = {},
-  planoActual,
   onNodeHover,
   onNodeLeave,
   highlightedNode,
-  connectionLines,
-  onDeleteNode, // 🔥 NUEVA PROP: función para eliminar nodos
-  onDeleteConnection // 🔥 NUEVA PROP: función para eliminar conexiones
+  onDeleteNode,
+  onDeleteConnection
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [hoveredNode, setHoveredNode] = useState(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null); // { type: 'node' | 'connection', id: string }
+  const [activeFilter, setActiveFilter] = useState('todos');
+  const [isLocating, setIsLocating] = useState(false);
 
   // Combinar todos los nodos de todos los planos
   const allNodes = useMemo(() => {
@@ -41,11 +38,47 @@ const RelationsPanel = ({
     return nodes;
   }, [todosLosDatos]);
 
+  // Filtrar nodos basado en búsqueda y filtro activo
+  const filteredNodes = useMemo(() => {
+    let filtered = allNodes;
+    
+    if (activeFilter !== 'todos') {
+      filtered = filtered.filter(node => {
+        switch (activeFilter) {
+          case 'areas':
+            return node.tipo !== AREA_TYPES.PUNTO && 
+                   node.tipo !== AREA_TYPES.PASILLO &&
+                   !isSpecialType(node.tipo);
+          case 'puntos':
+            return node.tipo === AREA_TYPES.PUNTO;
+          case 'escaleras':
+            return node.tipo === AREA_TYPES.ESCALERA;
+          case 'pasillos':
+            return node.tipo === AREA_TYPES.PASILLO;
+          case 'seguridad':
+            return isSpecialType(node.tipo);
+          default:
+            return true;
+        }
+      });
+    }
+    
+    if (searchTerm) {
+      filtered = filtered.filter(node => 
+        node.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        node.tipo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (node.carrera && node.carrera.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (node.piso && node.piso.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    }
+    
+    return filtered;
+  }, [allNodes, searchTerm, activeFilter]);
+
   // Encontrar conexiones para un nodo
   const getNodeConnections = (nodeId) => {
     const connections = [];
     
-    // Buscar en pasillos
     Object.values(todosLosDatos).forEach(planoData => {
       if (planoData.areas) {
         planoData.areas
@@ -56,9 +89,7 @@ const RelationsPanel = ({
                 type: 'pasillo',
                 node: pasillo.to,
                 direction: 'salida',
-                planoId: pasillo.planoId,
-                connectionId: pasillo.id, // 🔥 ID de la conexión para poder eliminarla
-                connectionData: pasillo // 🔥 Datos completos de la conexión
+                connectionId: pasillo.id,
               });
             }
             if (pasillo.to && pasillo.to.id === nodeId) {
@@ -66,9 +97,7 @@ const RelationsPanel = ({
                 type: 'pasillo',
                 node: pasillo.from,
                 direction: 'entrada',
-                planoId: pasillo.planoId,
-                connectionId: pasillo.id, // 🔥 ID de la conexión
-                connectionData: pasillo // 🔥 Datos completos
+                connectionId: pasillo.id,
               });
             }
           });
@@ -78,74 +107,54 @@ const RelationsPanel = ({
     return connections;
   };
 
-  // Filtrar nodos basado en búsqueda
-  const filteredNodes = useMemo(() => {
-    if (!searchTerm) return allNodes;
-    
-    return allNodes.filter(node => 
-      node.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      node.tipo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (node.carrera && node.carrera.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (node.piso && node.piso.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
-  }, [allNodes, searchTerm]);
-
   // Estadísticas
-      const stats = useMemo(() => ({
-        total: allNodes.length,
-        areas: allNodes.filter(n => 
-          n.tipo !== AREA_TYPES.PUNTO && 
-          n.tipo !== AREA_TYPES.PASILLO &&
-          !isSpecialType(n.tipo) // 🔥 EXCLUIR TIPOS ESPECIALES
-        ).length,
-        puntos: allNodes.filter(n => n.tipo === AREA_TYPES.PUNTO).length,
-        pasillos: allNodes.filter(n => n.tipo === AREA_TYPES.PASILLO).length,
-        escaleras: allNodes.filter(n => n.tipo === AREA_TYPES.ESCALERA).length,
-        // 🔥 NUEVAS ESTADÍSTICAS
-        seguridad: allNodes.filter(n => isSpecialType(n.tipo)).length,
-        extintores: allNodes.filter(n => n.tipo === AREA_TYPES.EXTINTOR).length,
-        salidas: allNodes.filter(n => n.tipo === AREA_TYPES.SALIDA_EMERGENCIA).length,
-        desfibriladores: allNodes.filter(n => n.tipo === AREA_TYPES.DESFIBRILADOR).length
-      }), [allNodes]);
+  const stats = useMemo(() => ({
+    total: allNodes.length,
+    areas: allNodes.filter(n => 
+      n.tipo !== AREA_TYPES.PUNTO && 
+      n.tipo !== AREA_TYPES.PASILLO &&
+      !isSpecialType(n.tipo)
+    ).length,
+    puntos: allNodes.filter(n => n.tipo === AREA_TYPES.PUNTO).length,
+    pasillos: allNodes.filter(n => n.tipo === AREA_TYPES.PASILLO).length,
+    escaleras: allNodes.filter(n => n.tipo === AREA_TYPES.ESCALERA).length,
+    seguridad: allNodes.filter(n => isSpecialType(n.tipo)).length
+  }), [allNodes]);
 
-      // Función auxiliar
-     
+  // Handlers simplificados
+  const handleNodeMouseEnter = (node) => {
+    setIsLocating(true);
+    
+    if (onNodeHover) {
+      onNodeHover(node);
+    }
+  };
 
-      // En RelationsPanel.jsx - mejora las funciones de hover
-    const handleNodeMouseEnter = (node) => {
-      console.log("🖱️ HOVER ENTER - Nodo:", node.nombre, node.id);
-      setHoveredNode(node);
-      if (onNodeHover) {
-        onNodeHover(node);
-      } else {
-        console.log("❌ onNodeHover no está definido");
-      }
-    };
+  const handleNodeMouseLeave = () => {
+    setIsLocating(false);
+    
+    if (onNodeLeave) {
+      onNodeLeave();
+    }
+  };
 
-    const handleNodeMouseLeave = () => {
-      console.log("🖱️ HOVER LEAVE");
-      setHoveredNode(null);
-      if (onNodeLeave) {
-        onNodeLeave();
-      } else {
-        console.log("❌ onNodeLeave no está definido");
-      }
-    };
+  const handleConnectionMouseEnter = (connection) => {
+    setIsLocating(true);
+    
+    if (onNodeHover) {
+      onNodeHover(connection.node);
+    }
+  };
 
-// 🔥 NUEVA FUNCIÓN: Hover en conexiones
-    const handleConnectionMouseEnter = (connection) => {
-      if (onNodeHover) {
-        // Destacar ambos nodos de la conexión
-        onNodeHover(connection.connectionData, 'connection');
-      }
-    };
+  const handleConnectionMouseLeave = () => {
+    setIsLocating(false);
+    
+    if (onNodeLeave) {
+      onNodeLeave();
+    }
+  };
 
-    const handleConnectionMouseLeave = () => {
-      if (onNodeLeave) {
-        onNodeLeave();
-      }
-    };
-  // 🔥 NUEVAS FUNCIONES PARA ELIMINAR
+  // Funciones para eliminar
   const handleDeleteNode = (nodeId) => {
     if (onDeleteNode) {
       onDeleteNode(nodeId);
@@ -160,6 +169,8 @@ const RelationsPanel = ({
     }
   };
 
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
+
   const confirmDelete = (type, id, name) => {
     setShowDeleteConfirm({ type, id, name });
   };
@@ -171,7 +182,6 @@ const RelationsPanel = ({
   const getTypeDisplayName = (tipo) => {
     const names = {
       [AREA_TYPES.AULA]: 'Aula',
-      [AREA_TYPES.SALON]: 'Salón',
       [AREA_TYPES.HALL]: 'Hall',
       [AREA_TYPES.BANO]: 'Baño',
       [AREA_TYPES.ESCALERA]: 'Escalera',
@@ -183,16 +193,41 @@ const RelationsPanel = ({
       [AREA_TYPES.BOTIQUIN]: '🩹 Botiquín',
       [AREA_TYPES.ALARMA]: '🚨 Alarma',
       [AREA_TYPES.TOTEM]: '📟 Tótem'
-      };
+    };
     return names[tipo] || tipo;
+  };
+
+  const getTypeIcon = (tipo) => {
+    const icons = {
+      [AREA_TYPES.AULA]: '🏫',
+      [AREA_TYPES.HALL]: '🏢',
+      [AREA_TYPES.BANO]: '🚻',
+      [AREA_TYPES.ESCALERA]: '🪜',
+      [AREA_TYPES.PUNTO]: '📍',
+      [AREA_TYPES.PASILLO]: '🛣️',
+      [AREA_TYPES.EXTINTOR]: '🧯',
+      [AREA_TYPES.SALIDA_EMERGENCIA]: '🚪',
+      [AREA_TYPES.DESFIBRILADOR]: '💓',
+      [AREA_TYPES.BOTIQUIN]: '🩹',
+      [AREA_TYPES.ALARMA]: '🚨',
+      [AREA_TYPES.TOTEM]: '📟'
+    };
+    return icons[tipo] || '📁';
   };
 
   if (!isVisible) return null;
 
   return (
-    <div className="relations-panel">
+    <div className={`relations-panel ${isLocating ? 'relations-panel--locating' : ''}`}>
       <div className="relations-panel__header">
-        <h3 className="relations-panel__title">🔗 Relaciones y Conexiones</h3>
+        <div className="relations-panel__header-content">
+          <h3 className="relations-panel__title">
+            🔗 Gestor de Relaciones
+          </h3>
+          <p className="relations-panel__subtitle">
+            Pasa el mouse sobre los nodos para ver su ubicación en el mapa
+          </p>
+        </div>
         <button
           onClick={onClose}
           className="relations-panel__close-button"
@@ -202,19 +237,51 @@ const RelationsPanel = ({
         </button>
       </div>
 
-      <div className="relations-panel__description">
-        Explora las conexiones entre nodos. Pasa el cursor sobre cualquier elemento para ver sus relaciones en el mapa.
+      {/* Filtros y búsqueda */}
+      <div className="relations-panel__filters">
+        <div className="relations-panel__search-container">
+          <input
+            type="text"
+            placeholder="🔍 Buscar nodos..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="relations-panel__search"
+          />
+        </div>
+        
+        <div className="relations-panel__filter-tabs">
+          {[
+            { key: 'todos', label: 'Todos', count: stats.total },
+            { key: 'areas', label: 'Áreas', count: stats.areas },
+            { key: 'puntos', label: 'Puntos', count: stats.puntos },
+            { key: 'escaleras', label: 'Escaleras', count: stats.escaleras },
+            { key: 'pasillos', label: 'Pasillos', count: stats.pasillos },
+            { key: 'seguridad', label: 'Seguridad', count: stats.seguridad }
+          ].map(filter => (
+            <button
+              key={filter.key}
+              className={`relations-panel__filter-tab ${
+                activeFilter === filter.key ? 'relations-panel__filter-tab--active' : ''
+              }`}
+              onClick={() => setActiveFilter(filter.key)}
+            >
+              <span className="relations-panel__filter-label">{filter.label}</span>
+              <span className="relations-panel__filter-count">{filter.count}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* 🔥 MODAL DE CONFIRMACIÓN DE ELIMINACIÓN */}
+      {/* Modal de confirmación de eliminación */}
       {showDeleteConfirm && (
         <div className="relations-panel__delete-modal">
           <div className="relations-panel__delete-content">
-            <h4>¿Estás seguro?</h4>
+            <div className="relations-panel__delete-icon">⚠️</div>
+            <h4>Confirmar Eliminación</h4>
             <p>
               {showDeleteConfirm.type === 'node' 
-                ? `Vas a eliminar el nodo "${showDeleteConfirm.name}". Esta acción no se puede deshacer.`
-                : `Vas a eliminar esta conexión. Esta acción no se puede deshacer.`
+                ? `¿Estás seguro de eliminar "${showDeleteConfirm.name}"?`
+                : `¿Estás seguro de eliminar esta conexión?`
               }
             </p>
             <div className="relations-panel__delete-actions">
@@ -239,34 +306,31 @@ const RelationsPanel = ({
         </div>
       )}
 
-      <div className="relations-panel__section">
-        <div className="relations-panel__section-title">
-          🔍 Buscar Nodos
+      {/* Lista de nodos */}
+      <div className="relations-panel__content">
+        <div className="relations-panel__nodes-header">
+          <span className="relations-panel__nodes-count">
+            {filteredNodes.length} nodo{filteredNodes.length !== 1 ? 's' : ''} encontrado{filteredNodes.length !== 1 ? 's' : ''}
+          </span>
+          {isLocating && (
+            <div className="relations-panel__locating-indicator">
+              <div className="relations-panel__locating-dot"></div>
+              Localizando...
+            </div>
+          )}
         </div>
-        <input
-          type="text"
-          placeholder="Buscar por nombre, tipo, carrera..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="relations-panel__search"
-        />
-      </div>
 
-      <div className="relations-panel__section">
-        <div className="relations-panel__section-title">
-          📍 Todos los Nodos ({filteredNodes.length})
-        </div>
-        
         {filteredNodes.length === 0 ? (
           <div className="relations-panel__empty-state">
-            {searchTerm ? 'No se encontraron nodos' : 'No hay nodos creados'}
+            <div className="relations-panel__empty-icon">🔍</div>
+            <p>No se encontraron nodos</p>
+            <small>Intenta cambiar los filtros o términos de búsqueda</small>
           </div>
         ) : (
           <div className="relations-panel__node-list">
             {filteredNodes.map(node => {
               const connections = getNodeConnections(node.id);
               const isHighlighted = highlightedNode?.id === node.id;
-              const isHovered = hoveredNode?.id === node.id;
               
               return (
                 <div
@@ -274,72 +338,73 @@ const RelationsPanel = ({
                   className={`relations-panel__node-item ${
                     isHighlighted ? 'relations-panel__node-item--highlighted' : ''
                   }`}
-                  onMouseEnter={() => {
-                    console.log("🖱️ Hover en nodo del panel:", node.nombre);
-                    if (onNodeHover) {
-                      onNodeHover(node); // ← Esto debería activar el highlight en el mapa
-                    }
-                  }}
-                  onMouseLeave={() => {
-                    console.log("🖱️ Leave del nodo del panel");
-                    if (onNodeLeave) {
-                      onNodeLeave();
-                    }
-                  }}
-                  style={{ cursor: 'pointer' }}
+                  onMouseEnter={() => handleNodeMouseEnter(node)}
+                  onMouseLeave={handleNodeMouseLeave}
                 >
                   <div className="relations-panel__node-header">
-                    <div className="relations-panel__node-title">
+                    <div className="relations-panel__node-icon">
+                      {getTypeIcon(node.tipo)}
+                    </div>
+                    <div className="relations-panel__node-info">
                       <h4 className="relations-panel__node-name">{node.nombre}</h4>
-                      <span className={`relations-panel__node-type relations-panel__node-type--${node.tipo}`}>
-                        {getTypeDisplayName(node.tipo)}
-                      </span>
+                      <div className="relations-panel__node-meta">
+                        <span className={`relations-panel__node-type relations-panel__node-type--${node.tipo}`}>
+                          {getTypeDisplayName(node.tipo)}
+                        </span>
+                        <span className="relations-panel__node-location">
+                          {node.carrera && `${node.carrera} • `}{node.piso}
+                        </span>
+                      </div>
                     </div>
                     
-                    {/* 🔥 BOTÓN ELIMINAR NODO */}
-                    {onDeleteNode && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          confirmDelete('node', node.id, node.nombre);
-                        }}
-                        className="relations-panel__delete-button"
-                        title={`Eliminar ${node.nombre}`}
-                      >
-                        🗑️
-                      </button>
-                    )}
-                  </div>
-                  
-                  <div className="relations-panel__node-info">
-                    {node.carrera && `${node.carrera} • `}{node.piso}
-                    {node.planoId && ` • Plano: ${node.planoId}`}
+                    {/* Botones de acción */}
+                    <div className="relations-panel__node-actions">
+                      {connections.length > 0 && (
+                        <span className="relations-panel__connections-badge">
+                          {connections.length} 🔗
+                        </span>
+                      )}
+                      {onDeleteNode && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            confirmDelete('node', node.id, node.nombre);
+                          }}
+                          className="relations-panel__delete-button"
+                          title={`Eliminar ${node.nombre}`}
+                        >
+                          🗑️
+                        </button>
+                      )}
+                    </div>
                   </div>
 
+                  {/* Conexiones */}
                   {connections.length > 0 && (
                     <div className="relations-panel__connections">
                       <div className="relations-panel__connections-title">
-                        🔗 {connections.length} conexión{connections.length !== 1 ? 'es' : ''}
+                        Conexiones ({connections.length})
                       </div>
                       <div className="relations-panel__connection-list">
-                        {connections.slice(0, 3).map((conn, index) => (
+                        {connections.map((conn, index) => (
                           <div 
                             key={index} 
                             className="relations-panel__connection-item"
                             onMouseEnter={() => handleConnectionMouseEnter(conn)}
                             onMouseLeave={handleConnectionMouseLeave}
-                            style={{ cursor: 'pointer' }}
                           >
                             <div className="relations-panel__connection-info">
                               <span className="relations-panel__connection-icon">
                                 {conn.direction === 'salida' ? '➡️' : '⬅️'}
                               </span>
-                              <span>
-                                {conn.node.nombre} ({getTypeDisplayName(conn.node.tipo)})
+                              <span className="relations-panel__connection-node">
+                                {conn.node.nombre}
+                              </span>
+                              <span className="relations-panel__connection-type">
+                                {getTypeDisplayName(conn.node.tipo)}
                               </span>
                             </div>
                             
-                            {/* Botón eliminar conexión */}
                             {onDeleteConnection && (
                               <button
                                 onClick={(e) => {
@@ -354,11 +419,6 @@ const RelationsPanel = ({
                             )}
                           </div>
                         ))}
-                        {connections.length > 3 && (
-                          <div className="relations-panel__connection-item">
-                            +{connections.length - 3} más...
-                          </div>
-                        )}
                       </div>
                     </div>
                   )}
@@ -369,11 +429,26 @@ const RelationsPanel = ({
         )}
       </div>
 
-      <div className="relations-panel__stats">
-        <span>📊 Total: {stats.total}</span>
-        <span>🏢 Áreas: {stats.areas}</span>
-        <span>📍 Puntos: {stats.puntos}</span>
-        <span>🪜 Escaleras: {stats.escaleras}</span>
+      {/* Footer con estadísticas */}
+      <div className="relations-panel__footer">
+        <div className="relations-panel__stats">
+          <div className="relations-panel__stat">
+            <span className="relations-panel__stat-value">{stats.total}</span>
+            <span className="relations-panel__stat-label">Total</span>
+          </div>
+          <div className="relations-panel__stat">
+            <span className="relations-panel__stat-value">{stats.areas}</span>
+            <span className="relations-panel__stat-label">Áreas</span>
+          </div>
+          <div className="relations-panel__stat">
+            <span className="relations-panel__stat-value">{stats.puntos}</span>
+            <span className="relations-panel__stat-label">Puntos</span>
+          </div>
+          <div className="relations-panel__stat">
+            <span className="relations-panel__stat-value">{stats.escaleras}</span>
+            <span className="relations-panel__stat-label">Escaleras</span>
+          </div>
+        </div>
       </div>
     </div>
   );

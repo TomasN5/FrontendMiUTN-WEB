@@ -1,47 +1,237 @@
-/* RelationsPanel.css */
+/* RelationsPanel.css - CON ANIMACIONES DE LOCALIZACIÓN */
 .relations-panel {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
-  padding: 20px;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90vw;
+  max-width: 800px;
+  height: 85vh;
+  background: white;
   border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
-  z-index: 9;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  border: 1px solid #e2e8f0;
+  z-index: 2000;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  width: 300px;
-  max-height: 80vh;
-  overflow-y: auto;
-  font-family: "Inter", Arial, sans-serif;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  overflow: hidden;
   transition: all 0.3s ease;
 }
 
-.relations-panel__header {
+/* Estado de localización - modal semi-transparente */
+.relations-panel--locating {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  border-color: rgba(102, 126, 234, 0.5);
+  box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3);
+}
+
+/* Overlay de localización */
+.relations-panel__location-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  margin-bottom: 8px;
+  justify-content: center;
+  z-index: 10;
+  animation: fadeIn 0.3s ease;
+}
+
+.relations-panel__location-pulse {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(102, 126, 234, 0.2);
+  position: relative;
+  animation: locationPulse 1.5s ease-in-out infinite;
+  margin-bottom: 20px;
+}
+
+.relations-panel__location-pulse::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  background: #667eea;
+  border-radius: 50%;
+  animation: locationDot 1.5s ease-in-out infinite;
+}
+
+.relations-panel__location-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: #667eea;
+  text-align: center;
+  animation: locationText 1.5s ease-in-out infinite;
+}
+
+/* Indicador de localización en el header */
+.relations-panel__locating-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #667eea;
+  font-weight: 600;
+  animation: locatingIndicator 2s ease-in-out infinite;
+}
+
+.relations-panel__locating-dot {
+  width: 8px;
+  height: 8px;
+  background: #667eea;
+  border-radius: 50%;
+  animation: locatingDot 1.5s ease-in-out infinite;
+}
+
+/* Animaciones */
+@keyframes locationPulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+}
+
+@keyframes locationDot {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.3);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes locationText {
+  0%, 100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 0.7;
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes locatingIndicator {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes locatingDot {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.7;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Efectos mejorados para hover en nodos */
+.relations-panel__node-item--hovered {
+  border-color: #667eea !important;
+  background: rgba(102, 126, 234, 0.05) !important;
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+  transition: all 0.3s ease;
+}
+
+.relations-panel__node-item--highlighted {
+  border-color: #667eea;
+  background: rgba(102, 126, 234, 0.1);
+  animation: highlightPulse 2s ease-in-out infinite;
+}
+
+@keyframes highlightPulse {
+  0%, 100% {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.4);
+  }
+  50% {
+    border-color: #5a67d8;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+  }
+}
+
+/* Conexiones con efecto mejorado */
+.relations-panel__connection-item:hover {
+  background: rgba(102, 126, 234, 0.1);
+  border-left: 3px solid #667eea;
+  transform: translateX(4px);
+  transition: all 0.2s ease;
+}
+
+/* Resto del CSS permanece igual... */
+.relations-panel__header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 24px;
+  position: relative;
+}
+
+.relations-panel__header-content {
+  max-width: calc(100% - 40px);
 }
 
 .relations-panel__title {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.relations-panel__subtitle {
   margin: 0;
-  color: #1f2937;
-  font-size: 16px;
-  font-weight: 600;
+  opacity: 0.9;
+  font-size: 14px;
 }
 
 .relations-panel__close-button {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 8px;
   width: 32px;
   height: 32px;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background: white;
-  color: #475569;
-  font-size: 16px;
+  color: white;
+  font-size: 18px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -50,275 +240,355 @@
 }
 
 .relations-panel__close-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.relations-panel__filters {
   background: #f8fafc;
-  transform: scale(1.05);
+  border-bottom: 1px solid #e2e8f0;
+  padding: 20px;
 }
 
-.relations-panel__description {
-  font-size: 12px;
-  color: #64748b;
+.relations-panel__search-container {
   margin-bottom: 16px;
-}
-
-.relations-panel__section {
-  margin-bottom: 20px;
-}
-
-.relations-panel__section-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #475569;
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .relations-panel__search {
   width: 100%;
-  padding: 8px 12px;
-  border-radius: 8px;
+  padding: 12px 16px;
   border: 1px solid #e2e8f0;
-  font-size: 12px;
-  margin-bottom: 12px;
-  transition: border-color 0.2s ease;
+  border-radius: 10px;
+  font-size: 14px;
+  background: white;
+  transition: all 0.2s ease;
 }
 
 .relations-panel__search:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.relations-panel__filter-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.relations-panel__filter-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.relations-panel__filter-tab:hover {
+  border-color: #cbd5e1;
+  color: #475569;
+}
+
+.relations-panel__filter-tab--active {
+  background: #667eea;
+  border-color: #667eea;
+  color: white;
+}
+
+.relations-panel__filter-label {
+  font-weight: 600;
+}
+
+.relations-panel__filter-count {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.relations-panel__filter-tab--active .relations-panel__filter-count {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.relations-panel__content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.relations-panel__nodes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.relations-panel__nodes-count {
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.relations-panel__empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #64748b;
+}
+
+.relations-panel__empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.relations-panel__empty-state p {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.relations-panel__empty-state small {
+  font-size: 14px;
+  opacity: 0.7;
 }
 
 .relations-panel__node-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  max-height: 200px;
-  overflow-y: auto;
+  gap: 12px;
 }
 
 .relations-panel__node-item {
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
   background: white;
+  border: 2px solid #f1f5f9;
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.3s ease;
   cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
 }
 
 .relations-panel__node-item:hover {
-  border-color: #3b82f6;
-  transform: translateX(4px);
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
-}
-
-.relations-panel__node-item--highlighted {
-  border-color: #10b981;
-  background: rgba(16, 185, 129, 0.05);
+  border-color: #e2e8f0;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .relations-panel__node-header {
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 6px;
+  gap: 12px;
 }
 
-.relations-panel__node-name {
-  font-size: 12px;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0;
-}
-
-.relations-panel__node-type {
-  font-size: 10px;
-  padding: 2px 6px;
-  border-radius: 12px;
-  background: #e5e7eb;
-  color: #374151;
-  font-weight: 500;
-}
-
-.relations-panel__node-type--aula {
-  background: rgba(66, 135, 245, 0.2);
-  color: #1e40af;
-}
-
-.relations-panel__node-type--salon {
-  background: rgba(255, 165, 0, 0.2);
-  color: #92400e;
-}
-
-.relations-panel__node-type--hall {
-  background: rgba(255, 235, 59, 0.2);
-  color: #854d0e;
-}
-
-.relations-panel__node-type--bano {
-  background: rgba(186, 104, 200, 0.2);
-  color: #86198f;
-}
-
-.relations-panel__node-type--escalera {
-  background: rgba(120, 40, 40, 0.2);
-  color: #7f1d1d;
-}
-
-.relations-panel__node-type--punto {
-  background: rgba(239, 68, 68, 0.2);
-  color: #dc2626;
+.relations-panel__node-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
 .relations-panel__node-info {
-  font-size: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.relations-panel__node-name {
+  margin: 0 0 6px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  word-break: break-word;
+}
+
+.relations-panel__node-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.relations-panel__node-type {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.relations-panel__node-type--escalera {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.relations-panel__node-type--pasillo {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.relations-panel__node-type--extintor {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.relations-panel__node-location {
+  font-size: 12px;
   color: #64748b;
-  margin-bottom: 4px;
+}
+
+.relations-panel__node-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.relations-panel__connections-badge {
+  background: #10b981;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.relations-panel__delete-button {
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s ease;
+}
+
+.relations-panel__delete-button:hover {
+  background: #dc2626;
+  transform: scale(1.1);
 }
 
 .relations-panel__connections {
-  margin-top: 8px;
-  padding-top: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
   border-top: 1px solid #f1f5f9;
 }
 
 .relations-panel__connections-title {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
-  color: #475569;
-  margin-bottom: 6px;
+  color: #64748b;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .relations-panel__connection-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .relations-panel__connection-item {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 8px;
-  border-radius: 4px;
+  justify-content: space-between;
+  padding: 8px 12px;
   background: #f8fafc;
-  font-size: 10px;
-  color: #475569;
+  border-radius: 8px;
   transition: all 0.2s ease;
+  border-left: 3px solid transparent;
 }
 
-.relations-panel__connection-item:hover {
-  background: #e2e8f0;
+.relations-panel__connection-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
 }
 
 .relations-panel__connection-icon {
-  font-size: 8px;
-}
-
-.relations-panel__empty-state {
-  text-align: center;
-  padding: 20px;
-  color: #64748b;
   font-size: 12px;
 }
 
-.relations-panel__stats {
-  display: flex;
-  justify-content: space-between;
+.relations-panel__connection-node {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.relations-panel__connection-type {
   font-size: 11px;
   color: #64748b;
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid #e2e8f0;
-}
-
-.relations-panel__highlight-overlay {
-  fill: rgba(59, 130, 246, 0.1);
-  stroke: #3b82f6;
-  stroke-width: 2;
-  stroke-dasharray: 4, 4;
-  pointer-events: none;
-}
-
-.relations-panel__connection-line {
-  stroke: #10b981;
-  stroke-width: 3;
-  stroke-dasharray: 6, 3;
-  opacity: 0.8;
-  pointer-events: none;
-}
-
-.relations-panel__connection-point {
-  fill: #10b981;
-  stroke: white;
-  stroke-width: 2;
-  r: 5;
-  pointer-events: none;
-}
-/* Botones de eliminación */
-.relations-panel__delete-button {
-  background: #ff4444;
-  border: none;
+  background: #e2e8f0;
+  padding: 2px 6px;
   border-radius: 4px;
-  padding: 4px 8px;
-  cursor: pointer;
-  font-size: 12px;
-  color: white;
-  transition: background 0.2s;
-}
-
-.relations-panel__delete-button:hover {
-  background: #cc0000;
 }
 
 .relations-panel__delete-connection-button {
-  background: #ff6b6b;
+  background: #fca5a5;
+  color: #dc2626;
   border: none;
-  border-radius: 50%;
+  border-radius: 4px;
   width: 20px;
   height: 20px;
   cursor: pointer;
   font-size: 12px;
-  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s;
+  transition: all 0.2s ease;
 }
 
 .relations-panel__delete-connection-button:hover {
-  background: #ff4444;
+  background: #ef4444;
+  color: white;
 }
 
-.relations-panel__node-header {
+.relations-panel__footer {
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  padding: 16px 24px;
+}
+
+.relations-panel__stats {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 8px;
+  justify-content: space-around;
 }
 
-.relations-panel__node-title {
-  flex: 1;
+.relations-panel__stat {
+  text-align: center;
 }
 
-.relations-panel__connection-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
+.relations-panel__stat-value {
+  display: block;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 2px;
 }
 
-.relations-panel__connection-info {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.relations-panel__stat-label {
+  font-size: 11px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 /* Modal de confirmación */
 .relations-panel__delete-modal {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   right: 0;
@@ -327,56 +597,110 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 3000;
 }
 
 .relations-panel__delete-content {
   background: white;
-  padding: 20px;
-  border-radius: 8px;
-  max-width: 400px;
-  width: 90%;
+  border-radius: 12px;
+  padding: 24px;
   text-align: center;
+  max-width: 320px;
+  width: 90%;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.relations-panel__delete-icon {
+  font-size: 32px;
+  margin-bottom: 16px;
 }
 
 .relations-panel__delete-content h4 {
-  margin: 0 0 10px 0;
-  color: #333;
+  margin: 0 0 12px 0;
+  color: #1f2937;
+  font-size: 18px;
 }
 
 .relations-panel__delete-content p {
   margin: 0 0 20px 0;
-  color: #666;
+  color: #64748b;
+  line-height: 1.5;
 }
 
 .relations-panel__delete-actions {
   display: flex;
-  gap: 10px;
-  justify-content: center;
+  gap: 12px;
 }
 
 .relations-panel__delete-cancel {
-  background: #6c757d;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  border-radius: 8px;
   cursor: pointer;
-}
-
-.relations-panel__delete-confirm {
-  background: #dc3545;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
+  font-weight: 600;
+  color: #64748b;
+  transition: all 0.2s ease;
 }
 
 .relations-panel__delete-cancel:hover {
-  background: #5a6268;
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.relations-panel__delete-confirm {
+  flex: 1;
+  padding: 12px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
 }
 
 .relations-panel__delete-confirm:hover {
-  background: #c82333;
+  background: #dc2626;
+}
+
+/* Scrollbar personalizado */
+.relations-panel__content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.relations-panel__content::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.relations-panel__content::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.relations-panel__content::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .relations-panel {
+    width: 95vw;
+    height: 90vh;
+  }
+  
+  .relations-panel__filter-tabs {
+    flex-wrap: wrap;
+  }
+  
+  .relations-panel__node-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .relations-panel__node-actions {
+    align-self: flex-end;
+  }
 }
