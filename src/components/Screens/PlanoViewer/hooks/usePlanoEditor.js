@@ -13,173 +13,214 @@ export const usePlanoEditor = () => {
   const [selectedNode, setSelectedNode] = useState(null);
   const [planoActual, setPlanoActual] = useState(null);
 
+  const datosPorPlanoRef = useRef(datosPorPlano);
 
-    const datosPorPlanoRef = useRef(datosPorPlano);
-
-
-    useEffect(() => {
-        const cargarDatosDesdeAPI = async () => {
-          try {
-            console.log("🔄 Cargando datos desde API...");
-            
-            const response = await fetch('http://localhost:8080/api/map/getPoint');
-            
-            if (!response.ok) {
-              throw new Error(`Error HTTP: ${response.status}`);
-            }
-            
-            const datos = await response.json();
-            
-            if (!datos || !datos.planos || Object.keys(datos.planos).length === 0) {
-              console.log("📭 API respondió pero sin datos");
-              return;
-            }
-            
-            console.log("✅ Datos cargados desde API correctamente");
-            cargarDatosEnEditor(datos);
-            
-          } catch (error) {
-            console.log('📭 Error cargando datos desde API:', error.message);
-            console.log('💡 Continuando sin datos preguardados...');
-          }
-        };
-
-        // Pequeño delay para asegurar que la app esté lista
-        setTimeout(cargarDatosDesdeAPI, 1000);
+  useEffect(() => {
+    const cargarDatosDesdeAPI = async () => {
+      try {
+        console.log("🔄 Cargando datos desde API...");
         
-      }, []);
-      
-    useEffect(() => {
-      datosPorPlanoRef.current = datosPorPlano;
-    }, [datosPorPlano]);
-        // 2️⃣ FUNCIONES DE EXPORTACIÓN (en orden de dependencia)
+        const response = await fetch('http://localhost:8080/api/map/getPoint');
+        
+        if (!response.ok) {
+          throw new Error(`Error HTTP: ${response.status}`);
+        }
+        
+        const datos = await response.json();
+        
+        if (!datos || !datos.planos || Object.keys(datos.planos).length === 0) {
+          console.log("📭 API respondió pero sin datos");
+          return;
+        }
+        
+        console.log("✅ Datos cargados desde API correctamente");
+        cargarDatosEnEditor(datos);
+        
+      } catch (error) {
+        console.log('📭 Error cargando datos desde API:', error.message);
+        console.log('💡 Continuando sin datos preguardados...');
+      }
+    };
+
+    // Pequeño delay para asegurar que la app esté lista
+    setTimeout(cargarDatosDesdeAPI, 1000);
+    
+  }, []);
+  
+  useEffect(() => {
+    datosPorPlanoRef.current = datosPorPlano;
+  }, [datosPorPlano]);
+
+  // 2️⃣ FUNCIONES DE EXPORTACIÓN (en orden de dependencia)
   const exportarDatosJSON = useCallback(() => {
     const datosActuales = datosPorPlanoRef.current;
     const datosCompletos = {
       metadata: {
         fechaExportacion: new Date().toISOString(),
         totalPlanos: Object.keys(datosActuales).length,
-        version: "1.0"
+        version: "2.0", // Actualizamos versión por el cambio
+        soporteDestinosMultiples: true
       },
       planos: {}
     };
     
     Object.entries(datosActuales).forEach(([planoId, planoData]) => {
       datosCompletos.planos[planoId] = {
-        areas: planoData.areas || [],
+        areas: (planoData.areas || []).map(area => {
+          // Para escaleras, formatear correctamente los destinos
+          if (area.tipo === "escalera") {
+            const escaleraFormateada = { ...area };
+            
+            // Si tiene destinos múltiples, incluirlos en el JSON
+            if (Array.isArray(area.destinos) && area.destinos.length > 0) {
+              escaleraFormateada.destinos = area.destinos.map(destino => ({
+                carrera: destino.carrera,
+                piso: destino.piso,
+                direccion: destino.direccion || "ambos"
+              }));
+              
+              // Mantener compatibilidad: también incluir destino único principal
+              if (area.destinos.length > 0) {
+                const destinoPrincipal = area.destinos[0];
+                escaleraFormateada.carreraDestino = destinoPrincipal.carrera;
+                escaleraFormateada.pisoDestino = destinoPrincipal.piso;
+              }
+            } else {
+              // Para escaleras con destino único, mantener estructura original
+              escaleraFormateada.carreraDestino = area.carreraDestino;
+              escaleraFormateada.pisoDestino = area.pisoDestino;
+              escaleraFormateada.direccion = area.direccion || "ambos";
+            }
+            
+            return escaleraFormateada;
+          }
+          
+          // Para otras áreas, mantener formato original
+          return area;
+        }),
         points: planoData.points || []
       };
     });
     
-    console.log("=== 📋 DATOS COMPLETOS EN FORMATO JSON ===");
+    console.log("=== 📋 DATOS COMPLETOS EN FORMATO JSON (CON DESTINOS MÚLTIPLES) ===");
     console.log(JSON.stringify(datosCompletos, null, 2));
     
     return datosCompletos;
   }, [datosPorPlano]);
 
-     const guardarTodosLosDatosEnServidor = useCallback(async () => {
-          try {
-            debugger
-            const datosCompletos = exportarDatosJSON();
-            const datosStr = JSON.stringify(datosCompletos);
+  const guardarTodosLosDatosEnServidor = useCallback(async () => {
+    try {
+      debugger
+      const datosCompletos = exportarDatosJSON();
+      const datosStr = JSON.stringify(datosCompletos);
+      
+      const response = await fetch('http://localhost:8080/api/map/updatePoint', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: datosStr
+      });
+      
+      if (response.ok) {
+        console.log("✅ Todos los datos guardados en servidor");
+        return true;
+      } else {
+        console.warn("⚠️ No se pudo guardar en servidor");
+        return false;
+      }
+    } catch (error) {
+      console.warn("⚠️ Error de conexión con servidor:", error.message);
+      return false;
+    }
+  }, [exportarDatosJSON]);
+
+  const cargarDatosEnEditor = useCallback((datosImportados) => {
+    if (!datosImportados || !datosImportados.planos) {
+      console.error('❌ Datos inválidos para cargar en editor');
+      return;
+    }
+
+    console.log("🔄 Cargando datos preguardados en el editor...");
+    
+    const estadisticas = {
+      planos: 0,
+      areas: 0,
+      puntos: 0,
+      escaleras: 0,
+      pasillos: 0,
+      elementosEspeciales: 0,
+      escalerasMultiDestino: 0
+    };
+
+    // Crear nueva estructura de datos
+    const nuevosDatos = {};
+    
+    Object.entries(datosImportados.planos).forEach(([planoId, planoData]) => {
+      estadisticas.planos++;
+      
+      nuevosDatos[planoId] = {
+        areas: [],
+        points: []
+      };
+
+      // Procesar áreas
+      if (planoData.areas && Array.isArray(planoData.areas)) {
+        nuevosDatos[planoId].areas = planoData.areas.map(area => {
+          estadisticas.areas++;
+          
+          if (area.tipo === AREA_TYPES.ESCALERA) {
+            estadisticas.escaleras++;
             
-            const response = await fetch('http://localhost:8080/api/map/updatePoint', {
-              method: 'PUT',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: datosStr
-            });
-            
-            if (response.ok) {
-              console.log("✅ Todos los datos guardados en servidor");
-              return true;
+            // Detectar si es una escalera con destinos múltiples
+            if (area.destinos && Array.isArray(area.destinos) && area.destinos.length > 1) {
+              estadisticas.escalerasMultiDestino++;
+              console.log(`   🪜 Cargando escalera multi-destino: ${area.nombre} (${area.destinos.length} destinos)`);
             } else {
-              console.warn("⚠️ No se pudo guardar en servidor");
-              return false;
+              console.log(`   🪜 Cargando escalera: ${area.nombre}`);
             }
-          } catch (error) {
-            console.warn("⚠️ Error de conexión con servidor:", error.message);
-            return false;
+          } else if (area.tipo === AREA_TYPES.PASILLO) {
+            estadisticas.pasillos++;
           }
-        }, [exportarDatosJSON]);
-
-       const cargarDatosEnEditor = useCallback((datosImportados) => {
-          if (!datosImportados || !datosImportados.planos) {
-            console.error('❌ Datos inválidos para cargar en editor');
-            return;
+          
+          console.log(`   🏢 Cargando área: ${area.nombre} (${area.tipo})`);
+          return area;
+        });
+      }
+      
+      // Procesar puntos
+      if (planoData.points && Array.isArray(planoData.points)) {
+        nuevosDatos[planoId].points = planoData.points.map(punto => {
+          estadisticas.puntos++;
+          
+          if (punto.tipo !== AREA_TYPES.PUNTO) {
+            estadisticas.elementosEspeciales++;
           }
-
-          console.log("🔄 Cargando datos preguardados en el editor...");
           
-          const estadisticas = {
-            planos: 0,
-            areas: 0,
-            puntos: 0,
-            escaleras: 0,
-            pasillos: 0,
-            elementosEspeciales: 0
-          };
+          console.log(`   📍 Cargando punto: ${punto.nombre} (${punto.tipo})`);
+          return punto;
+        });
+      }
+    });
 
-          // Crear nueva estructura de datos
-          const nuevosDatos = {};
-          
-          Object.entries(datosImportados.planos).forEach(([planoId, planoData]) => {
-            estadisticas.planos++;
-            
-            nuevosDatos[planoId] = {
-              areas: [],
-              points: []
-            };
+    // Actualizar el estado con los nuevos datos
+    setDatosPorPlano(nuevosDatos);
 
-            // Procesar áreas
-            if (planoData.areas && Array.isArray(planoData.areas)) {
-              nuevosDatos[planoId].areas = planoData.areas.map(area => {
-                estadisticas.areas++;
-                
-                if (area.tipo === AREA_TYPES.ESCALERA) {
-                  estadisticas.escaleras++;
-                } else if (area.tipo === AREA_TYPES.PASILLO) {
-                  estadisticas.pasillos++;
-                }
-                
-                console.log(`   🏢 Cargando área: ${area.nombre} (${area.tipo})`);
-                return area;
-              });
-            }
-            
-            // Procesar puntos
-            if (planoData.points && Array.isArray(planoData.points)) {
-              nuevosDatos[planoId].points = planoData.points.map(punto => {
-                estadisticas.puntos++;
-                
-                if (punto.tipo !== AREA_TYPES.PUNTO) {
-                  estadisticas.elementosEspeciales++;
-                }
-                
-                console.log(`   📍 Cargando punto: ${punto.nombre} (${punto.tipo})`);
-                return punto;
-              });
-            }
-          });
+    console.log("📈 DATOS CARGADOS AUTOMÁTICAMENTE:");
+    console.log(`   📊 Planos: ${estadisticas.planos}`);
+    console.log(`   🏢 Áreas: ${estadisticas.areas}`);
+    console.log(`   📍 Puntos: ${estadisticas.puntos}`);
+    console.log(`   🪜 Escaleras: ${estadisticas.escaleras}`);
+    console.log(`   🔄 Escaleras multi-destino: ${estadisticas.escalerasMultiDestino}`);
+    console.log(`   🛣️ Pasillos: ${estadisticas.pasillos}`);
+    console.log(`   🧯 Elementos especiales: ${estadisticas.elementosEspeciales}`);
+    
+    // Mostrar notificación sutil
+    setTimeout(() => {
+      console.log("🎯 Todos los datos preguardados han sido cargados automáticamente");
+    }, 1000);
 
-          // Actualizar el estado con los nuevos datos
-          setDatosPorPlano(nuevosDatos);
-
-          console.log("📈 DATOS CARGADOS AUTOMÁTICAMENTE:");
-          console.log(`   📊 Planos: ${estadisticas.planos}`);
-          console.log(`   🏢 Áreas: ${estadisticas.areas}`);
-          console.log(`   📍 Puntos: ${estadisticas.puntos}`);
-          console.log(`   🪜 Escaleras: ${estadisticas.escaleras}`);
-          console.log(`   🛣️ Pasillos: ${estadisticas.pasillos}`);
-          console.log(`   🧯 Elementos especiales: ${estadisticas.elementosEspeciales}`);
-          
-          // Mostrar notificación sutil
-          setTimeout(() => {
-            console.log("🎯 Todos los datos preguardados han sido cargados automáticamente");
-          }, 1000);
-
-        }, []);
+  }, []);
 
   // 1️⃣ FUNCIONES BASE PRIMERO
   const generarIdUnico = useCallback((prefijo) => {
@@ -203,7 +244,7 @@ export const usePlanoEditor = () => {
     setSelectedNode(null);
   }, []);
 
- const actualizarDatosPlano = useCallback((planoId, nuevasAreas, nuevosPoints) => {
+  const actualizarDatosPlano = useCallback((planoId, nuevasAreas, nuevosPoints) => {
     setDatosPorPlano(prev => {
       const nuevosDatos = {
         ...prev,
@@ -220,6 +261,7 @@ export const usePlanoEditor = () => {
       return nuevosDatos;
     });
   }, []);
+
   const getDisplayName = (tipo) => {
     const nombres = {
       [AREA_TYPES.PUNTO]: 'Punto',
@@ -232,8 +274,6 @@ export const usePlanoEditor = () => {
     };
     return nombres[tipo] || tipo;
   };
-
-
 
   const descargarJSON = useCallback(() => {
     const datosCompletos = exportarDatosJSON();
@@ -318,7 +358,10 @@ export const usePlanoEditor = () => {
               pisoActual: area.pisoActual,
               carreraDestino: area.carreraDestino,
               pisoDestino: area.pisoDestino,
-              direccion: area.direccion
+              direccion: area.direccion,
+              // Nuevo campo para destinos múltiples
+              destinos: area.destinos || null,
+              destinosCount: area.destinos ? area.destinos.length : 1
             }),
             ...(area.tipo === 'pasillo' && {
               desde: area.from?.id,
@@ -355,6 +398,7 @@ export const usePlanoEditor = () => {
     console.log(`   🏢 Áreas: ${todosLosDatosArray.filter(d => d.tipo === 'area').length}`);
     console.log(`   📍 Puntos: ${todosLosDatosArray.filter(d => d.tipo === 'punto').length}`);
     console.log(`   🪜 Escaleras: ${todosLosDatosArray.filter(d => d.tipoArea === 'escalera').length}`);
+    console.log(`   🔄 Escaleras multi-destino: ${todosLosDatosArray.filter(d => d.destinosCount > 1).length}`);
     console.log(`   🛣️ Pasillos: ${todosLosDatosArray.filter(d => d.tipoArea === 'pasillo').length}`);
     console.log(`   🧯 Elementos especiales: ${todosLosDatosArray.filter(d => 
       d.tipoPunto && d.tipoPunto !== 'punto').length}`);
@@ -418,14 +462,22 @@ export const usePlanoEditor = () => {
             datosPorTipo.banos.push(areaData);
             break;
           case 'escalera':
-            datosPorTipo.escaleras.push({
+            const escaleraData = {
               ...areaData,
               carreraActual: area.carreraActual,
               pisoActual: area.pisoActual,
               carreraDestino: area.carreraDestino,
               pisoDestino: area.pisoDestino,
               direccion: area.direccion
-            });
+            };
+            
+            // Incluir información de destinos múltiples si existe
+            if (area.destinos && area.destinos.length > 0) {
+              escaleraData.destinos = area.destinos;
+              escaleraData.destinosCount = area.destinos.length;
+            }
+            
+            datosPorTipo.escaleras.push(escaleraData);
             break;
           case 'pasillo':
             datosPorTipo.pasillos.push({
@@ -479,8 +531,13 @@ export const usePlanoEditor = () => {
     console.log("=== 🗂️ DATOS ORGANIZADOS POR TIPO ===");
     Object.entries(datosPorTipo).forEach(([tipo, datos]) => {
       if (datos.length > 0) {
-        console.log(`\n${getIconoTipo(tipo)} ${tipo.toUpperCase()} (${datos.length}):`);
-        datos.forEach(item => console.log(`   📍 ${item.nombre} - ID: ${item.id}`));
+        const infoExtra = tipo === 'escaleras' ? 
+          ` (${datos.filter(d => d.destinosCount > 1).length} multi-destino)` : '';
+        console.log(`\n${getIconoTipo(tipo)} ${tipo.toUpperCase()} (${datos.length}${infoExtra}):`);
+        datos.forEach(item => {
+          const destinosInfo = item.destinosCount > 1 ? ` [${item.destinosCount} destinos]` : '';
+          console.log(`   📍 ${item.nombre} - ID: ${item.id}${destinosInfo}`);
+        });
       }
     });
     
@@ -559,7 +616,7 @@ export const usePlanoEditor = () => {
     setCursorPos([x, y]);
   }, [modoEdicion, tipoActual]);
 
-const handleGuardarArea = useCallback(async (nuevaArea, planoInfo) => {
+  const handleGuardarArea = useCallback(async (nuevaArea, planoInfo) => {
     const esTipoPunto = [
       AREA_TYPES.PUNTO,
       AREA_TYPES.EXTINTOR,
@@ -601,8 +658,14 @@ const handleGuardarArea = useCallback(async (nuevaArea, planoInfo) => {
         id: generarIdUnico('area'),
         carrera: planoInfo.carrera || 'general',
         piso: planoInfo.piso || 'planta_principal',
-        planoId: planoInfo.id
+        planoId: planoInfo.id,
+        points: nuevaArea.points || puntosTemporales
       };
+      
+      // Para escaleras con destinos múltiples, mostrar información
+      if (nuevaArea.tipo === AREA_TYPES.ESCALERA && nuevaArea.destinos) {
+        console.log("🔗 Escalera con múltiples destinos configurada:", nuevaArea.destinos);
+      }
       
       const datosActuales = getDatosPlanoActual();
       const nuevasAreas = [...datosActuales.areas, areaConInfo];
@@ -617,9 +680,7 @@ const handleGuardarArea = useCallback(async (nuevaArea, planoInfo) => {
     }
   }, [puntosTemporales, getDatosPlanoActual, actualizarDatosPlano, resetEditorState, generarIdUnico, guardarTodosLosDatosEnServidor]);
 
-
-
-const handleGuardarPuntos = useCallback(async (planoInfo) => {
+  const handleGuardarPuntos = useCallback(async (planoInfo) => {
     if (puntosTemporales.length > 0 && planoInfo) {
       const datosActuales = getDatosPlanoActual();
       const nuevosPuntos = puntosTemporales.map((pt, i) => ({
@@ -651,8 +712,6 @@ const handleGuardarPuntos = useCallback(async (planoInfo) => {
     }
   }, [puntosTemporales, tipoActual, getDatosPlanoActual, actualizarDatosPlano, resetEditorState, generarIdUnico, guardarTodosLosDatosEnServidor]);
 
-
-
   const handleDeshacer = useCallback(() => {
     setPuntosTemporales((prev) => prev.slice(0, -1));
   }, []);
@@ -661,7 +720,7 @@ const handleGuardarPuntos = useCallback(async (planoInfo) => {
     resetEditorState();
   }, [resetEditorState]);
 
-const handleNodeClick = useCallback(async (node) => {
+  const handleNodeClick = useCallback(async (node) => {
     if (!modoEdicion || tipoActual !== AREA_TYPES.PASILLO || !planoActual) return;
     
     if (!selectedNode) {
@@ -710,9 +769,7 @@ const handleNodeClick = useCallback(async (node) => {
     }
   }, [datosPorPlano, actualizarDatosPlano]);
 
-
-
-const handleEliminarNodo = useCallback(async (nodeId) => {
+  const handleEliminarNodo = useCallback(async (nodeId) => {
     if (!planoActual) return;
     
     console.log("🗑️ Eliminando nodo:", nodeId);
@@ -741,7 +798,7 @@ const handleEliminarNodo = useCallback(async (nodeId) => {
     }, 100);
   }, [planoActual, getDatosPlanoActual, actualizarDatosPlano, selectedNode, guardarTodosLosDatosEnServidor]);
 
-const handleEliminarConexion = useCallback(async (conexionId) => {
+  const handleEliminarConexion = useCallback(async (conexionId) => {
     if (!planoActual) return;
     
     console.log("🗑️ Eliminando conexión:", conexionId);
@@ -759,7 +816,6 @@ const handleEliminarConexion = useCallback(async (conexionId) => {
       await guardarTodosLosDatosEnServidor();
     }, 100);
   }, [planoActual, getDatosPlanoActual, actualizarDatosPlano, guardarTodosLosDatosEnServidor]);
-
 
   const handleEliminarConexionesNodo = useCallback((nodeId) => {
     if (!planoActual) return;
@@ -823,7 +879,6 @@ const handleEliminarConexion = useCallback(async (conexionId) => {
     simularGuardadoEnHooks,
     cargarDatosEnEditor,
     
-
     // Para debug
     todosLosDatos: datosPorPlano
   };

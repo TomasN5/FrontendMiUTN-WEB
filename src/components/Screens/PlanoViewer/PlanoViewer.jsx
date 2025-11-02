@@ -276,23 +276,34 @@ const PlanoViewer = () => {
     editor.handleGuardarPuntos();
   }, [editor.handleGuardarPuntos]);
 
-  const handleSaveStair = useCallback((config) => {
-    const nuevaEscalera = {
-      id: `a${editor.areas.length + 1}`,
-      nombre: config.nombre,
-      tipo: AREA_TYPES.ESCALERA,
-      points: stairConfigData.points,
-      carreraActual: config.carreraActual,
-      pisoActual: config.pisoActual,
-      carreraDestino: config.carreraDestino,
-      pisoDestino: config.pisoDestino,
-      direccion: config.direccion
-    };
-    
-    editor.handleGuardarArea(nuevaEscalera);
-    setShowStairConfig(false);
-    setStairConfigData(null);
-  }, [editor.areas.length, editor.handleGuardarArea, stairConfigData]);
+ // En PlanoViewer.jsx - MODIFICAR handleSaveStair
+const handleSaveStair = useCallback((config) => {
+  const nuevaEscalera = {
+    id: `a${editor.areas.length + 1}`,
+    nombre: config.nombre,
+    tipo: AREA_TYPES.ESCALERA,
+    points: stairConfigData.points,
+    carreraActual: config.carreraActual,
+    pisoActual: config.pisoActual,
+    // Para compatibilidad, mantener estos campos
+    carreraDestino: config.tipoDestino === 'multiple' ? 
+      config.destinosMultiples[0]?.carrera : config.carreraDestino,
+    pisoDestino: config.tipoDestino === 'multiple' ? 
+      config.destinosMultiples[0]?.piso : config.pisoDestino,
+    direccion: config.direccion,
+    // Nuevo campo para destinos múltiples
+    destinos: config.tipoDestino === 'multiple' ? 
+      config.destinosMultiples.map(destino => ({
+        carrera: destino.carrera,
+        piso: destino.piso,
+        direccion: destino.direccion
+      })) : null
+  };
+  
+  editor.handleGuardarArea(nuevaEscalera);
+  setShowStairConfig(false);
+  setStairConfigData(null);
+}, [editor.areas.length, editor.handleGuardarArea, stairConfigData]);
 
   const handleDeshacer = useCallback(() => {
     editor.handleDeshacer();

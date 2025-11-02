@@ -1,5 +1,6 @@
 import plata_principal from "./../assets/Dibujo1-Presentación1.png";
 import sistemas_p1 from "./../assets/sistemas-piso-1.png"
+import sistemas_p2 from "./../assets/sistemas-piso-2.png"
 
 
 
@@ -119,7 +120,7 @@ export const PLANOS_CONFIG = {
     nombre: 'Sistemas - Piso 2',
     carrera: CARRERAS.SISTEMAS,
     piso: PISOS.PISO2,
-    src: '/planos/sistemas-p2.png',
+    src: sistemas_p2,
     naturalWidth: 1012,
     naturalHeight: 768,
     areas: []
@@ -189,4 +190,15 @@ export const CONTROL_PANEL_STYLE = {
   gap: "14px",
   width: "320px",
   fontFamily: "Inter, Arial, sans-serif",
+};
+
+export const ESCALERA_DIRECCIONES = {
+  SUBIDA: 'subida',
+  BAJADA: 'bajada', 
+  AMBOS: 'ambos'
+};
+
+export const TIPOS_DESTINO_ESCALERA = {
+  UNICO: 'unico',
+  MULTIPLE: 'multiple'
 };
