@@ -727,3 +727,110 @@
     opacity: 0.7;
   }
 }
+/* 🔥 AGREGAR al final de SVGEditor.css */
+
+/* Estilos mejorados para highlight por CLICK */
+.svg-highlight-group--click {
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.svg-highlight-point-glow--click {
+  fill: rgba(59, 130, 246, 0.4);
+  animation: pointPulseClick 1.5s infinite;
+}
+
+.svg-highlight-point--click {
+  fill: #3b82f6;
+  stroke: #ffffff;
+  stroke-width: 3;
+  filter: drop-shadow(0 0 12px #3b82f6);
+  r: 12;
+}
+
+.svg-highlight-area-glow--click {
+  fill: rgba(59, 130, 246, 0.3);
+  stroke: rgba(59, 130, 246, 0.8);
+  stroke-width: 8;
+  filter: blur(4px);
+}
+
+.svg-highlight-area--click {
+  fill: rgba(59, 130, 246, 0.4);
+  stroke: #3b82f6;
+  stroke-width: 4;
+  stroke-dasharray: none;
+  animation: areaPulseClick 2s infinite;
+}
+
+.svg-connection-line--click {
+  stroke: #3b82f6;
+  stroke-width: 4;
+  stroke-dasharray: none;
+  filter: drop-shadow(0 0 8px #3b82f6);
+  animation: connectionGlowClick 1.5s infinite;
+}
+
+.svg-connection-point--click {
+  fill: #3b82f6;
+  stroke: #ffffff;
+  stroke-width: 2;
+  r: 6;
+  filter: drop-shadow(0 0 8px #3b82f6);
+  animation: pointPulseClick 1s infinite;
+}
+
+/* Animaciones específicas para click */
+@keyframes pointPulseClick {
+  0%, 100% { 
+    r: 12;
+    opacity: 1;
+  }
+  50% { 
+    r: 14;
+    opacity: 0.8;
+  }
+}
+
+@keyframes areaPulseClick {
+  0%, 100% { 
+    stroke-width: 4;
+    opacity: 1;
+  }
+  50% { 
+    stroke-width: 5;
+    opacity: 0.7;
+  }
+}
+
+@keyframes connectionGlowClick {
+  0%, 100% { 
+    stroke: #3b82f6;
+    stroke-width: 4;
+  }
+  50% { 
+    stroke: #60a5fa;
+    stroke-width: 5;
+  }
+}
+
+/* Efecto de pulso adicional para click */
+.svg-highlight-pulse--click {
+  fill: rgba(59, 130, 246, 0.2);
+  stroke: #3b82f6;
+  stroke-width: 1;
+  animation: highlightPulseClick 2s ease-out infinite;
+}
+
+@keyframes highlightPulseClick {
+  0% {
+    r: 15;
+    opacity: 0.8;
+    stroke-width: 2;
+  }
+  100% {
+    r: 30;
+    opacity: 0;
+    stroke-width: 1;
+  }
+}

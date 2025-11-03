@@ -142,7 +142,18 @@ const PlanoViewer = () => {
     
     // 🔥 VALIDAR QUE EL NODO TENGA PUNTOS VÁLIDOS
     if (nodeInfo.planoId === planoManager.planoActual?.id) {
-      if (nodeInfo.tipo === "punto") {
+      // 🔥 CORREGIDO: Incluir TODOS los tipos de puntos especiales
+      const esPuntoEspecial = [
+        AREA_TYPES.PUNTO,
+        AREA_TYPES.EXTINTOR,
+        AREA_TYPES.SALIDA_EMERGENCIA,
+        AREA_TYPES.DESFIBRILADOR,
+        AREA_TYPES.BOTIQUIN,
+        AREA_TYPES.ALARMA,
+        AREA_TYPES.TOTEM
+      ].includes(nodeInfo.tipo);
+
+      if (esPuntoEspecial) {
         return { 
           x: nodeInfo.x || -1000, 
           y: nodeInfo.y || -1000 
@@ -210,6 +221,7 @@ const PlanoViewer = () => {
     // 4. Quitar highlight después de un tiempo
     setTimeout(() => {
       setHighlightedNode(null);
+      setConnectionLines([]);
     }, 5000);
     
   }, [planoManager]);
@@ -389,12 +401,16 @@ const PlanoViewer = () => {
     console.log("🎯 Cambiando a plano ID:", planoId);
     planoManager.cambiarPlano(planoId);
     setFloorNotifications([]);
+    setHighlightedNode(null);
+    setConnectionLines([]);
   }, [planoManager]);
 
   const handleCambiarCarrera = useCallback((carrera) => {
     console.log("🏢 Cambiando a carrera:", carrera);
     planoManager.cambiarCarrera(carrera);
     setFloorNotifications([]);
+    setHighlightedNode(null);
+    setConnectionLines([]);
   }, [planoManager]);
 
   const handleClearRoute = useCallback(() => {
@@ -403,6 +419,8 @@ const PlanoViewer = () => {
     gps.setRutaActual([]);
     routeAnimation.resetAnimation();
     setFloorNotifications([]);
+    setHighlightedNode(null);
+    setConnectionLines([]);
   }, [gps.setOrigen, gps.setDestino, gps.setRutaActual, routeAnimation.resetAnimation]);
 
   // Función para encontrar conexiones de un nodo
@@ -427,16 +445,18 @@ const PlanoViewer = () => {
     return connections;
   }, [editor.todosLosDatos]);
 
-  const handleNodeHover = useCallback((node) => {
-    console.log("🎯 handleNodeHover recibió nodo:", node?.nombre);
+  // 🔥 CORREGIDO: Handler para click en nodo desde RelationsPanel - AHORA INCLUYE TODOS LOS TIPOS
+  const handleNodeClick = useCallback((node) => {
+    console.log("🎯 handleNodeClick recibió nodo:", node?.nombre, "Tipo:", node?.tipo);
     
-    // Si estamos en modo edición de pasillos, no hacer nada
+    // Si estamos en modo edición de pasillos, usar el handler original
     if (editor.modoEdicion && editor.tipoActual === AREA_TYPES.PASILLO) {
+      editor.handleNodeClick(node);
       return;
     }
     
     if (node && node.id) {
-      console.log("✅ Aplicando highlight en mapa para:", node.nombre);
+      console.log("✅ Aplicando highlight en mapa para:", node.nombre, "Tipo:", node.tipo);
       setHighlightedNode(node);
       
       // Encontrar conexiones de este nodo
@@ -450,13 +470,13 @@ const PlanoViewer = () => {
         return { 
           from: fromCoords, 
           to: toCoords,
-          isHovered: true 
+          isClicked: true 
         };
       });
       
       setConnectionLines(lines);
     }
-  }, [getPointCoordinates, findNodeConnections, editor.modoEdicion, editor.tipoActual]);
+  }, [getPointCoordinates, findNodeConnections, editor.modoEdicion, editor.tipoActual, editor.handleNodeClick]);
 
   const handleNodeLeave = useCallback(() => {
     console.log("🎯 handleNodeLeave - Limpiando highlight");
@@ -467,11 +487,20 @@ const PlanoViewer = () => {
   const handleDeleteNode = useCallback((nodeId) => {
     console.log("🗑️ Eliminando nodo desde RelationsPanel:", nodeId);
     editor.handleEliminarNodo(nodeId);
-  }, [editor.handleEliminarNodo]);
+    // Limpiar highlight si el nodo eliminado estaba seleccionado
+    if (highlightedNode && highlightedNode.id === nodeId) {
+      setHighlightedNode(null);
+      setConnectionLines([]);
+    }
+  }, [editor.handleEliminarNodo, highlightedNode]);
 
   const handleDeleteConnection = useCallback((connectionId) => {
     console.log("🗑️ Eliminando conexión desde RelationsPanel:", connectionId);
     editor.handleEliminarConexion(connectionId);
+    // Actualizar connectionLines si es necesario
+    setConnectionLines(prev => prev.filter(line => 
+      !line.connectionId || line.connectionId !== connectionId
+    ));
   }, [editor.handleEliminarConexion]);
 
   return (
@@ -536,9 +565,7 @@ const PlanoViewer = () => {
         onSimularGuardado={editor.simularGuardadoEnHooks}
         
         onShowRelationsPanel={() => setShowRelationsPanel(true)}
-      >
-        
-      </ControlPanel>
+      />
 
       <SVGEditor
         src={planoManager.src}
@@ -591,13 +618,12 @@ const PlanoViewer = () => {
           points={editor.points}
           todosLosDatos={editor.todosLosDatos}
           planoActual={planoManager.planoActual}
-          onNodeHover={handleNodeHover}
+          onNodeClick={handleNodeClick}
           onNodeLeave={handleNodeLeave}
           highlightedNode={highlightedNode}
           connectionLines={connectionLines}
           onDeleteNode={handleDeleteNode}
           onDeleteConnection={handleDeleteConnection}
-          // 🔥 NUEVA PROP para navegación
           onNavigateToNode={handleNavigateToNode}
         />
       )}
