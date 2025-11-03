@@ -8,7 +8,8 @@ const Staircase = ({
   zoomScale, 
   isSelectable, 
   onNodeClick,
-  getPolygonCenter 
+  getPolygonCenter,
+  hideNames // 🔥 NUEVO: Prop para ocultar nombres
 }) => {
   const handleClick = () => {
     if (isSelectable && onNodeClick) {
@@ -40,31 +41,38 @@ const Staircase = ({
     return nombres[carreraKey] || carreraKey;
   };
 
+  // 🔥 NUEVA LÓGICA: Determinar si mostrar etiquetas
+  const shouldShowLabels = !hideNames && zoomScale >= 2.5;
+
   return (
-    <g
-      onClick={handleClick}
-      className={staircaseClass}
+  <g
+    onClick={handleClick}
+    className={staircaseClass}
+  >
+    {/* 🔥 LA ESCALERA SIEMPRE SE MUESTRA */}
+    <polygon
+      points={geometryUtils.toPointsAttr(area.points)}
+      className="staircase__background"
+    />
+
+    {generateStairPattern(area.points, isHorizontal)}
+    
+    {/* 🔥 EL ICONO SIEMPRE SE MUESTRA */}
+    <text
+      x={centerX}
+      y={centerY}
+      textAnchor="middle"
+      className={`staircase__icon ${
+        Math.min(width, height) > 50 ? 'staircase__icon--large' : 'staircase__icon--small'
+      }`}
+      fontSize={getStairIconSize(zoomScale)}
     >
-      <polygon
-        points={geometryUtils.toPointsAttr(area.points)}
-        className="staircase__background"
-      />
+      ⬆️⬇️
+    </text>
 
-      {generateStairPattern(area.points, isHorizontal)}
-      
-     <text
-        x={centerX}
-        y={centerY}
-        textAnchor="middle"
-        className={`staircase__icon ${
-          Math.min(width, height) > 50 ? 'staircase__icon--large' : 'staircase__icon--small'
-        }`}
-        fontSize={getStairIconSize(zoomScale)} // 🔥 Usar tamaño escalado
-      >
-        ⬆️⬇️
-      </text>
-
-      {zoomScale >= 2.5 && (
+    {/* 🔥 SOLO LAS ETIQUETAS DE NOMBRE SE OCULTAN */}
+    {!hideNames && zoomScale >= 2.5 && (
+      <>
         <text
           x={centerX}
           y={centerY + 25}
@@ -73,31 +81,32 @@ const Staircase = ({
         >
           {area.nombre}
         </text>
-      )}
 
-      {area.carreraActual && area.pisoActual && area.carreraDestino && area.pisoDestino && (
-        <text
-          x={centerX}
-          y={centerY + 40}
-          textAnchor="middle"
-          className="staircase__label staircase__label--info"
-        >
-          {getCarreraNombre(area.carreraActual)} {area.pisoActual} → {getCarreraNombre(area.carreraDestino)} {area.pisoDestino}
-        </text>
-      )}
+        {area.carreraActual && area.pisoActual && area.carreraDestino && area.pisoDestino && (
+          <text
+            x={centerX}
+            y={centerY + 40}
+            textAnchor="middle"
+            className="staircase__label staircase__label--info"
+          >
+            {getCarreraNombre(area.carreraActual)} {area.pisoActual} → {getCarreraNombre(area.carreraDestino)} {area.pisoDestino}
+          </text>
+        )}
 
-      {area.direccion && area.direccion !== "ambos" && (
-        <text
-          x={centerX}
-          y={centerY + 55}
-          textAnchor="middle"
-          className="staircase__label staircase__label--direction"
-        >
-          {area.direccion === "subida" ? "⬆️ Solo subida" : "⬇️ Solo bajada"}
-        </text>
-      )}
-    </g>
-  );
+        {area.direccion && area.direccion !== "ambos" && (
+          <text
+            x={centerX}
+            y={centerY + 55}
+            textAnchor="middle"
+            className="staircase__label staircase__label--direction"
+          >
+            {area.direccion === "subida" ? "⬆️ Solo subida" : "⬇️ Solo bajada"}
+          </text>
+        )}
+      </>
+    )}
+  </g>
+);
 };
 
 const getStairIconSize = (zoomScale) => {
@@ -107,7 +116,6 @@ const getStairIconSize = (zoomScale) => {
   if (zoomScale >= 2) return '18px';
   return '20px';
 };
-
 
 const generateStairPattern = (points, isHorizontal) => {
   const steps = 5;

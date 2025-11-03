@@ -50,7 +50,9 @@ const ControlPanel = ({
   onExportByType,
   onDescargarJSON,
   onCopiarJSON,
-  onSimularGuardado
+  onSimularGuardado,
+  hideNames,
+  onToggleHideNames
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState('navegacion'); // 'navegacion', 'edicion', 'exportar'
@@ -219,7 +221,7 @@ const ControlPanel = ({
               )}
             </div>
 
-            {/* Navegación GPS */}
+           {/* Navegación GPS */}
             <div className="control-panel__section">
               <div className="control-panel__section-header">
                 <span className="control-panel__section-icon">🌍</span>
@@ -234,11 +236,18 @@ const ControlPanel = ({
                   className="control-panel__select"
                 >
                   <option value="">Seleccionar origen</option>
-                  {todosLosNodos.map(node => (
-                    <option key={node.id} value={node.id}>
-                      {node.nombre} ({node.carrera} {node.piso})
-                    </option>
-                  ))}
+                  {todosLosNodos
+                    .filter(node => 
+                      // FILTRAR: Mostrar solo puntos especiales y áreas, NO pasillos
+                      node.tipo !== 'pasillo' && 
+                      node.tipo !== 'punto' // Opcional: también excluir puntos normales si quieres
+                    )
+                    .map(node => (
+                      <option key={node.id} value={node.id}>
+                        {node.nombre} ({node.carrera} {node.piso})
+                      </option>
+                    ))
+                  }
                 </select>
               </div>
 
@@ -250,17 +259,44 @@ const ControlPanel = ({
                   className="control-panel__select"
                 >
                   <option value="">Seleccionar destino</option>
-                  {todosLosNodos.map(node => (
-                    <option key={node.id} value={node.id}>
-                      {node.nombre} ({node.carrera} {node.piso})
-                    </option>
-                  ))}
+                  {todosLosNodos
+                    .filter(node => 
+                      // FILTRAR: Mostrar solo puntos especiales y áreas, NO pasillos
+                      node.tipo !== 'pasillo' && 
+                      node.tipo !== 'punto' // Opcional: también excluir puntos normales si quieres
+                    )
+                    .map(node => (
+                      <option key={node.id} value={node.id}>
+                        {node.nombre} ({node.carrera} {node.piso})
+                      </option>
+                    ))
+                  }
                 </select>
               </div>
 
               <div className="control-panel__button-group--vertical">
                 <button
-                  onClick={onCalculateRoute}
+                  onClick={() => {
+                    if (onCalculateRoute) {
+                      // Primero calcular la ruta
+                      onCalculateRoute();
+                      
+                      // 🔥 AGREGAR: Iniciar animación con duración extendida
+                      // Necesitas tener acceso a la función startRouteAnimation y los parámetros necesarios
+                      if (window.startRouteAnimation && window.rutaEncontrada && window.getPointCoordinates && window.getNodeInfo && window.onFloorTransition) {
+                        setTimeout(() => {
+                          window.startRouteAnimation(
+                            window.rutaEncontrada, 
+                            window.getPointCoordinates, 
+                            window.getNodeInfo, 
+                            window.onFloorTransition, 
+                            6000
+                             // 6 segundos en lugar de 4
+                          );
+                        }, 100);
+                      }
+                    }
+                  }}
                   disabled={!origen || !destino}
                   className={`control-panel__button control-panel__button--primary ${
                     origen && destino ? '' : 'control-panel__button--disabled'
@@ -288,8 +324,6 @@ const ControlPanel = ({
                   </button>
                 )}
               </div>
-
-
             </div>
 
             {/* Herramientas y Configuración */}
@@ -328,7 +362,7 @@ const ControlPanel = ({
                     ❌ Salir
                   </button>
                 </div>
-                
+                           
                 {/* Selector de tipo de elemento */}
                 <div className="control-panel__input-group">
                   <label className="control-panel__label">Tipo de Elemento:</label>
@@ -355,6 +389,7 @@ const ControlPanel = ({
                     </optgroup>
                   </select>
                 </div>
+            
 
                 {/* Nombre del área */}
                 <div className="control-panel__input-group">
@@ -425,8 +460,21 @@ const ControlPanel = ({
                       <span className="control-panel__section-icon">⚙️</span>
                       <h4 className="control-panel__section-title">Herramientas</h4>
                     </div>
-
+                    <div className="control-panel__section">
+                      
+                        <label className="control-panel__checkbox-label">
+                          <input
+                            type="checkbox"
+                            checked={hideNames}
+                            onChange={(e) => onToggleHideNames && onToggleHideNames(e.target.checked)}
+                            className="control-panel__checkbox"
+                          />
+                         <span className="control-panel__section-icon">👁️</span>
+                        <h4 className="control-panel__section-title">Ocultar Nombres</h4>
+                        </label>
+                    </div>
                     <div className="control-panel__tools-grid">
+
                       <button
                         onClick={onToggleRelationsPanel}
                         className="control-panel__tool-button"

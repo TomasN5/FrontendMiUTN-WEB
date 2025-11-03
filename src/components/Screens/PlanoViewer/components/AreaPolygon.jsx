@@ -11,7 +11,9 @@ const AreaPolygon = ({
   isSelectable, 
   onNodeClick,
   getPolygonCenter,
-  tipoActual
+  tipoActual,
+  modoEdicion,
+  hideNames // 🔥 NUEVO: Prop para ocultar nombres
 }) => {
   // Detectar si es un punto especial
   const isSpecialPoint = [
@@ -26,18 +28,26 @@ const AreaPolygon = ({
   // Detectar si es un punto normal
   const isPointWithIcon = area.tipo === AREA_TYPES.PUNTO;
 
+  // 🔥 NUEVA LÓGICA: Si es un punto normal Y NO estamos en modo edición, no renderizar
+  if (isPointWithIcon && !modoEdicion) {
+    return null;
+  }
+
   // 🔥 TODOS los puntos (normales y especiales) usan SpecialPoint y son seleccionables
   if (isSpecialPoint || isPointWithIcon) {
     return (
       <SpecialPoint
         area={area}
         zoomScale={zoomScale}
-        isSelectable={isSelectable} // 🔥 Esto debe ser true cuando estemos en modo pasillo
+        isSelectable={isSelectable}
         onNodeClick={onNodeClick}
         tipoActual={tipoActual}
+        modoEdicion={modoEdicion}
+        hideNames={hideNames} // 🔥 Pasar la prop
       />
     );
   }
+
   if (area.tipo === AREA_TYPES.ESCALERA) {
     return (
       <Staircase
@@ -46,6 +56,7 @@ const AreaPolygon = ({
         isSelectable={isSelectable}
         onNodeClick={onNodeClick}
         getPolygonCenter={getPolygonCenter}
+        hideNames={hideNames} // 🔥 Pasar la prop
       />
     );
   }
@@ -63,54 +74,61 @@ const AreaPolygon = ({
   // Para áreas (aulas, halls, baños) - mostrar polígono + icono
   const [centerX, centerY] = getPolygonCenter(area.points);
 
-  return (
-    <g
-      onClick={handleClick}
-      className={polygonClass}
-    >
-      <polygon
-        points={geometryUtils.toPointsAttr(area.points)}
-        className={`area-polygon__shape area-polygon__shape--${area.tipo}`}
-      />
-      
-      {/* 🔥 ICONO EN EL CENTRO DEL ÁREA */}
-      {zoomScale >= 1.2 && ICONS[area.tipo] && ( // 🔥 Mostrar desde zoom 1.2x
+  // 🔥 NUEVA LÓGICA: Determinar si mostrar etiquetas
+  const shouldShowLabels = !hideNames || 
+    (area.tipo !== AREA_TYPES.PASILLO && area.tipo !== AREA_TYPES.PUNTO);
+ // En AreaPolygon.jsx, dentro del return:
+    return (
+      <g
+        onClick={handleClick}
+        className={polygonClass}
+      >
+        {/* 🔥 EL POLÍGONO SIEMPRE SE MUESTRA */}
+        <polygon
+          points={geometryUtils.toPointsAttr(area.points)}
+          className={`area-polygon__shape area-polygon__shape--${area.tipo}`}
+        />
+        
+        {/* 🔥 ICONO EN EL CENTRO DEL ÁREA - SIEMPRE VISIBLE */}
+        {zoomScale >= 1.2 && ICONS[area.tipo] && (
+            <text
+              x={centerX}
+              y={centerY}
+              textAnchor="middle"
+              dominantBaseline="central"
+              className="area-polygon__icon"
+              fontSize={getAreaIconSize(zoomScale)}
+            >
+              {ICONS[area.tipo]}
+            </text>
+          )}
+        
+        {/* 🔥 SOLO LA ETIQUETA DEL NOMBRE SE OCULTA */}
+        {!hideNames && zoomScale >= 2.5 && (
           <text
             x={centerX}
-            y={centerY}
+            y={centerY + 20}
             textAnchor="middle"
-            dominantBaseline="central"
-            className="area-polygon__icon"
-            fontSize={getAreaIconSize(zoomScale)}
+            className={`area-polygon__label ${
+              zoomScale >= 3 ? 'area-polygon__label--medium' : 'area-polygon__label--small'
+            }`}
           >
-            {ICONS[area.tipo]}
+            {area.nombre}
           </text>
         )}
-      
-      {zoomScale >= 2.5 && (
-        <text
-          x={centerX}
-          y={centerY + 20}
-          textAnchor="middle"
-          className={`area-polygon__label ${
-            zoomScale >= 3 ? 'area-polygon__label--medium' : 'area-polygon__label--small'
-          }`}
-        >
-          {area.nombre}
-        </text>
-      )}
-    </g>
-  );
+      </g>
+    );
 };
 
 // Función auxiliar para tamaño de iconos en áreas
 const getAreaIconSize = (zoomScale) => {
   // Iconos en áreas también se escalan con zoom
-  if (zoomScale >= 5) return '10px';   // Zoom muy alto
-  if (zoomScale >= 4) return '12px';   // Zoom alto
-  if (zoomScale >= 3) return '14px';   // Zoom medio-alto
-  if (zoomScale >= 2) return '16px';   // Zoom medio
-  if (zoomScale >= 1.5) return '18px'; // Zoom bajo-medio
-  return '20px';                       // Zoom normal
+  if (zoomScale >= 5) return '10px';
+  if (zoomScale >= 4) return '12px';
+  if (zoomScale >= 3) return '14px';
+  if (zoomScale >= 2) return '16px';
+  if (zoomScale >= 1.5) return '18px';
+  return '20px';
 };
+
 export default AreaPolygon;

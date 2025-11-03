@@ -3,7 +3,7 @@ import { COLORS, AREA_TYPES } from '../utils/constants';
 import { geometryUtils } from '../utils/geometry';
 import './../styles/ConnectionLine.css';
 
-const ConnectionLine = ({ area, getPolygonCenter }) => {
+const ConnectionLine = ({ area, getPolygonCenter, hideNames = false }) => {
   // 🔥 VERIFICAR que los nodos existen
   if (!area.from || !area.to) {
     console.warn('⚠️ ConnectionLine: from o to es undefined', area);
@@ -44,6 +44,7 @@ const ConnectionLine = ({ area, getPolygonCenter }) => {
 
   return (
     <g className="connection-line">
+      {/* 🔥 LA LÍNEA DEL PASILLO SIEMPRE SE MUESTRA */}
       <line
         x1={fromCoords[0]}
         y1={fromCoords[1]}
@@ -61,14 +62,17 @@ const ConnectionLine = ({ area, getPolygonCenter }) => {
         />
       )}
       
-      <text
-        x={(fromCoords[0] + toCoords[0]) / 2}
-        y={(fromCoords[1] + toCoords[1]) / 2 - 8}
-        textAnchor="middle"
-        className="connection-line__label"
-      >
-        {area.nombre}
-      </text>
+      {/* 🔥 SOLO LA ETIQUETA DEL NOMBRE SE OCULTA */}
+      {!hideNames && (
+        <text
+          x={(fromCoords[0] + toCoords[0]) / 2}
+          y={(fromCoords[1] + toCoords[1]) / 2 - 8}
+          textAnchor="middle"
+          className="connection-line__label"
+        >
+          {area.nombre}
+        </text>
+      )}
     </g>
   );
 };

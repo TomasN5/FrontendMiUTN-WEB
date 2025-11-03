@@ -27,6 +27,7 @@ const PlanoViewer = () => {
   const [showRelationsPanel, setShowRelationsPanel] = useState(false);
   const [highlightedNode, setHighlightedNode] = useState(null);
   const [connectionLines, setConnectionLines] = useState([]);
+  const [hideNames, setHideNames] = useState(false);
   
   // Hooks personalizados
   const editor = usePlanoEditor();
@@ -565,6 +566,8 @@ const PlanoViewer = () => {
         onSimularGuardado={editor.simularGuardadoEnHooks}
         
         onShowRelationsPanel={() => setShowRelationsPanel(true)}
+        hideNames={hideNames}
+        onToggleHideNames={setHideNames}
       />
 
       <SVGEditor
@@ -593,6 +596,7 @@ const PlanoViewer = () => {
         onClickSVG={handleClickSVG}
         onMouseMove={handleMouseMove}
         onNodeClick={editor.handleNodeClick}
+        hideNames={hideNames}
         getRelativeCoords={{ ...coordinates, getPolygonCenter: geometryUtils.getPolygonCenter }}
         snapIndicators={
           <SnapIndicators 

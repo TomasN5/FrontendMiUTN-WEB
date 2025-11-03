@@ -1,5 +1,5 @@
 import React from 'react';
-import { COLORS, ICONS } from '../utils/constants';
+import { COLORS, ICONS, AREA_TYPES } from '../utils/constants';
 import './../styles/SpecialPoint.css';
 
 const SpecialPoint = ({ 
@@ -7,8 +7,15 @@ const SpecialPoint = ({
   zoomScale, 
   isSelectable, 
   onNodeClick,
-  tipoActual 
+  tipoActual,
+  modoEdicion,
+  hideNames // 🔥 NUEVO: Prop para ocultar nombres
 }) => {
+  // 🔥 NUEVA LÓGICA: Si es un punto normal Y NO estamos en modo edición, no renderizar
+  if (area.tipo === AREA_TYPES.PUNTO && !modoEdicion) {
+    return null;
+  }
+
   const handleClick = () => {
     if (isSelectable && onNodeClick) {
       onNodeClick(area);
@@ -19,46 +26,50 @@ const SpecialPoint = ({
     isSelectable ? 'special-point--selectable' : ''
   } special-point--${area.tipo}`;
 
-  return (
-    <g
-      onClick={handleClick}
-      className={pointClass}
+  // 🔥 NUEVA LÓGICA: Determinar si mostrar etiqueta
+  const shouldShowLabel = !hideNames && zoomScale >= 2;
+
+  // En SpecialPoint.jsx, dentro del return:
+return (
+  <g
+    onClick={handleClick}
+    className={pointClass}
+  >
+    {/* 🔥 EL PUNTO SIEMPRE SE MUESTRA */}
+    <circle
+      cx={area.x}
+      cy={area.y}
+      r={getPointSize(zoomScale)}
+      className="special-point__background"
+      fill={COLORS[area.tipo] || '#CCCCCC'}
+    />
+    
+    {/* 🔥 EL ICONO SIEMPRE SE MUESTRA */}
+    <text
+      x={area.x}
+      y={area.y}
+      textAnchor="middle"
+      dominantBaseline="central"
+      className="special-point__icon"
+      fontSize={getIconSize(zoomScale)}
     >
-      {/* 🔥 Círculo de fondo SIN animación */}
-      <circle
-        cx={area.x}
-        cy={area.y}
-        r={getPointSize(zoomScale)}
-        className="special-point__background"
-        fill={COLORS[area.tipo] || '#CCCCCC'}
-      />
-      
-      {/* 🔥 Icono SIN animación */}
+      {ICONS[area.tipo] || '📍'}
+    </text>
+    
+    {/* 🔥 SOLO LA ETIQUETA DEL NOMBRE SE OCULTA */}
+    {!hideNames && zoomScale >= 2 && (
       <text
         x={area.x}
-        y={area.y}
+        y={area.y + getPointSize(zoomScale) + 10}
         textAnchor="middle"
-        dominantBaseline="central"
-        className="special-point__icon"
-        fontSize={getIconSize(zoomScale)}
+        className="special-point__label"
+        fontSize={getLabelSize(zoomScale)}
       >
-        {ICONS[area.tipo] || '📍'}
+        {area.nombre}
       </text>
-      
-      {/* Etiqueta en zoom alto - SIN animación */}
-      {zoomScale >= 2 && (
-        <text
-          x={area.x}
-          y={area.y + getPointSize(zoomScale) + 10}
-          textAnchor="middle"
-          className="special-point__label"
-          fontSize={getLabelSize(zoomScale)}
-        >
-          {area.nombre}
-        </text>
-      )}
-    </g>
-  );
+    )}
+  </g>
+);
 };
 
 // Funciones auxiliares para tamaños responsivos (sin cambios)

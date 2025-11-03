@@ -111,10 +111,20 @@
 .svg-editor__route-line {
   stroke: #00ff88;
   stroke-width: 3;
-  stroke-dasharray: 6, 3;
-  opacity: 0.7;
+  stroke-dasharray: 8, 4;
+  opacity: 0.8;
+  animation: staticPulse 3s ease-in-out infinite;
 }
-
+@keyframes staticPulse {
+  0%, 100% {
+    stroke-width: 3;
+    opacity: 0.7;
+  }
+  50% {
+    stroke-width: 4;
+    opacity: 0.9;
+  }
+}
 .svg-editor__route-point {
   fill: #00ff88;
   stroke: white;
@@ -248,7 +258,7 @@
 
 @keyframes routeFlow {
   0% {
-    stroke-dashoffset: 1000;
+    stroke-dashoffset: 100;
   }
   100% {
     stroke-dashoffset: 0;
@@ -293,16 +303,40 @@
   stroke-dasharray: 12, 6;
   stroke-linecap: round;
   stroke-linejoin: round;
-  filter: drop-shadow(0 0 10px #00ff88);
-  animation: routeGlow 1.5s ease-in-out infinite;
+  filter: drop-shadow(0 0 8px rgba(0, 255, 136, 0.6));
+  animation: routeFlow 2s linear infinite;
 }
+
+.svg-editor__animated-route-glow {
+  stroke: #00ff88;
+  stroke-width: 6;
+  stroke-dasharray: 20, 10;
+  stroke-linecap: round;
+  opacity: 0.4;
+  filter: blur(3px);
+  animation: routeFlow 3s linear infinite;
+}
+
 
 .svg-editor__animated-traveler {
   fill: #00ff88;
   stroke: #ffffff;
   stroke-width: 2;
-  filter: drop-shadow(0 0 15px #00ff88);
-  animation: travelerPulse 1.2s ease-in-out infinite;
+  filter: 
+    drop-shadow(0 0 10px #00ff88)
+    drop-shadow(0 0 20px #00ff88);
+  animation: travelerFloat 2s ease-in-out infinite;
+}
+
+@keyframes travelerFloat {
+  0%, 100% {
+    transform: scale(1);
+    r: 10;
+  }
+  50% {
+    transform: scale(1.1);
+    r: 11;
+  }
 }
 
 .svg-editor__animated-pulse {
@@ -314,6 +348,32 @@
 
 .svg-editor__animated-trail {
   fill: #00ff88;
+   animation: trailFade 0.8s ease-out forwards;
+}
+
+@keyframes trailFade {
+  0% {
+    opacity: 0.6;
+    r: 4;
+  }
+  100% {
+    opacity: 0;
+    r: 1;
+  }
+}
+.svg-editor__animated-particle {
+  fill: #00ff88;
+  animation: particleFloat 1s ease-out forwards;
+}
+@keyframes particleFloat {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0);
+  }
 }
 
 @keyframes routeGlow {
@@ -341,13 +401,18 @@
 @keyframes pulseWave {
   0% {
     r: 8;
-    opacity: 1;
+    opacity: 0.8;
     stroke-width: 2;
   }
-  100% {
+  50% {
     r: 20;
-    opacity: 0;
+    opacity: 0.3;
     stroke-width: 1;
+  }
+  100% {
+    r: 25;
+    opacity: 0;
+    stroke-width: 0;
   }
 }
 

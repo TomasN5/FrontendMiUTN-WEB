@@ -38,6 +38,7 @@ const SVGEditor = ({
   todosLosDatos = {},
   highlightedNode,
   connectionLines,
+  hideNames
 }) => {
 
     const [isDragging, setIsDragging] = useState(false);
@@ -230,22 +231,40 @@ const SVGEditor = ({
                       key={a.id}
                       area={a}
                       getPolygonCenter={getRelativeCoords.getPolygonCenter}
+                      hideNames={hideNames}
                     />
                   ))}
 
-                {areas
-            .filter((a) => a && a.tipo !== "pasillo")
-            .map((a) => (
-              <AreaPolygon
-                key={a.id}
-                area={a}
-                zoomScale={zoomScale}
-                isSelectable={modoEdicion && tipoActual === AREA_TYPES.PASILLO} // 🔥 IMPORTANTE
-                onNodeClick={onNodeClick}
-                getPolygonCenter={getRelativeCoords.getPolygonCenter}
-                tipoActual={tipoActual}
-              />
-            ))}
+              {areas
+                .filter((a) => a && a.tipo !== "pasillo")
+                .map((a) => (
+                  <AreaPolygon
+                    key={a.id}
+                    area={a}
+                    zoomScale={zoomScale}
+                    isSelectable={modoEdicion && tipoActual === AREA_TYPES.PASILLO}
+                    onNodeClick={onNodeClick}
+                    getPolygonCenter={getRelativeCoords.getPolygonCenter}
+                    tipoActual={tipoActual}
+                    modoEdicion={modoEdicion} // 🔥 NUEVO: Pasar modoEdicion
+                      hideNames={hideNames} // 🔥 Pasar la prop
+                  />
+                ))}
+
+              {points.map((p) => (
+                  p && (
+                    <AreaPolygon
+                      key={p.id}
+                      area={p}
+                      zoomScale={zoomScale}
+                      isSelectable={modoEdicion && tipoActual === AREA_TYPES.PASILLO}
+                      onNodeClick={onNodeClick}
+                      tipoActual={tipoActual}
+                      modoEdicion={modoEdicion} // 🔥 NUEVO: Pasar modoEdicion
+                        hideNames={hideNames} // 🔥 Pasar la prop
+                    />
+                  )
+                ))}
 
             {points.map((p) => (
                 p && (
@@ -329,9 +348,9 @@ const SVGEditor = ({
                   );
                 })}
 
-                {isRouteAnimating && animatedPath && animatedPath.length > 1 && (
+              {isRouteAnimating && animatedPath && animatedPath.length > 1 && (
                 <g className="svg-editor__animated-route-container">
-                  {/* Línea animada principal */}
+                  {/* 🔥 LÍNEA PRINCIPAL MEJORADA - Animación más suave */}
                   <polyline
                     points={animatedPath.map(point => `${point.x},${point.y}`).join(" ")}
                     className="svg-editor__animated-route"
@@ -339,36 +358,54 @@ const SVGEditor = ({
                     strokeWidth="4"
                   />
                   
-                  {/* Punto que se mueve (efecto de "viajero") */}
+                  {/* 🔥 EFECTO DE TRAZO LUMINOSO DETRÁS */}
+                  <polyline
+                    points={animatedPath.map(point => `${point.x},${point.y}`).join(" ")}
+                    className="svg-editor__animated-route-glow"
+                    fill="none"
+                    strokeWidth="6"
+                  />
+                  
+                  {/* 🔥 PUNTO VIAJERO MEJORADO */}
                   {animatedPath.length > 0 && (
                     <g>
-                      {/* Círculo principal del viajero */}
+                      {/* Círculo principal del viajero con gradiente */}
                       <circle
                         cx={animatedPath[animatedPath.length - 1].x}
                         cy={animatedPath[animatedPath.length - 1].y}
-                        r="8"
+                        r="10"
                         className="svg-editor__animated-traveler"
                       />
                       
-                      {/* Efecto de pulso alrededor del viajero */}
+                      {/* Efecto de pulso mejorado */}
                       <circle
                         cx={animatedPath[animatedPath.length - 1].x}
                         cy={animatedPath[animatedPath.length - 1].y}
-                        r="12"
+                        r="15"
                         className="svg-editor__animated-pulse"
                       />
                       
-                      {/* Rastro luminoso detrás del viajero */}
-                      {animatedPath.slice(-8).map((point, index) => (
+                      {/* 🔥 NUEVO: Efecto de estela más larga y suave */}
+                      {animatedPath.slice(-10).map((point, index) => (
                         <circle
                           key={`trail-${index}`}
                           cx={point.x}
                           cy={point.y}
-                          r={4 - (index * 0.4)}
+                          r={6 - (index * 0.5)}
                           className="svg-editor__animated-trail"
-                          opacity={0.6 - (index * 0.08)}
+                          opacity={0.8 - (index * 0.08)}
                         />
                       ))}
+                      
+                      {/* 🔥 NUEVO: Partículas de efecto (opcional) */}
+                      {animatedPath.length > 5 && Math.random() > 0.7 && (
+                        <circle
+                          cx={animatedPath[animatedPath.length - 1].x + (Math.random() - 0.5) * 8}
+                          cy={animatedPath[animatedPath.length - 1].y + (Math.random() - 0.5) * 8}
+                          r={1 + Math.random() * 2}
+                          className="svg-editor__animated-particle"
+                        />
+                      )}
                     </g>
                   )}
                 </g>
