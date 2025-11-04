@@ -19,9 +19,17 @@ export const usePlanoEditor = () => {
     const cargarDatosDesdeAPI = async () => {
       try {
         console.log("🔄 Cargando datos desde API...");
+        debugger
+        const response = await fetch('https://e13217bbfd70.ngrok-free.app/api/map/getPoint',{
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        }
+      });
         
-        const response = await fetch('http://localhost:8080/api/map/getPoint');
-        
+      debugger
         if (!response.ok) {
           throw new Error(`Error HTTP: ${response.status}`);
         }
@@ -114,10 +122,12 @@ export const usePlanoEditor = () => {
       const datosCompletos = exportarDatosJSON();
       const datosStr = JSON.stringify(datosCompletos);
       
-      const response = await fetch('http://localhost:8080/api/map/updatePoint', {
+      const response = await fetch('https://e13217bbfd70.ngrok-free.app/api/map/updatePoint', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
         },
         body: datosStr
       });
