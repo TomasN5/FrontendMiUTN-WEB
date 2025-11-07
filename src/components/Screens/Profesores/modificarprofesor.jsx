@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import './modificarprofesor.css';
 import Sidebar from '../../Layouts/Sidebar';
 import env from '../../../config/env';
@@ -8,43 +8,109 @@ const api_URL = env.API_BASE_URL;
 
 export default function ModificarProfesor() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeMenuItem, setActiveMenuItem] = useState('materias');
   const [formData, setFormData] = useState({
     name: '',
     lastname: '',
     legajo: '',
-    mail: ''
+    email: ''
   });
+  const [profesorId, setProfesorId] = useState(null);
 
   const [loading, setLoading] = useState(true);
 
-  // 🔹 Simular carga de datos desde API
+  // Cargar datos del profesor desde el estado de navegación o desde la API
   useEffect(() => {
     const fetchProfesor = async () => {
       try {
-        // Simulación de API con timeout
-        const simulatedResponse = await new Promise((resolve) =>
-          setTimeout(() => {
-            resolve({
-              name: 'Ruben',
-              lastname: 'Guerrieri',
-              legajo: '11111',
-              mail: 'ruben@frlp.utn.edu.ar'
+        const profesorFromState = location.state?.profesor;
+        
+        if (profesorFromState && profesorFromState.id) {
+          // Guardar el ID del profesor
+          setProfesorId(profesorFromState.id);
+          
+          // Si tenemos el profesor desde el estado, buscar los datos completos desde la API
+          try {
+            const response = await fetch(api_URL + 'api/v1/miUTN/professor/findAll', {
+              headers: {
+                'ngrok-skip-browser-warning': 'true',
+              }
             });
-          }, 1000)
-        );
-
-        setFormData(simulatedResponse);
+            
+            if (response.ok) {
+              const data = await response.json();
+              const profesorCompleto = data.find(p => p.id === profesorFromState.id);
+              
+              if (profesorCompleto) {
+                // Adaptar los datos de la API al formato del formulario
+                setFormData({
+                  name: profesorCompleto.name || '',
+                  lastname: profesorCompleto.lastname || '',
+                  legajo: profesorCompleto.legajo?.toString() || profesorFromState.legajo || '',
+                  email: profesorCompleto.email || profesorFromState.email || ''
+                });
+              } else {
+                // Si no se encuentra en la API, usar los datos del estado
+                // Separar nombre completo en name y lastname
+                const nombreCompleto = profesorFromState.nombre || '';
+                const partes = nombreCompleto.split(' ');
+                const name = partes[0] || '';
+                const lastname = partes.slice(1).join(' ') || '';
+                
+                setFormData({
+                  name: name,
+                  lastname: lastname,
+                  legajo: profesorFromState.legajo || '',
+                  email: profesorFromState.email || ''
+                });
+              }
+            } else {
+              // Si falla la API, usar los datos del estado
+              const nombreCompleto = profesorFromState.nombre || '';
+              const partes = nombreCompleto.split(' ');
+              const name = partes[0] || '';
+              const lastname = partes.slice(1).join(' ') || '';
+              
+              setFormData({
+                name: name,
+                lastname: lastname,
+                legajo: profesorFromState.legajo || '',
+                email: profesorFromState.email || ''
+              });
+            }
+          } catch (apiError) {
+            console.error('Error al obtener datos desde la API:', apiError);
+            // Usar datos del estado como fallback
+            const nombreCompleto = profesorFromState.nombre || '';
+            const partes = nombreCompleto.split(' ');
+            const name = partes[0] || '';
+            const lastname = partes.slice(1).join(' ') || '';
+            
+            setFormData({
+              name: name,
+              lastname: lastname,
+              legajo: profesorFromState.legajo || '',
+              email: profesorFromState.email || ''
+            });
+          }
+        } else {
+          // Si no hay datos en el estado, redirigir a la lista de profesores
+          alert('No se seleccionó ningún profesor para modificar');
+          navigate('/profesores');
+        }
+        
         setLoading(false);
       } catch (error) {
         console.error('Error al cargar datos del docente:', error);
         alert('No se pudo cargar el docente');
         setLoading(false);
+        navigate('/profesores');
       }
     };
 
     fetchProfesor();
-  }, []);
+  }, [location.state, navigate]);
 
   const handleChange = ({ target: { name, value } }) => {
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -53,12 +119,21 @@ export default function ModificarProfesor() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(api_URL+'api/v1/MiUTN/professors', {
+      // Preparar los datos para enviar, convirtiendo legajo a número o null e incluyendo el id
+      const dataToSend = {
+        id: profesorId,
+        name: formData.name,
+        lastname: formData.lastname,
+        email: formData.email,
+        legajo: formData.legajo && formData.legajo.trim() !== '' && formData.legajo !== '-' 
+          ? Number(formData.legajo) 
+          : null
+      };
+
+      const response = await fetch(api_URL+'api/v1/miUTN/professor/update', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json',
-          'ngrok-skip-browser-warning': 'true',
-         },
-        body: JSON.stringify(formData)
+        headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true'},
+        body: JSON.stringify(dataToSend)
       });
       if (response.ok) {
         alert('Docente modificado correctamente');
@@ -119,16 +194,15 @@ export default function ModificarProfesor() {
               <input
                 type="number"
                 name="legajo"
-                value={formData.legajo}
+                value={formData.legajo === '-' ? '' : formData.legajo}
                 onChange={handleChange}
-                required
               />
 
-              <label>Mail</label>
+              <label>Email</label>
               <input
                 type="email"
-                name="mail"
-                value={formData.mail}
+                name="email"
+                value={formData.email}
                 onChange={handleChange}
                 required
               />
