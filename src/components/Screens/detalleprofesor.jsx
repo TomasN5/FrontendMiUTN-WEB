@@ -36,8 +36,8 @@ export default function ProfesorDetalle() {
       const adaptadas = data.map((m) => ({
         id: m.id,
         nombre: `${m.name} ${m.lastname}`,
-        legajo: "111111",
-        mail: m.email,
+        legajo: m.legajo ?? "-",
+        email: m.email,
       }));
 
       setDocentes(adaptadas);
@@ -141,7 +141,7 @@ export default function ProfesorDetalle() {
       <tr key={idx}>
         <td data-label="Nombre">{p.nombre}</td>
         <td data-label="Legajo">{p.legajo}</td>
-        <td data-label="Mail">{p.mail}</td>
+        <td data-label="Mail">{p.email}</td>
         <td className="acciones" data-label="Acciones">
           <button
             className="btn-modificar"

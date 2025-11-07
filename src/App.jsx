@@ -140,7 +140,7 @@ function App() {
             path="/profesores/modificarprofesor" 
             element={
               isAuthenticated ? (
-                <CargarProfesor />
+                <ModificarProfesor />
               ) : (
                 <Navigate to="/login" replace />
               )
