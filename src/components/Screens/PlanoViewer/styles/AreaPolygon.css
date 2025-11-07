@@ -74,3 +74,43 @@
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
   opacity: 0.9;
 }
+.area-polygon__shape--departamento {
+  fill: rgba(255, 152, 0, 0.3);
+  stroke: #FF9800;
+  stroke-width: 2;
+}
+
+.area-polygon--selectable.area-polygon__shape--departamento:hover {
+  fill: rgba(255, 152, 0, 0.5);
+  stroke: #FF9800;
+  stroke-width: 3;
+}
+
+/* Área Genérica - Gris */
+.area-polygon__shape--area_generica {
+  fill: rgba(158, 158, 158, 0.3);
+  stroke: #9E9E9E;
+  stroke-width: 2;
+}
+
+.area-polygon--selectable.area-polygon__shape--area_generica:hover {
+  fill: rgba(158, 158, 158, 0.5);
+  stroke: #9E9E9E;
+  stroke-width: 3;
+}
+
+/* Iconos para las nuevas áreas */
+.area-polygon__icon {
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Departamento icon */
+.area-polygon__shape--departamento + .area-polygon__icon {
+  fill: #FF9800;
+}
+
+/* Área Genérica icon */
+.area-polygon__shape--area_generica + .area-polygon__icon {
+  fill: #9E9E9E;
+}

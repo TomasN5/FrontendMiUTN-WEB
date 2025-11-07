@@ -437,7 +437,7 @@ export const usePlanoEditor = () => {
   const exportarDatosPorTipo = useCallback(() => {
     const datosPorTipo = {
       aulas: [],
-      halls: [],
+      departamentos: [],
       banos: [],
       escaleras: [],
       pasillos: [],
@@ -447,7 +447,8 @@ export const usePlanoEditor = () => {
       desfibriladores: [],
       botiquines: [],
       alarmas: [],
-      totems: []
+      totems: [],
+      areas_genericas: [],
     };
     
     Object.values(datosPorPlano).forEach(planoData => {
@@ -465,9 +466,9 @@ export const usePlanoEditor = () => {
           case 'aula':
             datosPorTipo.aulas.push(areaData);
             break;
-          case 'hall':
-            datosPorTipo.halls.push(areaData);
-            break;
+           case 'departamento': // Cambiado de 'hall' a 'departamento'
+              datosPorTipo.departamentos.push(areaData);
+              break;
           case 'bano':
             datosPorTipo.banos.push(areaData);
             break;

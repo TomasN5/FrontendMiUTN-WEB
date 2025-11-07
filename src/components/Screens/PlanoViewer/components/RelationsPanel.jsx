@@ -191,11 +191,12 @@ const RelationsPanel = ({
   const getNodeIcon = (tipo) => {
     const iconos = {
       'aula': '🏫',
-      'hall': '🏢',
+      'departamento': '🏢',
       'bano': '🚻',
       'escalera': '🪜',
       'pasillo': '🛣️',
       'punto': '📍',
+      'area_generica': '📦',
       'extintor': '🧯',
       'salida_emergencia': '🚪',
       'desfibrilador': '💓',
@@ -209,7 +210,8 @@ const RelationsPanel = ({
   const getTipoNombre = (tipo) => {
     const nombres = {
       'aula': 'Aula',
-      'hall': 'Hall',
+      'departamento': 'Departamento',
+      'area_generica': 'Área Genérica',
       'bano': 'Baño',
       'escalera': 'Escalera',
       'pasillo': 'Pasillo',
@@ -540,7 +542,7 @@ const RelationsPanel = ({
           <div className="relations-panel__section">
             <h3 className="relations-panel__section-title">Áreas</h3>
             {Object.entries(nodosPorTipo).map(([tipo, nodos]) => {
-              if (['aulas', 'halls', 'banos', 'escaleras', 'pasillos'].includes(tipo) && nodos.length > 0) {
+              if (['aulas', 'departamentos', 'banos', 'escaleras', 'pasillos','areas_genericas'].includes(tipo) && nodos.length > 0) {
                 return (
                   <div key={tipo} className="relations-panel__category">
                     <div className="relations-panel__category-header">

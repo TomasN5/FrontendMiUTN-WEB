@@ -1,4 +1,4 @@
-// ControlPanel.jsx - VERSIÓN MEJORADA INTERFAZ
+// ControlPanel.jsx - VERSIÓN MODIFICADA CON DEPARTAMENTO Y ÁREA GENÉRICA
 import React, { useState } from 'react';
 import { AREA_TYPES } from '../utils/constants';
 import './../styles/ControlPanel.css';
@@ -55,7 +55,7 @@ const ControlPanel = ({
   onToggleHideNames
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [activeTab, setActiveTab] = useState('navegacion'); // 'navegacion', 'edicion', 'exportar'
+  const [activeTab, setActiveTab] = useState('navegacion');
 
   const togglePanel = () => {
     setIsCollapsed(!isCollapsed);
@@ -73,7 +73,6 @@ const ControlPanel = ({
     isCollapsed ? 'control-panel__collapsed-info--visible' : 'control-panel__collapsed-info--hidden'
   }`;
 
-  // OBTENER TODOS LOS NODOS DE TODOS LOS PLANOS
   const getAllNodes = () => {
     const allAreas = [];
     const allPoints = [];
@@ -96,23 +95,24 @@ const ControlPanel = ({
       [AREA_TYPES.DESFIBRILADOR]: 'Desfibrilador',
       [AREA_TYPES.BOTIQUIN]: 'Botiquín',
       [AREA_TYPES.ALARMA]: 'Alarma',
-      [AREA_TYPES.TOTEM]: 'Totem'
+      [AREA_TYPES.TOTEM]: 'Totem',
+      [AREA_TYPES.AREA_GENERICA]: 'Área Genérica'
     };
     return nombres[tipo] || 'Elemento';
   };
 
-  // Estadísticas para el panel
   const stats = {
     totalNodos: todosLosNodos.length,
     areas: todosLosNodos.filter(n => n.tipo !== AREA_TYPES.PUNTO && n.tipo !== AREA_TYPES.PASILLO).length,
     puntos: todosLosNodos.filter(n => n.tipo === AREA_TYPES.PUNTO).length,
     escaleras: todosLosNodos.filter(n => n.tipo === AREA_TYPES.ESCALERA).length,
-    pasillos: todosLosNodos.filter(n => n.tipo === AREA_TYPES.PASILLO).length
+    pasillos: todosLosNodos.filter(n => n.tipo === AREA_TYPES.PASILLO).length,
+    departamentos: todosLosNodos.filter(n => n.tipo === AREA_TYPES.DEPARTAMENTO).length,
+    areasGenericas: todosLosNodos.filter(n => n.tipo === AREA_TYPES.AREA_GENERICA).length
   };
 
   return (
     <div className={panelClass}>
-      {/* Botón de toggle */}
       <button
         onClick={togglePanel}
         className="control-panel__toggle-button"
@@ -121,9 +121,7 @@ const ControlPanel = ({
         {isCollapsed ? "→" : "←"}
       </button>
 
-      {/* Contenido del panel */}
       <div className={contentClass}>
-        {/* Header con tabs */}
         <div className="control-panel__header">
           <h3 className="control-panel__title">
             🗺️ Panel de Control
@@ -151,10 +149,9 @@ const ControlPanel = ({
           </div>
         </div>
 
-        {/* PESTAÑA NAVEGACIÓN */}
         {activeTab === 'navegacion' && (
           <div className="control-panel__tab-content">
-            {/* Selector de Carrera y Plano */}
+            {/* Contenido de navegación (sin cambios) */}
             <div className="control-panel__section">
               <div className="control-panel__section-header">
                 <span className="control-panel__section-icon">🏢</span>
@@ -221,7 +218,6 @@ const ControlPanel = ({
               )}
             </div>
 
-           {/* Navegación GPS */}
             <div className="control-panel__section">
               <div className="control-panel__section-header">
                 <span className="control-panel__section-icon">🌍</span>
@@ -238,9 +234,8 @@ const ControlPanel = ({
                   <option value="">Seleccionar origen</option>
                   {todosLosNodos
                     .filter(node => 
-                      // FILTRAR: Mostrar solo puntos especiales y áreas, NO pasillos
                       node.tipo !== 'pasillo' && 
-                      node.tipo !== 'punto' // Opcional: también excluir puntos normales si quieres
+                      node.tipo !== 'punto'
                     )
                     .map(node => (
                       <option key={node.id} value={node.id}>
@@ -261,9 +256,8 @@ const ControlPanel = ({
                   <option value="">Seleccionar destino</option>
                   {todosLosNodos
                     .filter(node => 
-                      // FILTRAR: Mostrar solo puntos especiales y áreas, NO pasillos
                       node.tipo !== 'pasillo' && 
-                      node.tipo !== 'punto' // Opcional: también excluir puntos normales si quieres
+                      node.tipo !== 'punto'
                     )
                     .map(node => (
                       <option key={node.id} value={node.id}>
@@ -276,27 +270,7 @@ const ControlPanel = ({
 
               <div className="control-panel__button-group--vertical">
                 <button
-                  onClick={() => {
-                    if (onCalculateRoute) {
-                      // Primero calcular la ruta
-                      onCalculateRoute();
-                      
-                      // 🔥 AGREGAR: Iniciar animación con duración extendida
-                      // Necesitas tener acceso a la función startRouteAnimation y los parámetros necesarios
-                      if (window.startRouteAnimation && window.rutaEncontrada && window.getPointCoordinates && window.getNodeInfo && window.onFloorTransition) {
-                        setTimeout(() => {
-                          window.startRouteAnimation(
-                            window.rutaEncontrada, 
-                            window.getPointCoordinates, 
-                            window.getNodeInfo, 
-                            window.onFloorTransition, 
-                            6000
-                             // 6 segundos en lugar de 4
-                          );
-                        }, 100);
-                      }
-                    }
-                  }}
+                  onClick={onCalculateRoute}
                   disabled={!origen || !destino}
                   className={`control-panel__button control-panel__button--primary ${
                     origen && destino ? '' : 'control-panel__button--disabled'
@@ -325,17 +299,12 @@ const ControlPanel = ({
                 )}
               </div>
             </div>
-
-            {/* Herramientas y Configuración */}
-          
           </div>
         )}
 
-        {/* PESTAÑA EDICIÓN */}
         {activeTab === 'edicion' && (
           <div className="control-panel__tab-content">
             {!modoEdicion ? (
-              /* Botón para activar modo edición */
               <div className="control-panel__section control-panel__section--edit-activation">
                 <div className="control-panel__edit-activation-card">
                   <div className="control-panel__edit-icon">✏️</div>
@@ -363,7 +332,6 @@ const ControlPanel = ({
                   </button>
                 </div>
                            
-                {/* Selector de tipo de elemento */}
                 <div className="control-panel__input-group">
                   <label className="control-panel__label">Tipo de Elemento:</label>
                   <select
@@ -373,10 +341,11 @@ const ControlPanel = ({
                   >
                     <optgroup label="Áreas">
                       <option value={AREA_TYPES.AULA}>🏫 Aula</option>
-                      <option value={AREA_TYPES.HALL}>🏢 Hall</option>
+                      <option value={AREA_TYPES.DEPARTAMENTO}>🏢 Departamento</option>
                       <option value={AREA_TYPES.BANO}>🚻 Baño</option>
                       <option value={AREA_TYPES.ESCALERA}>🪜 Escalera</option>
                       <option value={AREA_TYPES.PASILLO}>🛣️ Pasillo</option>
+                      <option value={AREA_TYPES.AREA_GENERICA}>📦 Área Genérica</option>
                     </optgroup>
                     <optgroup label="Puntos y Elementos">
                       <option value={AREA_TYPES.PUNTO}>📍 Punto</option>
@@ -389,9 +358,7 @@ const ControlPanel = ({
                     </optgroup>
                   </select>
                 </div>
-            
 
-                {/* Nombre del área */}
                 <div className="control-panel__input-group">
                   <label className="control-panel__label">Nombre:</label>
                   <input
@@ -403,7 +370,6 @@ const ControlPanel = ({
                   />
                 </div>
 
-                {/* Botones de acción según tipo */}
                 <div className="control-panel__action-buttons">
                   {tipoActual === AREA_TYPES.PUNTO || 
                   tipoActual === AREA_TYPES.EXTINTOR ||
@@ -453,58 +419,55 @@ const ControlPanel = ({
                   >
                     ↩️
                   </button>
-
                 </div>
-                  <div className="control-panel__section">
-                    <div className="control-panel__section-header">
-                      <span className="control-panel__section-icon">⚙️</span>
-                      <h4 className="control-panel__section-title">Herramientas</h4>
-                    </div>
-                    <div className="control-panel__section">
-                      
-                        <label className="control-panel__checkbox-label">
-                          <input
-                            type="checkbox"
-                            checked={hideNames}
-                            onChange={(e) => onToggleHideNames && onToggleHideNames(e.target.checked)}
-                            className="control-panel__checkbox"
-                          />
-                         <span className="control-panel__section-icon">👁️</span>
-                        <h4 className="control-panel__section-title">Ocultar Nombres</h4>
-                        </label>
-                    </div>
-                    <div className="control-panel__tools-grid">
 
-                      <button
-                        onClick={onToggleRelationsPanel}
-                        className="control-panel__tool-button"
-                        title="Ver relaciones entre nodos"
-                      >
-                        <span className="control-panel__tool-icon">🔗</span>
-                        <span className="control-panel__tool-label">Relaciones</span>
-                      </button>
-
-                      <button
-                        onClick={onToggleSnap}
-                        className={`control-panel__tool-button ${isSnapEnabled ? 'control-panel__tool-button--active' : ''}`}
-                        title="Activar/desactivar snap a pasillos"
-                      >
-                        <span className="control-panel__tool-icon">🧲</span>
-                        <span className="control-panel__tool-label">Snap {isSnapEnabled ? 'ON' : 'OFF'}</span>
-                      </button>
-
-                      <button
-                        onClick={onToggleDebugEdges}
-                        className={`control-panel__tool-button ${showDebugEdges ? 'control-panel__tool-button--active' : ''}`}
-                        title="Mostrar/ocultar debug de bordes"
-                      >
-                        <span className="control-panel__tool-icon">🐛</span>
-                        <span className="control-panel__tool-label">Debug {showDebugEdges ? 'ON' : 'OFF'}</span>
-                      </button>
-                    </div>
+                <div className="control-panel__section">
+                  <div className="control-panel__section-header">
+                    <span className="control-panel__section-icon">⚙️</span>
+                    <h4 className="control-panel__section-title">Herramientas</h4>
                   </div>
+                  <div className="control-panel__section">
+                    <label className="control-panel__checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={hideNames}
+                        onChange={(e) => onToggleHideNames && onToggleHideNames(e.target.checked)}
+                        className="control-panel__checkbox"
+                      />
+                      <span className="control-panel__section-icon">👁️</span>
+                      <h4 className="control-panel__section-title">Ocultar Nombres</h4>
+                    </label>
+                  </div>
+                  <div className="control-panel__tools-grid">
+                    <button
+                      onClick={onToggleRelationsPanel}
+                      className="control-panel__tool-button"
+                      title="Ver relaciones entre nodos"
+                    >
+                      <span className="control-panel__tool-icon">🔗</span>
+                      <span className="control-panel__tool-label">Relaciones</span>
+                    </button>
 
-                {/* Información de edición */}
+                    <button
+                      onClick={onToggleSnap}
+                      className={`control-panel__tool-button ${isSnapEnabled ? 'control-panel__tool-button--active' : ''}`}
+                      title="Activar/desactivar snap a pasillos"
+                    >
+                      <span className="control-panel__tool-icon">🧲</span>
+                      <span className="control-panel__tool-label">Snap {isSnapEnabled ? 'ON' : 'OFF'}</span>
+                    </button>
+
+                    <button
+                      onClick={onToggleDebugEdges}
+                      className={`control-panel__tool-button ${showDebugEdges ? 'control-panel__tool-button--active' : ''}`}
+                      title="Mostrar/ocultar debug de bordes"
+                    >
+                      <span className="control-panel__tool-icon">🐛</span>
+                      <span className="control-panel__tool-label">Debug {showDebugEdges ? 'ON' : 'OFF'}</span>
+                    </button>
+                  </div>
+                </div>
+
                 <div className="control-panel__edit-info">
                   {puntosTemporales && puntosTemporales.length > 0 && (
                     <div className="control-panel__points-counter">
@@ -535,7 +498,6 @@ const ControlPanel = ({
           </div>
         )}
 
-        {/* PESTAÑA EXPORTAR */}
         {activeTab === 'exportar' && (
           <div className="control-panel__tab-content">
             <div className="control-panel__section">
@@ -577,7 +539,6 @@ const ControlPanel = ({
                   <span className="control-panel__export-label">Copiar JSON</span>
                 </button>
 
-                {/* Solo en desarrollo */}
                 {process.env.NODE_ENV === 'development' && (
                   <button
                     onClick={onSimularGuardado}
@@ -594,7 +555,6 @@ const ControlPanel = ({
               </div>
             </div>
 
-            {/* Estadísticas */}
             <div className="control-panel__section">
               <div className="control-panel__section-header">
                 <span className="control-panel__section-icon">📈</span>
@@ -623,15 +583,18 @@ const ControlPanel = ({
                   <span className="control-panel__stat-label">Pasillos</span>
                 </div>
                 <div className="control-panel__stat-item">
-                  <span className="control-panel__stat-value">{edgesCount || 0}</span>
-                  <span className="control-panel__stat-label">Bordes</span>
+                  <span className="control-panel__stat-value">{stats.departamentos}</span>
+                  <span className="control-panel__stat-label">Departamentos</span>
+                </div>
+                <div className="control-panel__stat-item">
+                  <span className="control-panel__stat-value">{stats.areasGenericas}</span>
+                  <span className="control-panel__stat-label">Áreas Genéricas</span>
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Información de estado (siempre visible) */}
         <div className="control-panel__status-bar">
           <div className="control-panel__status-item">
             <span className="control-panel__status-icon">🔍</span>
@@ -648,7 +611,6 @@ const ControlPanel = ({
         </div>
       </div>
 
-      {/* Información en estado colapsado */}
       <div className={collapsedInfoClass}>
         <div className="control-panel__collapsed-icon">🗺️</div>
         <div className="control-panel__collapsed-text">GPS</div>
