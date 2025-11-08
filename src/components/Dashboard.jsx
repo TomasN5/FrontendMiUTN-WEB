@@ -151,6 +151,11 @@ const Dashboard = () => {
     navigate('/profesores');
   };
 
+  // 🔹 NUEVA FUNCIÓN PARA EL BOTÓN MAPA
+  const handleMapaClick = () => {
+    navigate('/planoviewer');
+  };
+
   // Función para formatear fecha
   const formatDate = (dateString) => {
     if (!dateString || dateString === "Sin fecha") return "Fecha no disponible";
@@ -179,7 +184,7 @@ const Dashboard = () => {
           <h2>Panel Principal</h2>
         </div>
 
-        {/* Botones Principales */}
+        {/* Botones Principales - AHORA CON 4 BOTONES */}
         <div className="buttons-container">
           <div className="main-buttons">
             <button className="main-btn anuncios-btn" onClick={handleAnnouncementsClick}>
@@ -192,6 +197,11 @@ const Dashboard = () => {
             
             <button className="main-btn professores-btn" onClick={handleProfesoresClick}>
               <span className="btn-text">Profesores</span>
+            </button>
+
+            {/* 🔹 NUEVO BOTÓN MAPA */}
+            <button className="main-btn mapa-btn" onClick={handleMapaClick}>
+              <span className="btn-text">Mapa</span>
             </button>
           </div>
         </div>
