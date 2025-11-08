@@ -84,7 +84,7 @@ const Dashboard = () => {
           date: quitarHora(item.expirationDate) || "Sin fecha",
           important: item.priority,
           content: item.content,
-          image: item.image,
+          imagePath: item.imagePath,
           expirationDate: quitarHora(item.expirationDate)
         }))
         .slice(0, 6); // Limitar a 6 anuncios para el slider

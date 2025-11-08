@@ -64,7 +64,7 @@ const Announcements = () => {
         description: item.description,
         content: item.content,
         priority: item.priority,
-        image: item.image,
+        imagePath: item.imagePath,
         expirable: item.expirable,
         publicationMode: item.publicationMode
       }));
@@ -156,6 +156,9 @@ const handleConfirmSave = async () => {
       formData.append("priority", pendingAnnouncement.priority || false);
       formData.append("expirable", pendingAnnouncement.expirable || false);
       formData.append("publicationMode", pendingAnnouncement.publicationMode || "INMEDIATE");
+      if (pendingAnnouncement.image) {
+        formData.append("image", pendingAnnouncement.image);
+      }
 
       // Si hay imagen seleccionada, se agrega al FormData
       if (pendingAnnouncement.image) {
