@@ -152,7 +152,7 @@ const handleConfirmSave = async () => {
       formData.append("title", pendingAnnouncement.title);
       formData.append("description", pendingAnnouncement.description);
       formData.append("content", pendingAnnouncement.content);
-      formData.append("hidden", !pendingAnnouncement.published); // ✅ Consistente
+      formData.append("hidden", pendingAnnouncement.published); // ✅ Consistente
       formData.append("priority", pendingAnnouncement.priority || false);
       formData.append("expirable", pendingAnnouncement.expirable || false);
       formData.append("publicationMode", pendingAnnouncement.publicationMode || "INMEDIATE");

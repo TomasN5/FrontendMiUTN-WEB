@@ -31,6 +31,7 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
     }
 
     if (announcement) {
+      console.log('published =', announcement.published);
 
       setFormData({
         image: null,
@@ -38,7 +39,7 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
         description: announcement.description || '',
         content: announcement.content || '',
         priority: Boolean(announcement.priority), // ✅ Asegurar que sea boolean
-        published: Boolean(announcement.hidden),
+        published: Boolean(announcement.published),
         publicationMode: announcement.publicationMode || 'INMEDIATE',
         scheduledDate: announcement.scheduledDate || '',
         expirable: Boolean(announcement.expirable), // ✅ Asegurar que sea boolean
@@ -357,7 +358,7 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
                   <input
                     type="checkbox"
                     name="published"
-                    unchecked={announcement ? !announcement.published : formData.published}
+                    checked={formData.published}
                     onChange={handleInputChange}
                     className="announcement-checkbox-input"
                   />
