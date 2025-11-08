@@ -142,8 +142,43 @@ export default function CargarMateria() {
     }));
   };
 
+  const removeSchedule = (index) => {
+    if (formData.schedule.length > 1) {
+      setFormData(prev => ({
+        ...prev,
+        schedule: prev.schedule.filter((_, i) => i !== index)
+      }));
+    }
+  };
+
   const getYearFromCommission = (commissionName) => {
-    const match = commissionName.match(/S(\d)/i);
+    console.log(careerId);
+    
+    let letter;
+    switch (careerId) {
+      case 1:
+        letter = 'S';
+        break;
+      case 2:
+        letter = 'Q';
+        break;
+      case 3:
+        letter = 'M';
+        break;
+      case 4:
+        letter = 'C';
+        break;
+      case 5:
+        letter = 'I';
+        break;
+      case 6:
+        letter = 'E';
+        break;
+      default:
+        letter = 'S'; // Por defecto usa S si no coincide ningún caso
+    }
+  
+    const match = commissionName.match(new RegExp(`${letter}(\\d)`, 'i'));
     return match ? parseInt(match[1]) : null;
   };
 
@@ -153,6 +188,7 @@ export default function CargarMateria() {
       commissionId: commission.id,
       commissionName: commission.name
     }));
+    formData.commissionId = commission.id;
     setShowCommissionModal(false);
   };
 
@@ -221,6 +257,31 @@ export default function CargarMateria() {
     }
   };
 
+  const handleAddCommission = async (commissionName) => {
+    try {
+      const response = await fetch(api_URL+"api/v1/MiUTN/commission/save", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' ,
+          'ngrok-skip-browser-warning': 'true',
+        },
+        body: JSON.stringify({ name: commissionName })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log(data);
+        return data.id;
+      } else {
+        throw new Error('Error al crear la comisión');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('⚠️ Error de conexión');
+    }
+  }
+
+
+
   const handleBackToDashboard = () => {
     navigate('/materias/' + nombre);
   };
@@ -288,12 +349,14 @@ export default function CargarMateria() {
                     <button
                       type="button"
                       className="cargar-materias-modal-add-btn"
-                      onClick={() => {
-                        if (!newCommissionName.trim()) return alert("⚠️ Ingresá un nombre válido");
-                        const newCommission = { id: Date.now(), name: newCommissionName.trim() };
-                        setCommissions(prev => [...prev, newCommission]);
-                        handleSelectCommission(newCommission);
-                        setNewCommissionName('');
+                      onClick={async () => {
+                        const commissionName = newCommissionName.trim();
+                        if (!commissionName) return alert("⚠️ Ingresá un nombre válido");
+                          const newCommissionId = await handleAddCommission(commissionName);
+                          const newCommission = { id: newCommissionId, name: commissionName};
+                          setCommissions(prev => [...prev, newCommission]);
+                          handleSelectCommission(newCommission);
+                          setNewCommissionName('');
                       }}
                     >
                       Agregar
@@ -479,6 +542,17 @@ export default function CargarMateria() {
                       </option>
                     ))}
                   </select>
+
+                  {/* Botón de eliminar */}
+                  <button
+                    type="button"
+                    className="cargar-materias-delete-horario-btn"
+                    onClick={() => removeSchedule(index)}
+                    disabled={formData.schedule.length === 1}
+                    title={formData.schedule.length === 1 ? "Debe haber al menos un horario" : "Eliminar horario"}
+                  >
+                    Eliminar
+                  </button>
                 </div>
               ))}
               <button
