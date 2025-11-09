@@ -111,10 +111,20 @@
 .svg-editor__route-line {
   stroke: #00ff88;
   stroke-width: 3;
-  stroke-dasharray: 6, 3;
-  opacity: 0.7;
+  stroke-dasharray: 8, 4;
+  opacity: 0.8;
+  animation: staticPulse 3s ease-in-out infinite;
 }
-
+@keyframes staticPulse {
+  0%, 100% {
+    stroke-width: 3;
+    opacity: 0.7;
+  }
+  50% {
+    stroke-width: 4;
+    opacity: 0.9;
+  }
+}
 .svg-editor__route-point {
   fill: #00ff88;
   stroke: white;
@@ -248,7 +258,7 @@
 
 @keyframes routeFlow {
   0% {
-    stroke-dashoffset: 1000;
+    stroke-dashoffset: 100;
   }
   100% {
     stroke-dashoffset: 0;
@@ -293,16 +303,40 @@
   stroke-dasharray: 12, 6;
   stroke-linecap: round;
   stroke-linejoin: round;
-  filter: drop-shadow(0 0 10px #00ff88);
-  animation: routeGlow 1.5s ease-in-out infinite;
+  filter: drop-shadow(0 0 8px rgba(0, 255, 136, 0.6));
+  animation: routeFlow 2s linear infinite;
 }
+
+.svg-editor__animated-route-glow {
+  stroke: #00ff88;
+  stroke-width: 6;
+  stroke-dasharray: 20, 10;
+  stroke-linecap: round;
+  opacity: 0.4;
+  filter: blur(3px);
+  animation: routeFlow 3s linear infinite;
+}
+
 
 .svg-editor__animated-traveler {
   fill: #00ff88;
   stroke: #ffffff;
   stroke-width: 2;
-  filter: drop-shadow(0 0 15px #00ff88);
-  animation: travelerPulse 1.2s ease-in-out infinite;
+  filter: 
+    drop-shadow(0 0 10px #00ff88)
+    drop-shadow(0 0 20px #00ff88);
+  animation: travelerFloat 2s ease-in-out infinite;
+}
+
+@keyframes travelerFloat {
+  0%, 100% {
+    transform: scale(1);
+    r: 10;
+  }
+  50% {
+    transform: scale(1.1);
+    r: 11;
+  }
 }
 
 .svg-editor__animated-pulse {
@@ -314,6 +348,32 @@
 
 .svg-editor__animated-trail {
   fill: #00ff88;
+   animation: trailFade 0.8s ease-out forwards;
+}
+
+@keyframes trailFade {
+  0% {
+    opacity: 0.6;
+    r: 4;
+  }
+  100% {
+    opacity: 0;
+    r: 1;
+  }
+}
+.svg-editor__animated-particle {
+  fill: #00ff88;
+  animation: particleFloat 1s ease-out forwards;
+}
+@keyframes particleFloat {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0);
+  }
 }
 
 @keyframes routeGlow {
@@ -341,13 +401,18 @@
 @keyframes pulseWave {
   0% {
     r: 8;
-    opacity: 1;
+    opacity: 0.8;
     stroke-width: 2;
   }
-  100% {
+  50% {
     r: 20;
-    opacity: 0;
+    opacity: 0.3;
     stroke-width: 1;
+  }
+  100% {
+    r: 25;
+    opacity: 0;
+    stroke-width: 0;
   }
 }
 
@@ -628,4 +693,209 @@
 .svg-origin-marker,
 .svg-destination-marker {
   filter: drop-shadow(0 0 15px currentColor);
+}
+
+/* SVGEditor.css - AGREGAR estos estilos para las mejoras de highlight */
+
+/* 🔥 Nuevos estilos para animaciones de highlight */
+.svg-highlight-pulse {
+  fill: rgba(59, 130, 246, 0.3);
+  stroke: #3b82f6;
+  stroke-width: 1;
+  fill-opacity: 0.5;
+}
+
+.svg-highlight-pulse-area {
+  fill: none;
+  stroke: #3b82f6;
+  stroke-width: 2;
+  stroke-opacity: 0.5;
+}
+
+/* Mejorar los efectos de glow existentes */
+.svg-highlight-point-glow {
+  fill: rgba(59, 130, 246, 0.2);
+  stroke: #3b82f6;
+  stroke-width: 1;
+  animation: highlightGlow 2s ease-in-out infinite;
+}
+
+.svg-highlight-area-glow {
+  fill: rgba(59, 130, 246, 0.1);
+  stroke: #3b82f6;
+  stroke-width: 3;
+  animation: highlightGlow 2s ease-in-out infinite;
+}
+
+@keyframes highlightGlow {
+  0%, 100% {
+    stroke-width: 2;
+    opacity: 0.7;
+  }
+  50% {
+    stroke-width: 4;
+    opacity: 1;
+  }
+}
+
+/* Estilos para notificaciones de navegación */
+.svg-editor__floor-notification-text {
+  fill: white;
+  font-size: 14px;
+  font-weight: bold;
+  font-family: Arial, sans-serif;
+}
+
+.svg-editor__floor-notification-subtext {
+  fill: #e2e8f0;
+  font-size: 12px;
+  font-family: Arial, sans-serif;
+}
+
+.svg-editor__floor-notification {
+  fill: rgba(59, 130, 246, 0.9);
+  stroke: #1e40af;
+  stroke-width: 1;
+  rx: 8;
+  ry: 8;
+}
+
+/* Mejorar conexiones hover */
+.svg-connection-line {
+  stroke: #10b981;
+  stroke-width: 3;
+  stroke-dasharray: 5, 5;
+  opacity: 0.8;
+  animation: connectionDash 1.5s linear infinite;
+}
+
+@keyframes connectionDash {
+  to {
+    stroke-dashoffset: -10;
+  }
+}
+
+.svg-connection-point {
+  fill: #10b981;
+  stroke: white;
+  stroke-width: 1;
+  animation: connectionPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes connectionPulse {
+  0%, 100% {
+    r: 5;
+    opacity: 1;
+  }
+  50% {
+    r: 7;
+    opacity: 0.7;
+  }
+}
+/* 🔥 AGREGAR al final de SVGEditor.css */
+
+/* Estilos mejorados para highlight por CLICK */
+.svg-highlight-group--click {
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.svg-highlight-point-glow--click {
+  fill: rgba(59, 130, 246, 0.4);
+  animation: pointPulseClick 1.5s infinite;
+}
+
+.svg-highlight-point--click {
+  fill: #3b82f6;
+  stroke: #ffffff;
+  stroke-width: 3;
+  filter: drop-shadow(0 0 12px #3b82f6);
+  r: 12;
+}
+
+.svg-highlight-area-glow--click {
+  fill: rgba(59, 130, 246, 0.3);
+  stroke: rgba(59, 130, 246, 0.8);
+  stroke-width: 8;
+  filter: blur(4px);
+}
+
+.svg-highlight-area--click {
+  fill: rgba(59, 130, 246, 0.4);
+  stroke: #3b82f6;
+  stroke-width: 4;
+  stroke-dasharray: none;
+  animation: areaPulseClick 2s infinite;
+}
+
+.svg-connection-line--click {
+  stroke: #3b82f6;
+  stroke-width: 4;
+  stroke-dasharray: none;
+  filter: drop-shadow(0 0 8px #3b82f6);
+  animation: connectionGlowClick 1.5s infinite;
+}
+
+.svg-connection-point--click {
+  fill: #3b82f6;
+  stroke: #ffffff;
+  stroke-width: 2;
+  r: 6;
+  filter: drop-shadow(0 0 8px #3b82f6);
+  animation: pointPulseClick 1s infinite;
+}
+
+/* Animaciones específicas para click */
+@keyframes pointPulseClick {
+  0%, 100% { 
+    r: 12;
+    opacity: 1;
+  }
+  50% { 
+    r: 14;
+    opacity: 0.8;
+  }
+}
+
+@keyframes areaPulseClick {
+  0%, 100% { 
+    stroke-width: 4;
+    opacity: 1;
+  }
+  50% { 
+    stroke-width: 5;
+    opacity: 0.7;
+  }
+}
+
+@keyframes connectionGlowClick {
+  0%, 100% { 
+    stroke: #3b82f6;
+    stroke-width: 4;
+  }
+  50% { 
+    stroke: #60a5fa;
+    stroke-width: 5;
+  }
+}
+
+/* Efecto de pulso adicional para click */
+.svg-highlight-pulse--click {
+  fill: rgba(59, 130, 246, 0.2);
+  stroke: #3b82f6;
+  stroke-width: 1;
+  animation: highlightPulseClick 2s ease-out infinite;
+}
+
+@keyframes highlightPulseClick {
+  0% {
+    r: 15;
+    opacity: 0.8;
+    stroke-width: 2;
+  }
+  100% {
+    r: 30;
+    opacity: 0;
+    stroke-width: 1;
+  }
 }

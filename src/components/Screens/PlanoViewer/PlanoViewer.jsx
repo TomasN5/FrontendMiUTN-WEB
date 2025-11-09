@@ -12,7 +12,6 @@ import SnapIndicators from './components/SnapIndicators';
 import DebugEdges from './components/DebugEdges';
 import { geometryUtils } from './utils/geometry';
 import { AREA_TYPES } from './utils/constants';
-// En PlanoViewer.jsx, en la sección de imports, agrega:
 import RelationsPanel from './components/RelationsPanel';
 import './styles/PlanoViewer.css';
 
@@ -28,6 +27,7 @@ const PlanoViewer = () => {
   const [showRelationsPanel, setShowRelationsPanel] = useState(false);
   const [highlightedNode, setHighlightedNode] = useState(null);
   const [connectionLines, setConnectionLines] = useState([]);
+  const [hideNames, setHideNames] = useState(false);
   
   // Hooks personalizados
   const editor = usePlanoEditor();
@@ -133,35 +133,46 @@ const PlanoViewer = () => {
     return node;
   }, [getAllNodesFromEditor]);
 
-      const getPointCoordinates = useCallback((nodeId) => {
-        const nodeInfo = getNodeInfo(nodeId);
-        
-        if (!nodeInfo) {
-          console.warn(`❌ No se pudo obtener info para nodo: ${nodeId}`);
+  const getPointCoordinates = useCallback((nodeId) => {
+    const nodeInfo = getNodeInfo(nodeId);
+    
+    if (!nodeInfo) {
+      console.warn(`❌ No se pudo obtener info para nodo: ${nodeId}`);
+      return { x: -1000, y: -1000 };
+    }
+    
+    // 🔥 VALIDAR QUE EL NODO TENGA PUNTOS VÁLIDOS
+    if (nodeInfo.planoId === planoManager.planoActual?.id) {
+      // 🔥 CORREGIDO: Incluir TODOS los tipos de puntos especiales
+      const esPuntoEspecial = [
+        AREA_TYPES.PUNTO,
+        AREA_TYPES.EXTINTOR,
+        AREA_TYPES.SALIDA_EMERGENCIA,
+        AREA_TYPES.DESFIBRILADOR,
+        AREA_TYPES.BOTIQUIN,
+        AREA_TYPES.ALARMA,
+        AREA_TYPES.TOTEM
+      ].includes(nodeInfo.tipo);
+
+      if (esPuntoEspecial) {
+        return { 
+          x: nodeInfo.x || -1000, 
+          y: nodeInfo.y || -1000 
+        };
+      } else {
+        // Validar que tenga points antes de calcular el centro
+        if (!nodeInfo.points || !Array.isArray(nodeInfo.points) || nodeInfo.points.length === 0) {
+          console.warn(`❌ Nodo ${nodeId} no tiene puntos válidos:`, nodeInfo);
           return { x: -1000, y: -1000 };
         }
         
-        // 🔥 VALIDAR QUE EL NODO TENGA PUNTOS VÁLIDOS
-        if (nodeInfo.planoId === planoManager.planoActual?.id) {
-          if (nodeInfo.tipo === "punto") {
-            return { 
-              x: nodeInfo.x || -1000, 
-              y: nodeInfo.y || -1000 
-            };
-          } else {
-            // Validar que tenga points antes de calcular el centro
-            if (!nodeInfo.points || !Array.isArray(nodeInfo.points) || nodeInfo.points.length === 0) {
-              console.warn(`❌ Nodo ${nodeId} no tiene puntos válidos:`, nodeInfo);
-              return { x: -1000, y: -1000 };
-            }
-            
-            const center = geometryUtils.getPolygonCenter(nodeInfo.points);
-            return { x: center[0], y: center[1] };
-          }
-        } else {
-          return { x: -1000, y: -1000 };
-        }
-      }, [getNodeInfo, planoManager.planoActual]);
+        const center = geometryUtils.getPolygonCenter(nodeInfo.points);
+        return { x: center[0], y: center[1] };
+      }
+    } else {
+      return { x: -1000, y: -1000 };
+    }
+  }, [getNodeInfo, planoManager.planoActual]);
 
   const handleFloorTransition = useCallback((fromFloor, toFloor) => {
     console.log(`🔄 Ruta continúa en otro piso: ${fromFloor} → ${toFloor}`);
@@ -180,6 +191,41 @@ const PlanoViewer = () => {
       setFloorNotifications(prev => prev.filter(n => n.id !== notification.id));
     }, 5000);
   }, []);
+
+  // 🔥 NUEVA FUNCIÓN: Navegar a nodo desde RelationsPanel
+  const handleNavigateToNode = useCallback((node) => {
+    console.log("🎯 Navegando a nodo desde RelationsPanel:", node.nombre, node.planoId);
+    
+    // 1. Cambiar al plano del nodo si es necesario
+    if (node.planoId && node.planoId !== planoManager.planoActual?.id) {
+      console.log("🔄 Cambiando al plano:", node.planoId);
+      planoManager.cambiarPlano(node.planoId);
+    }
+    
+    // 2. Aplicar highlight al nodo
+    setHighlightedNode(node);
+    
+    // 3. Mostrar notificación
+    const notification = {
+      id: Date.now(),
+      message: `Navegando a: ${node.nombre}`,
+      type: 'navigation',
+      timestamp: new Date().toISOString()
+    };
+    
+    setFloorNotifications(prev => [...prev, notification]);
+    
+    setTimeout(() => {
+      setFloorNotifications(prev => prev.filter(n => n.id !== notification.id));
+    }, 3000);
+    
+    // 4. Quitar highlight después de un tiempo
+    setTimeout(() => {
+      setHighlightedNode(null);
+      setConnectionLines([]);
+    }, 5000);
+    
+  }, [planoManager]);
 
   // Animación de ruta
   useEffect(() => {
@@ -284,9 +330,19 @@ const PlanoViewer = () => {
       points: stairConfigData.points,
       carreraActual: config.carreraActual,
       pisoActual: config.pisoActual,
-      carreraDestino: config.carreraDestino,
-      pisoDestino: config.pisoDestino,
-      direccion: config.direccion
+      // Para compatibilidad, mantener estos campos
+      carreraDestino: config.tipoDestino === 'multiple' ? 
+        config.destinosMultiples[0]?.carrera : config.carreraDestino,
+      pisoDestino: config.tipoDestino === 'multiple' ? 
+        config.destinosMultiples[0]?.piso : config.pisoDestino,
+      direccion: config.direccion,
+      // Nuevo campo para destinos múltiples
+      destinos: config.tipoDestino === 'multiple' ? 
+        config.destinosMultiples.map(destino => ({
+          carrera: destino.carrera,
+          piso: destino.piso,
+          direccion: destino.direccion
+        })) : null
     };
     
     editor.handleGuardarArea(nuevaEscalera);
@@ -346,12 +402,16 @@ const PlanoViewer = () => {
     console.log("🎯 Cambiando a plano ID:", planoId);
     planoManager.cambiarPlano(planoId);
     setFloorNotifications([]);
+    setHighlightedNode(null);
+    setConnectionLines([]);
   }, [planoManager]);
 
   const handleCambiarCarrera = useCallback((carrera) => {
     console.log("🏢 Cambiando a carrera:", carrera);
     planoManager.cambiarCarrera(carrera);
     setFloorNotifications([]);
+    setHighlightedNode(null);
+    setConnectionLines([]);
   }, [planoManager]);
 
   const handleClearRoute = useCallback(() => {
@@ -360,83 +420,89 @@ const PlanoViewer = () => {
     gps.setRutaActual([]);
     routeAnimation.resetAnimation();
     setFloorNotifications([]);
+    setHighlightedNode(null);
+    setConnectionLines([]);
   }, [gps.setOrigen, gps.setDestino, gps.setRutaActual, routeAnimation.resetAnimation]);
 
+  // Función para encontrar conexiones de un nodo
+  const findNodeConnections = useCallback((nodeId) => {
+    const connections = [];
+    
+    Object.values(editor.todosLosDatos || {}).forEach(planoData => {
+      if (planoData.areas) {
+        planoData.areas
+          .filter(area => area.tipo === AREA_TYPES.PASILLO)
+          .forEach(pasillo => {
+            if (pasillo.from && pasillo.from.id === nodeId) {
+              connections.push({ node: pasillo.to, type: 'pasillo' });
+            }
+            if (pasillo.to && pasillo.to.id === nodeId) {
+              connections.push({ node: pasillo.from, type: 'pasillo' });
+            }
+          });
+      }
+    });
+    
+    return connections;
+  }, [editor.todosLosDatos]);
 
-     // Función para encontrar conexiones de un nodo
-    const findNodeConnections = useCallback((nodeId) => {
-      const connections = [];
+  // 🔥 CORREGIDO: Handler para click en nodo desde RelationsPanel - AHORA INCLUYE TODOS LOS TIPOS
+  const handleNodeClick = useCallback((node) => {
+    console.log("🎯 handleNodeClick recibió nodo:", node?.nombre, "Tipo:", node?.tipo);
+    
+    // Si estamos en modo edición de pasillos, usar el handler original
+    if (editor.modoEdicion && editor.tipoActual === AREA_TYPES.PASILLO) {
+      editor.handleNodeClick(node);
+      return;
+    }
+    
+    if (node && node.id) {
+      console.log("✅ Aplicando highlight en mapa para:", node.nombre, "Tipo:", node.tipo);
+      setHighlightedNode(node);
       
-      Object.values(editor.todosLosDatos || {}).forEach(planoData => {
-        if (planoData.areas) {
-          planoData.areas
-            .filter(area => area.tipo === AREA_TYPES.PASILLO)
-            .forEach(pasillo => {
-              if (pasillo.from && pasillo.from.id === nodeId) {
-                connections.push({ node: pasillo.to, type: 'pasillo' });
-              }
-              if (pasillo.to && pasillo.to.id === nodeId) {
-                connections.push({ node: pasillo.from, type: 'pasillo' });
-              }
-            });
-        }
+      // Encontrar conexiones de este nodo
+      const connections = findNodeConnections(node.id);
+      console.log("🔗 Conexiones encontradas:", connections.length);
+      
+      // Crear líneas para las conexiones
+      const lines = connections.map(conn => {
+        const fromCoords = getPointCoordinates(node.id);
+        const toCoords = getPointCoordinates(conn.node.id);
+        return { 
+          from: fromCoords, 
+          to: toCoords,
+          isClicked: true 
+        };
       });
       
-      return connections;
-    }, [editor.todosLosDatos]);
+      setConnectionLines(lines);
+    }
+  }, [getPointCoordinates, findNodeConnections, editor.modoEdicion, editor.tipoActual, editor.handleNodeClick]);
 
+  const handleNodeLeave = useCallback(() => {
+    console.log("🎯 handleNodeLeave - Limpiando highlight");
+    setHighlightedNode(null);
+    setConnectionLines([]);
+  }, []);
 
+  const handleDeleteNode = useCallback((nodeId) => {
+    console.log("🗑️ Eliminando nodo desde RelationsPanel:", nodeId);
+    editor.handleEliminarNodo(nodeId);
+    // Limpiar highlight si el nodo eliminado estaba seleccionado
+    if (highlightedNode && highlightedNode.id === nodeId) {
+      setHighlightedNode(null);
+      setConnectionLines([]);
+    }
+  }, [editor.handleEliminarNodo, highlightedNode]);
 
-
-
-    const handleNodeHover = useCallback((node) => {
-        console.log("🎯 handleNodeHover recibió nodo:", node?.nombre);
-        
-        // Si estamos en modo edición de pasillos, no hacer nada
-        if (editor.modoEdicion && editor.tipoActual === AREA_TYPES.PASILLO) {
-          return;
-        }
-        
-        if (node && node.id) {
-          console.log("✅ Aplicando highlight en mapa para:", node.nombre);
-          setHighlightedNode(node);
-          
-          // Encontrar conexiones de este nodo
-          const connections = findNodeConnections(node.id);
-          console.log("🔗 Conexiones encontradas:", connections.length);
-          
-          // Crear líneas para las conexiones
-          const lines = connections.map(conn => {
-            const fromCoords = getPointCoordinates(node.id);
-            const toCoords = getPointCoordinates(conn.node.id);
-            return { 
-              from: fromCoords, 
-              to: toCoords,
-              isHovered: true 
-            };
-          });
-          
-          setConnectionLines(lines);
-        }
-      }, [getPointCoordinates, findNodeConnections, editor.modoEdicion, editor.tipoActual]);
-
-      const handleNodeLeave = useCallback(() => {
-        console.log("🎯 handleNodeLeave - Limpiando highlight");
-        setHighlightedNode(null);
-        setConnectionLines([]);
-      }, []);
-
-
-const handleDeleteNode = useCallback((nodeId) => {
-  console.log("🗑️ Eliminando nodo desde RelationsPanel:", nodeId);
-  editor.handleEliminarNodo(nodeId);
-}, [editor.handleEliminarNodo]);
-
-const handleDeleteConnection = useCallback((connectionId) => {
-  console.log("🗑️ Eliminando conexión desde RelationsPanel:", connectionId);
-  editor.handleEliminarConexion(connectionId);
-}, [editor.handleEliminarConexion]);
- 
+  const handleDeleteConnection = useCallback((connectionId) => {
+    console.log("🗑️ Eliminando conexión desde RelationsPanel:", connectionId);
+    editor.handleEliminarConexion(connectionId);
+    // Actualizar connectionLines si es necesario
+    setConnectionLines(prev => prev.filter(line => 
+      !line.connectionId || line.connectionId !== connectionId
+    ));
+  }, [editor.handleEliminarConexion]);
 
   return (
     <div className="plano-viewer">
@@ -491,12 +557,18 @@ const handleDeleteConnection = useCallback((connectionId) => {
         onRetrocederPlano={planoManager.retrocederPlano}
 
         onToggleRelationsPanel={() => setShowRelationsPanel(prev => !prev)}
-        // o
-        onShowRelationsPanel={() => setShowRelationsPanel(true)}
-       
+
+        onExportAllData={editor.exportarTodosLosDatos}
+        onExportByType={editor.exportarDatosPorTipo}
+        onExportJSON={editor.exportarDatosJSON}
+        onDescargarJSON={editor.descargarJSON}
+        onCopiarJSON={editor.copiarJSONAlPortapapeles}
+        onSimularGuardado={editor.simularGuardadoEnHooks}
         
-      >
-      </ControlPanel>
+        onShowRelationsPanel={() => setShowRelationsPanel(true)}
+        hideNames={hideNames}
+        onToggleHideNames={setHideNames}
+      />
 
       <SVGEditor
         src={planoManager.src}
@@ -524,6 +596,7 @@ const handleDeleteConnection = useCallback((connectionId) => {
         onClickSVG={handleClickSVG}
         onMouseMove={handleMouseMove}
         onNodeClick={editor.handleNodeClick}
+        hideNames={hideNames}
         getRelativeCoords={{ ...coordinates, getPolygonCenter: geometryUtils.getPolygonCenter }}
         snapIndicators={
           <SnapIndicators 
@@ -537,24 +610,27 @@ const handleDeleteConnection = useCallback((connectionId) => {
             isVisible={showDebugEdges} 
           />
         }
+        highlightedNode={highlightedNode}
+        connectionLines={connectionLines}
       />
 
       {editor.modoEdicion && (
-      <RelationsPanel
-        isVisible={showRelationsPanel}
-        onClose={() => setShowRelationsPanel(false)}
-        areas={editor.areas}
-        points={editor.points}
-        todosLosDatos={editor.todosLosDatos}
-        planoActual={planoManager.planoActual}
-        onNodeHover={handleNodeHover}
-        onNodeLeave={handleNodeLeave}
-        highlightedNode={highlightedNode}
-        connectionLines={connectionLines}
-        onDeleteNode={handleDeleteNode}
-        onDeleteConnection={handleDeleteConnection}
-      />
-    )}
+        <RelationsPanel
+          isVisible={showRelationsPanel}
+          onClose={() => setShowRelationsPanel(false)}
+          areas={editor.areas}
+          points={editor.points}
+          todosLosDatos={editor.todosLosDatos}
+          planoActual={planoManager.planoActual}
+          onNodeClick={handleNodeClick}
+          onNodeLeave={handleNodeLeave}
+          highlightedNode={highlightedNode}
+          connectionLines={connectionLines}
+          onDeleteNode={handleDeleteNode}
+          onDeleteConnection={handleDeleteConnection}
+          onNavigateToNode={handleNavigateToNode}
+        />
+      )}
 
       <StairConfigModal
         isOpen={showStairConfig}

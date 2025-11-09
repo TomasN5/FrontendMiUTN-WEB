@@ -1,246 +1,244 @@
-/* ControlPanel.css */
+/* ControlPanel.css - VERSIÓN MEJORADA */
 .control-panel {
-  position: absolute;
+  position: fixed;
   top: 20px;
   left: 20px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  font-family: "Inter", Arial, sans-serif;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e2e8f0;
+  z-index: 1000;
+  transition: all 0.3s ease;
+  max-height: 85vh; /* Reducido ligeramente para mejor ajuste */
   overflow: hidden;
+}
+
+.control-panel--expanded {
+  width: 380px;
+  height: auto; /* Cambiado a auto para mejor ajuste */
+  max-height: 95vh; /* Máximo 85% de la altura de la ventana */
 }
 
 .control-panel--collapsed {
   width: 60px;
   height: 60px;
-  padding: 16px;
-  gap: 8px;
-  max-height: 60px;
-}
-
-.control-panel--expanded {
-  width: 320px;
-  height: auto;
-  padding: 20px;
-  gap: 14px;
-  max-height: 85vh; /* Mantener altura máxima */
 }
 
 .control-panel__toggle-button {
   position: absolute;
   top: 12px;
   right: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
   width: 32px;
   height: 32px;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background: white;
-  color: #475569;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  color: #64748b;
   transition: all 0.2s ease;
-  z-index: 11;
+  z-index: 1001;
 }
 
 .control-panel__toggle-button:hover {
-  background: #f8fafc;
-  transform: scale(1.05);
+  background: #e2e8f0;
+  color: #475569;
 }
 
 .control-panel__content {
-  transition: opacity 0.2s ease, height 0.3s ease;
-  overflow-y: auto; /* Scroll solo cuando sea necesario */
-  max-height: calc(85vh - 40px); /* Altura máxima menos padding */
+  padding: 20px;
+  transition: opacity 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .control-panel__content--visible {
   opacity: 1;
-  height: auto;
-  overflow-y: auto; /* Asegurar scroll aquí también */
-  pointer-events: all;
 }
 
 .control-panel__content--hidden {
   opacity: 0;
-  height: 0;
-  overflow: hidden;
   pointer-events: none;
 }
 
-/* Scrollbar personalizada */
-.control-panel__content::-webkit-scrollbar {
-  width: 6px;
+.control-panel__header {
+  margin-bottom: 20px;
+  flex-shrink: 0;
 }
 
-.control-panel__content::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 3px;
-}
-
-.control-panel__content::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 3px;
-}
-
-.control-panel__content::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.3);
-}
-
-/* El resto del CSS se mantiene igual... */
-.control-panel__collapsed-info {
-  text-align: center;
-  color: #64748b;
-  font-size: 10px;
-  font-weight: 600;
-  margin-top: 8px;
-  transition: opacity 0.2s ease;
-}
-
-.control-panel__collapsed-info--visible {
-  opacity: 1;
-}
-
-.control-panel__collapsed-info--hidden {
-  opacity: 0;
-}
-
-/* Título */
 .control-panel__title {
-  margin: 0 0 10px 0;
+  margin: 0 0 16px 0;
   color: #1f2937;
-  font-size: 16px;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
 }
 
-/* Secciones */
-.control-panel__section {
-  padding: 12px;
-  background: rgba(248, 250, 252, 0.8);
+.control-panel__tabs {
+  display: flex;
+  background: #f8fafc;
   border-radius: 8px;
-  border: 1px solid rgba(226, 232, 240, 0.8);
+  padding: 4px;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.control-panel__tab {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.control-panel__tab--active {
+  background: white;
+  color: #3b82f6;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.control-panel__tab:hover:not(.control-panel__tab--active) {
+  color: #475569;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.control-panel__tab-content {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+.control-panel__tab-content:first-child {
+  min-height: 450px; /* Un poco más alto para navegación */
+}
+
+.control-panel__section {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  border: 1px solid #e2e8f0;
+  flex-shrink: 0; /* Evita que las secciones se compriman */
+}
+
+
+.control-panel__section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin-bottom: 12px;
 }
 
-.control-panel__section--edit-activation {
-  background: rgba(59, 130, 246, 0.1);
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  text-align: center;
-}
-
-.control-panel__section--edit-active {
-  background: rgba(34, 197, 94, 0.1);
-  border: 1px solid rgba(34, 197, 94, 0.3);
+.control-panel__section-icon {
+  font-size: 16px;
 }
 
 .control-panel__section-title {
-  font-size: 12px;
+  margin: 0;
+  color: #374151;
+  font-size: 14px;
   font-weight: 600;
-  color: #475569;
-  margin-bottom: 8px;
 }
 
-/* Selector de plano */
-.control-panel__plano-selector {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-}
-
-.control-panel__plano-button {
-  padding: 4px 8px;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 10px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.control-panel__plano-button--active {
-  background: #3b82f6;
-}
-
-.control-panel__plano-button--disabled {
-  background: #cbd5e1;
-  cursor: not-allowed;
-}
-
-.control-panel__plano-info {
-  font-size: 10px;
-  color: #64748b;
-  margin-top: 6px;
-  text-align: center;
-}
-
-/* Input groups */
 .control-panel__input-group {
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .control-panel__label {
   display: block;
-  font-size: 11px;
+  margin-bottom: 6px;
   font-weight: 600;
-  color: #64748b;
-  margin-bottom: 4px;
+  color: #374151;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.control-panel__select,
-.control-panel__input {
+.control-panel__input,
+.control-panel__select {
   width: 100%;
-  padding: 6px 8px;
-  border-radius: 6px;
+  padding: 10px 12px;
+  border-radius: 8px;
   border: 1px solid #e2e8f0;
-  font-size: 11px;
+  font-family: "Inter", Arial, sans-serif;
+  font-size: 14px;
   background: white;
-  transition: border-color 0.2s ease;
+  transition: all 0.2s ease;
 }
 
-.control-panel__select:focus,
-.control-panel__input:focus {
+.control-panel__input:focus,
+.control-panel__select:focus {
   outline: none;
   border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-/* Botones */
-.control-panel__button {
-  padding: 8px;
-  border: none;
+.control-panel__plano-selector-container {
+  margin-top: 12px;
+  flex-shrink: 0;
+}
+
+.control-panel__plano-selector {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.control-panel__plano-nav {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
   border-radius: 6px;
-  font-size: 11px;
-  font-weight: 600;
+  padding: 8px 10px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  width: 100%;
-}
-
-.control-panel__button:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.control-panel__button--large {
-  padding: 10px 16px;
   font-size: 12px;
+  color: #475569;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
-.control-panel__button--small {
-  padding: 6px;
-  font-size: 10px;
+.control-panel__plano-nav:hover:not(:disabled) {
+  background: #e2e8f0;
+  border-color: #94a3b8;
 }
 
-.control-panel__button--icon {
-  width: auto;
-  padding: 8px 12px;
+.control-panel__plano-nav:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.control-panel__plano-info {
+  font-size: 11px;
+  color: #64748b;
+  text-align: center;
+  margin-top: 6px;
+}
+
+.control-panel__button-group--vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+  flex-shrink: 0;
+}
+.control-panel__button {
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  text-align: center;
+  width: 100%;
 }
 
 .control-panel__button--primary {
@@ -248,14 +246,28 @@
   color: white;
 }
 
+.control-panel__button--primary:hover:not(:disabled) {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.control-panel__button--secondary {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.control-panel__button--secondary:hover:not(:disabled) {
+  background: #e2e8f0;
+}
+
 .control-panel__button--success {
   background: #10b981;
   color: white;
 }
 
-.control-panel__button--danger {
-  background: #ef4444;
-  color: white;
+.control-panel__button--success:hover:not(:disabled) {
+  background: #059669;
 }
 
 .control-panel__button--warning {
@@ -263,130 +275,398 @@
   color: white;
 }
 
-.control-panel__button--secondary {
-  background: #6b7280;
-  color: white;
-}
-
-.control-panel__button--config {
-  flex: 1;
-  padding: 6px;
-  font-size: 10px;
-}
-
-.control-panel__button--disabled {
-  background: #cbd5e1;
-  color: white;
-  cursor: not-allowed;
-}
-
-.control-panel__button--disabled:hover {
-  transform: none;
-  box-shadow: none;
-}
-
-/* Grupos de botones */
-.control-panel__button-group {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 8px;
-}
-
-.control-panel__config-buttons {
-  display: flex;
-  gap: 6px;
-}
-
-/* Header de edición */
-.control-panel__edit-header {
-  font-size: 12px;
-  font-weight: 600;
-  color: #16a34a;
-  margin-bottom: 8px;
-}
-
-/* Información de edición */
-.control-panel__edit-info {
-  font-size: 10px;
-  color: #64748b;
-  text-align: center;
-  margin-bottom: 6px;
-}
-
-/* Información de ruta */
-.control-panel__route-info {
-  padding: 8px;
-  background: rgba(34, 197, 94, 0.1);
-  border-radius: 6px;
-  border: 1px solid rgba(34, 197, 94, 0.3);
-  margin-top: 8px;
-}
-
-.control-panel__route-info-title {
-  font-size: 10px;
-  font-weight: 600;
-  color: #16a34a;
-  margin-bottom: 4px;
-}
-
-.control-panel__route-info-details {
-  font-size: 9px;
-  color: #64748b;
-}
-
-/* Transiciones */
-.control-panel__transitions-info {
-  padding: 8px;
-  background: rgba(59, 130, 246, 0.1);
-  border-radius: 6px;
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  margin-top: 8px;
-}
-
-.control-panel__transitions-title {
-  font-size: 10px;
-  font-weight: 600;
-  color: #1e40af;
-  margin-bottom: 4px;
-}
-
-.control-panel__transition-item {
-  font-size: 9px;
-  color: #374151;
-}
-
-/* Debug info */
-.control-panel__debug-info {
-  padding: 8px;
-  background: rgba(248, 250, 252, 0.8);
-  border-radius: 6px;
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  margin-bottom: 8px;
-}
-
-.control-panel__debug-item {
-  font-size: 10px;
-  color: #64748b;
-  margin-bottom: 2px;
-}
-
-.control-panel__debug-item:last-child {
-  margin-bottom: 0;
-}
-
-/* Texto informativo */
-.control-panel__info-text {
-  font-size: 10px;
-  color: #64748b;
-  margin-top: 6px;
-  text-align: center;
+.control-panel__button--warning:hover:not(:disabled) {
+  background: #d97706;
 }
 
 .control-panel__button--danger {
-  background-color: #dc3545;
+  background: #ef4444;
   color: white;
 }
 
-.control-panel__button--danger:hover:not(.control-panel__button--disabled) {
-  background-color: #c82333;
+.control-panel__button--danger:hover:not(:disabled) {
+  background: #dc2626;
+}
+
+.control-panel__button--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.control-panel__button--icon {
+  width: auto;
+  padding: 10px;
+  flex-shrink: 0;
+}
+
+.control-panel__button--large {
+  padding: 14px 20px;
+  font-size: 16px;
+}
+
+.control-panel__button--small {
+  padding: 8px 12px;
+  font-size: 12px;
+  width: auto;
+}
+
+.control-panel__route-info {
+  background: #dbeafe;
+  border: 1px solid #93c5fd;
+  border-radius: 6px;
+  padding: 12px;
+  margin-top: 12px;
+  flex-shrink: 0;
+}
+
+.control-panel__route-info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1e40af;
+}
+
+.control-panel__route-steps {
+  background: #3b82f6;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+}
+
+.control-panel__tools-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.control-panel__tool-button {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.control-panel__tool-button:hover {
+  border-color: #3b82f6;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+}
+
+.control-panel__tool-button--active {
+  background: #dbeafe;
+  border-color: #3b82f6;
+  color: #1e40af;
+}
+
+.control-panel__tool-icon {
+  font-size: 16px;
+}
+
+.control-panel__tool-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.control-panel__edit-activation-card {
+  text-align: center;
+  padding: 20px;
+  flex-shrink: 0;
+}
+
+.control-panel__edit-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+
+.control-panel__edit-title {
+  margin: 0 0 8px 0;
+  color: #1f2937;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.control-panel__edit-description {
+  margin: 0 0 16px 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.control-panel__edit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.control-panel__edit-status {
+  font-weight: 600;
+  color: #059669;
+  font-size: 14px;
+}
+
+.control-panel__action-buttons {
+  display: flex;
+  gap: 8px;
+  margin: 16px 0;
+  flex-shrink: 0;
+}
+
+.control-panel__edit-info {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 12px;
+  color: #0369a1;
+  flex-shrink: 0;
+}
+.control-panel__points-counter {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.control-panel__edit-hint {
+  line-height: 1.4;
+}
+
+.control-panel__export-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.control-panel__export-button {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.control-panel__export-button:hover {
+  border-color: #3b82f6;
+  transform: translateY(-1px);
+}
+
+.control-panel__export-button--primary {
+  background: #dbeafe;
+  border-color: #3b82f6;
+}
+
+.control-panel__export-button--secondary {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+}
+
+.control-panel__export-button--warning {
+  background: #fef3c7;
+  border-color: #fcd34d;
+}
+
+.control-panel__export-icon {
+  font-size: 18px;
+}
+
+.control-panel__export-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.control-panel__export-info {
+  font-size: 11px;
+  color: #64748b;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.control-panel__stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.control-panel__stat-item {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 12px 8px;
+  text-align: center;
+}
+
+.control-panel__stat-value {
+  display: block;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 2px;
+}
+
+.control-panel__stat-label {
+  font-size: 10px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.control-panel__status-bar {
+  display: flex;
+  justify-content: space-around;
+  padding: 12px 0 0 0;
+  border-top: 1px solid #e2e8f0;
+  margin-top: auto; /* Empuja la status bar hacia abajo */
+  flex-shrink: 0;
+  background: white;
+  position: sticky;
+  bottom: 0;
+}
+.control-panel__status-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.control-panel__status-icon {
+  font-size: 12px;
+}
+
+.control-panel__collapsed-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 4px;
+}
+
+.control-panel__collapsed-icon {
+  font-size: 20px;
+}
+
+.control-panel__collapsed-text {
+  font-size: 10px;
+  font-weight: 700;
+  color: #374151;
+}
+
+.control-panel__collapsed-info--visible {
+  display: flex;
+}
+
+.control-panel__collapsed-info--hidden {
+  display: none;
+}
+
+/* Scrollbar personalizado */
+.control-panel__tab-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.control-panel__tab-content::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.control-panel__tab-content::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.control-panel__tab-content::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .control-panel--expanded {
+    width: 95vw;
+    left: 2.5vw;
+    right: 2.5vw;
+    max-height: 90vh; /* Un poco más alto en móvil */
+  }
+  
+  .control-panel__tab-content {
+    max-height: calc(90vh - 180px);
+    min-height: 350px;
+  }
+}
+
+/* Animaciones */
+.control-panel__section {
+  animation: slideInUp 0.3s ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+/* 🔥 ESTILOS PARA CHECKBOX EN CONTROL PANEL */
+
+.control-panel__checkbox-group {
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.control-panel__checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.control-panel__checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.control-panel__checkbox-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.control-panel__checkbox-description {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 6px;
+  line-height: 1.4;
 }

@@ -1,5 +1,6 @@
+// En StairConfigModal.jsx - REEMPLAZAR el componente completo
 import React, { useState, useEffect } from 'react';
-import { CARRERAS, PISOS } from '../utils/constants';
+import { CARRERAS, PISOS, TIPOS_DESTINO_ESCALERA } from '../utils/constants';
 import './../styles/StairConfigModal.css';
 
 const StairConfigModal = ({ 
@@ -12,23 +13,38 @@ const StairConfigModal = ({
   const [config, setConfig] = useState({
     carreraActual: CARRERAS.SISTEMAS,
     pisoActual: PISOS.PISO1,
+    tipoDestino: TIPOS_DESTINO_ESCALERA.UNICO,
+    // Para destino único (compatibilidad hacia atrás)
     carreraDestino: CARRERAS.SISTEMAS,
     pisoDestino: PISOS.PISO2,
+    // Para destinos múltiples
+    destinosMultiples: [
+      { carrera: CARRERAS.SISTEMAS, piso: PISOS.PISO2, direccion: "subida" }
+    ],
     nombre: "Escalera",
-    direccion: "ambos",
-    escaleraConectadaId: ""
+    direccion: "ambos"
   });
 
   useEffect(() => {
     if (initialData) {
+      // Detectar si es una escalera con destinos múltiples
+      const tieneDestinosMultiples = Array.isArray(initialData.destinos) && initialData.destinos.length > 0;
+      
       setConfig({
         carreraActual: initialData.carreraActual || CARRERAS.SISTEMAS,
         pisoActual: initialData.pisoActual || PISOS.PISO1,
+        tipoDestino: tieneDestinosMultiples ? TIPOS_DESTINO_ESCALERA.MULTIPLE : TIPOS_DESTINO_ESCALERA.UNICO,
         carreraDestino: initialData.carreraDestino || CARRERAS.SISTEMAS,
         pisoDestino: initialData.pisoDestino || PISOS.PISO2,
+        destinosMultiples: tieneDestinosMultiples ? initialData.destinos : [
+          { 
+            carrera: initialData.carreraDestino || CARRERAS.SISTEMAS, 
+            piso: initialData.pisoDestino || PISOS.PISO2, 
+            direccion: initialData.direccion || "ambos" 
+          }
+        ],
         nombre: initialData.nombre || "Escalera",
-        direccion: initialData.direccion || "ambos",
-        escaleraConectadaId: initialData.escaleraConectadaId || ""
+        direccion: initialData.direccion || "ambos"
       });
     }
   }, [initialData]);
@@ -36,21 +52,47 @@ const StairConfigModal = ({
   if (!isOpen) return null;
 
   const handleSave = () => {
-    onSave(config);
+    // Preparar datos para guardar
+    const datosGuardar = {
+      ...config,
+      // Para compatibilidad, mantener carreraDestino y pisoDestino
+      carreraDestino: config.tipoDestino === TIPOS_DESTINO_ESCALERA.UNICO ? 
+        config.carreraDestino : config.destinosMultiples[0]?.carrera,
+      pisoDestino: config.tipoDestino === TIPOS_DESTINO_ESCALERA.UNICO ? 
+        config.pisoDestino : config.destinosMultiples[0]?.piso,
+      // Nuevo campo para destinos múltiples
+      destinos: config.tipoDestino === TIPOS_DESTINO_ESCALERA.MULTIPLE ? 
+        config.destinosMultiples : null
+    };
+    
+    onSave(datosGuardar);
   };
 
-  const escalerasConectables = todasLasEscaleras.filter(escalera => 
-    escalera.carreraActual === config.carreraDestino &&
-    escalera.pisoActual === config.pisoDestino &&
-    escalera.carreraDestino === config.carreraActual &&
-    escalera.pisoDestino === config.pisoActual
-  );
+  const agregarDestino = () => {
+    setConfig(prev => ({
+      ...prev,
+      destinosMultiples: [
+        ...prev.destinosMultiples,
+        { carrera: CARRERAS.SISTEMAS, piso: PISOS.PISO1, direccion: "ambos" }
+      ]
+    }));
+  };
 
-  const escalerasMismoDestino = todasLasEscaleras.filter(escalera =>
-    escalera.carreraActual === config.carreraDestino &&
-    escalera.pisoActual === config.pisoDestino &&
-    escalera.id !== initialData?.id
-  );
+  const eliminarDestino = (index) => {
+    setConfig(prev => ({
+      ...prev,
+      destinosMultiples: prev.destinosMultiples.filter((_, i) => i !== index)
+    }));
+  };
+
+  const actualizarDestino = (index, campo, valor) => {
+    setConfig(prev => ({
+      ...prev,
+      destinosMultiples: prev.destinosMultiples.map((destino, i) => 
+        i === index ? { ...destino, [campo]: valor } : destino
+      )
+    }));
+  };
 
   const getCarreraNombre = (carreraKey) => {
     const nombres = {
@@ -63,10 +105,6 @@ const StairConfigModal = ({
     };
     return nombres[carreraKey] || carreraKey;
   };
-
-  const summaryClass = `stair-modal__summary ${
-    config.escaleraConectadaId ? 'stair-modal__summary--connected' : 'stair-modal__summary--pending'
-  }`;
 
   return (
     <div className="stair-modal">
@@ -121,109 +159,166 @@ const StairConfigModal = ({
           </div>
         </div>
 
-        <div className="stair-modal__section stair-modal__section--destination">
-          <h4 className="stair-modal__section-title">🎯 Destino</h4>
-          <div className="stair-modal__row">
-            <div className="stair-modal__column">
-              <label className="stair-modal__label">Carrera:</label>
-              <select
-                value={config.carreraDestino}
-                onChange={(e) => setConfig({...config, carreraDestino: e.target.value})}
-                className="stair-modal__select"
-              >
-                {Object.values(CARRERAS).map(carrera => (
-                  <option key={carrera} value={carrera}>
-                    {getCarreraNombre(carrera)}
-                  </option>
-                ))}
-              </select>
-            </div>
+        <div className="stair-modal__section stair-modal__section--destination-type">
+          <h4 className="stair-modal__section-title">🎯 Tipo de Destino</h4>
+          <div className="stair-modal__radio-group">
+            <label className="stair-modal__radio-label">
+              <input
+                type="radio"
+                value={TIPOS_DESTINO_ESCALERA.UNICO}
+                checked={config.tipoDestino === TIPOS_DESTINO_ESCALERA.UNICO}
+                onChange={(e) => setConfig({...config, tipoDestino: e.target.value})}
+                className="stair-modal__radio"
+              />
+              <span className="stair-modal__radio-text">Destino Único</span>
+            </label>
             
-            <div className="stair-modal__column">
-              <label className="stair-modal__label">Piso:</label>
-              <select
-                value={config.pisoDestino}
-                onChange={(e) => setConfig({...config, pisoDestino: e.target.value})}
-                className="stair-modal__select"
-              >
-                {Object.values(PISOS).map(piso => (
-                  <option key={piso} value={piso}>
-                    {piso}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <label className="stair-modal__radio-label">
+              <input
+                type="radio"
+                value={TIPOS_DESTINO_ESCALERA.MULTIPLE}
+                checked={config.tipoDestino === TIPOS_DESTINO_ESCALERA.MULTIPLE}
+                onChange={(e) => setConfig({...config, tipoDestino: e.target.value})}
+                className="stair-modal__radio"
+              />
+              <span className="stair-modal__radio-text">Múltiples Destinos</span>
+            </label>
           </div>
         </div>
 
-        <div className="stair-modal__section stair-modal__section--connection">
-          <h4 className="stair-modal__section-title">🔗 Conectar con Escalera Existente</h4>
-          
-          {escalerasConectables.length > 0 ? (
-            <div>
-              <label className="stair-modal__label">Escalera gemela (conexión automática):</label>
-              <select
-                value={config.escaleraConectadaId}
-                onChange={(e) => setConfig({...config, escaleraConectadaId: e.target.value})}
-                className="stair-modal__select"
-              >
-                <option value="">Seleccionar escalera gemela...</option>
-                {escalerasConectables.map(escalera => (
-                  <option key={escalera.id} value={escalera.id}>
-                    {escalera.nombre} ({getCarreraNombre(escalera.carreraActual)} {escalera.pisoActual})
-                  </option>
-                ))}
-              </select>
-              <div className="stair-modal__connection-info stair-modal__connection-info--success">
-                ⚡ Conexión bidireccional automática
+        {config.tipoDestino === TIPOS_DESTINO_ESCALERA.UNICO ? (
+          <div className="stair-modal__section stair-modal__section--single-destination">
+            <h4 className="stair-modal__section-title">🎯 Destino Único</h4>
+            <div className="stair-modal__row">
+              <div className="stair-modal__column">
+                <label className="stair-modal__label">Carrera:</label>
+                <select
+                  value={config.carreraDestino}
+                  onChange={(e) => setConfig({...config, carreraDestino: e.target.value})}
+                  className="stair-modal__select"
+                >
+                  {Object.values(CARRERAS).map(carrera => (
+                    <option key={carrera} value={carrera}>
+                      {getCarreraNombre(carrera)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="stair-modal__column">
+                <label className="stair-modal__label">Piso:</label>
+                <select
+                  value={config.pisoDestino}
+                  onChange={(e) => setConfig({...config, pisoDestino: e.target.value})}
+                  className="stair-modal__select"
+                >
+                  {Object.values(PISOS).map(piso => (
+                    <option key={piso} value={piso}>
+                      {piso}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
-          ) : escalerasMismoDestino.length > 0 ? (
-            <div>
-              <label className="stair-modal__label">Conectar con escalera en destino:</label>
-              <select
-                value={config.escaleraConectadaId}
-                onChange={(e) => setConfig({...config, escaleraConectadaId: e.target.value})}
-                className="stair-modal__select"
-              >
-                <option value="">Seleccionar escalera en destino...</option>
-                {escalerasMismoDestino.map(escalera => (
-                  <option key={escalera.id} value={escalera.id}>
-                    {escalera.nombre} ({getCarreraNombre(escalera.carreraActual)} {escalera.pisoActual})
-                  </option>
-                ))}
-              </select>
-              <div className="stair-modal__connection-info stair-modal__connection-info--warning">
-                🔄 Conexión manual - verificar configuración
-              </div>
-            </div>
-          ) : (
-            <div className="stair-modal__empty-state">
-              No hay escaleras disponibles para conectar en el destino
-            </div>
-          )}
-        </div>
-
-        <div className="stair-modal__input-group">
-          <label className="stair-modal__label">Dirección:</label>
-          <select
-            value={config.direccion}
-            onChange={(e) => setConfig({...config, direccion: e.target.value})}
-            className="stair-modal__select"
-          >
-            <option value="ambos">⬆️⬇️ Ambos sentidos</option>
-            <option value="subida">⬆️ Solo subida</option>
-            <option value="bajada">⬇️ Solo bajada</option>
-          </select>
-        </div>
-
-        <div className={summaryClass}>
-          <div>
-            {config.escaleraConectadaId ? "🔗 CONEXIÓN CONFIGURADA" : "⚠️ CONEXIÓN PENDIENTE"}
           </div>
-          <div className="stair-modal__summary-details">
-            {getCarreraNombre(config.carreraActual)} {config.pisoActual} → {getCarreraNombre(config.carreraDestino)} {config.pisoDestino}
-            {config.escaleraConectadaId && " • Conectada con escalera existente"}
+        ) : (
+          <div className="stair-modal__section stair-modal__section--multiple-destinations">
+            <h4 className="stair-modal__section-title">
+              🎯 Destinos Múltiples ({config.destinosMultiples.length})
+            </h4>
+            
+            {config.destinosMultiples.map((destino, index) => (
+              <div key={index} className="stair-modal__destination-item">
+                <div className="stair-modal__destination-header">
+                  <h5>Destino {index + 1}</h5>
+                  {config.destinosMultiples.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => eliminarDestino(index)}
+                      className="stair-modal__delete-destination"
+                    >
+                      🗑️
+                    </button>
+                  )}
+                </div>
+                
+                <div className="stair-modal__row">
+                  <div className="stair-modal__column">
+                    <label className="stair-modal__label">Carrera:</label>
+                    <select
+                      value={destino.carrera}
+                      onChange={(e) => actualizarDestino(index, 'carrera', e.target.value)}
+                      className="stair-modal__select"
+                    >
+                      {Object.values(CARRERAS).map(carrera => (
+                        <option key={carrera} value={carrera}>
+                          {getCarreraNombre(carrera)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div className="stair-modal__column">
+                    <label className="stair-modal__label">Piso:</label>
+                    <select
+                      value={destino.piso}
+                      onChange={(e) => actualizarDestino(index, 'piso', e.target.value)}
+                      className="stair-modal__select"
+                    >
+                      {Object.values(PISOS).map(piso => (
+                        <option key={piso} value={piso}>
+                          {piso}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div className="stair-modal__column">
+                    <label className="stair-modal__label">Dirección:</label>
+                    <select
+                      value={destino.direccion}
+                      onChange={(e) => actualizarDestino(index, 'direccion', e.target.value)}
+                      className="stair-modal__select"
+                    >
+                      <option value="ambos">⬆️⬇️ Ambos</option>
+                      <option value="subida">⬆️ Solo subida</option>
+                      <option value="bajada">⬇️ Solo bajada</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            ))}
+            
+            <button
+              type="button"
+              onClick={agregarDestino}
+              className="stair-modal__add-destination"
+            >
+              ➕ Agregar otro destino
+            </button>
+          </div>
+        )}
+
+        <div className="stair-modal__summary">
+          <div className="stair-modal__summary-title">
+            Resumen de Conexiones:
+          </div>
+          <div className="stair-modal__summary-content">
+            <strong>Origen:</strong> {getCarreraNombre(config.carreraActual)} {config.pisoActual}
+            <br />
+            <strong>Destinos:</strong>
+            {config.tipoDestino === TIPOS_DESTINO_ESCALERA.UNICO ? (
+              <span> {getCarreraNombre(config.carreraDestino)} {config.pisoDestino}</span>
+            ) : (
+              <ul>
+                {config.destinosMultiples.map((destino, index) => (
+                  <li key={index}>
+                    {getCarreraNombre(destino.carrera)} {destino.piso} 
+                    {destino.direccion !== "ambos" && ` (${destino.direccion})`}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
 
