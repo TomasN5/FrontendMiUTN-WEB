@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './AnnouncementForm.css';
 import { checkAuth,logout } from './../../CheckAuth';
+import env from '../../../config/env';
+
+const api_URL = env.API_BASE_URL;
 
 const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -18,6 +21,7 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
 
   const [imagePreview, setImagePreview] = useState(null);
   const [errors, setErrors] = useState({});
+  const [imageUrlObject, setImageUrlObject] = useState(null);
 
   // Cargar datos si estamos editando - CON MEJOR MANEJO
   useEffect(() => {
@@ -27,19 +31,81 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
     }
 
     if (announcement) {
-      console.log('Datos del anuncio a editar:', announcement);
+      console.log('published =', announcement.published);
+
       setFormData({
         image: null,
         title: announcement.title || '',
         description: announcement.description || '',
         content: announcement.content || '',
         priority: Boolean(announcement.priority), // ✅ Asegurar que sea boolean
-        published: announcement.published !== undefined ? announcement.published : true,
+        published: Boolean(announcement.published),
         publicationMode: announcement.publicationMode || 'INMEDIATE',
         scheduledDate: announcement.scheduledDate || '',
         expirable: Boolean(announcement.expirable), // ✅ Asegurar que sea boolean
         endDate: announcement.endDate || ''
       });
+
+    // Limpiar URL anterior si existe
+    let previousUrl = imageUrlObject;
+    if (previousUrl) {
+      URL.revokeObjectURL(previousUrl);
+      setImageUrlObject(null);
+    }
+
+    if (announcement) {
+      console.log('Datos del anuncio a editar:', announcement);
+    
+      // Cargar imagen si existe imagePath
+      if (announcement.imagePath) {
+        const loadImage = async () => {
+          try {
+            const response = await fetch(
+              `${api_URL}api/v1/miUTN/publication/download?path=${encodeURIComponent(announcement.imagePath)}`,
+              {
+                method: 'GET',
+                headers: {
+                  'ngrok-skip-browser-warning': 'true'
+                }
+              }
+            );
+
+            if (response.ok) {
+              const blob = await response.blob();
+              
+              // Extraer el nombre del archivo del path o usar un nombre por defecto
+              const fileName = announcement.imagePath.split('/').pop() || announcement.imagePath.split('\\').pop() || 'image.jpg';
+              
+              // Convertir el blob en un File para que el backend lo acepte como MultipartFile
+              const imageFile = new File([blob], fileName, { type: blob.type || 'image/jpeg' });
+              
+              // Establecer el File en formData
+              setFormData(prev => ({ ...prev, image: imageFile }));
+              
+              // Crear URL para el preview
+              const imageUrl = URL.createObjectURL(blob);
+              setImageUrlObject(imageUrl);
+              setImagePreview(imageUrl);
+            } else {
+              console.error('Error al cargar la imagen:', response.status);
+              setImagePreview(null);
+            }
+          } catch (error) {
+            console.error('Error al descargar la imagen:', error);
+            setImagePreview(null);
+          }
+        };
+
+        loadImage();
+      } else {
+        // Si no hay imagePath, limpiar el preview
+        setImagePreview(null);
+      }
+    } else {
+      // Si no hay anuncio, limpiar el preview
+      setImagePreview(null);
+    }
+
     }
   }, [announcement]);
 
@@ -94,10 +160,7 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    
-    // ✅ DEBUG: Log para verificar cambios
-    console.log(`Campo cambiado: ${name}, valor:`, type === 'checkbox' ? checked : value);
-    
+  
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
@@ -126,6 +189,11 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Limpiar URL anterior si existe (imagen descargada)
+      if (imageUrlObject) {
+        URL.revokeObjectURL(imageUrlObject);
+        setImageUrlObject(null);
+      }
       setFormData(prev => ({ ...prev, image: file }));
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -137,8 +205,22 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
 
   const handleRemoveImage = () => {
     setFormData(prev => ({ ...prev, image: null }));
+    // Limpiar la URL del objeto si existe
+    if (imageUrlObject) {
+      URL.revokeObjectURL(imageUrlObject);
+      setImageUrlObject(null);
+    }
     setImagePreview(null);
   };
+
+  // Limpiar la URL del objeto cuando el componente se desmonte
+  useEffect(() => {
+    return () => {
+      if (imageUrlObject) {
+        URL.revokeObjectURL(imageUrlObject);
+      }
+    };
+  }, [imageUrlObject]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -276,7 +358,7 @@ const AnnouncementForm = ({ announcement, onSave, onCancel }) => {
                   <input
                     type="checkbox"
                     name="published"
-                    unchecked={formData.published}
+                    checked={formData.published}
                     onChange={handleInputChange}
                     className="announcement-checkbox-input"
                   />

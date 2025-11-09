@@ -115,7 +115,7 @@
 
 .main-buttons {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr); /* Cambiado de 3 a 4 columnas */
   gap: var(--button-gap);
   width: 100%;
   max-width: min(92%, 1300px);
@@ -172,6 +172,11 @@
 
 .professores-btn {
   background: linear-gradient(135deg, #fd79a8, #e84393);
+  color: white;
+}
+
+.mapa-btn {
+  background: linear-gradient(135deg, #ff9f43, #ff7f00); /* Naranja para el botón mapa */
   color: white;
 }
 
@@ -445,7 +450,7 @@
 /* Tablets y pantallas medianas */
 @media (max-width: 1024px) {
   .main-buttons {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, 1fr); /* 2 columnas en tablets */
     max-width: 700px;
     gap: clamp(15px, 3vw, 25px);
   }
@@ -478,7 +483,7 @@
   }
   
   .main-buttons {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr; /* 1 columna en móviles */
     max-width: 550px;
     gap: clamp(12px, 2vh, 20px);
   }
