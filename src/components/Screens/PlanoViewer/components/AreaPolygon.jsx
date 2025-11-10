@@ -1,9 +1,17 @@
+// AreaPolygon.jsx - VERSIÓN CORREGIDA
 import React from 'react';
 import { COLORS, AREA_TYPES, ICONS } from '../utils/constants';
 import { geometryUtils } from '../utils/geometry';
 import Staircase from './Staircase';
 import SpecialPoint from './SpecialPoint';
 import './../styles/AreaPolygon.css';
+
+// 🔥 DEFINIR COLORS_DESTACADOS localmente por si no está en constants
+const COLORS_DESTACADOS = {
+  DESTACADO: '#FFD700',
+  DESTACADO_BORDE: '#FFA500',
+  DESTACADO_GLOW: '#FFF3CD'
+};
 
 const AreaPolygon = ({ 
   area, 
@@ -13,7 +21,7 @@ const AreaPolygon = ({
   getPolygonCenter,
   tipoActual,
   modoEdicion,
-  hideNames // 🔥 NUEVO: Prop para ocultar nombres
+  hideNames
 }) => {
   // Detectar si es un punto especial
   const isSpecialPoint = [
@@ -43,7 +51,7 @@ const AreaPolygon = ({
         onNodeClick={onNodeClick}
         tipoActual={tipoActual}
         modoEdicion={modoEdicion}
-        hideNames={hideNames} // 🔥 Pasar la prop
+        hideNames={hideNames}
       />
     );
   }
@@ -56,7 +64,7 @@ const AreaPolygon = ({
         isSelectable={isSelectable}
         onNodeClick={onNodeClick}
         getPolygonCenter={getPolygonCenter}
-        hideNames={hideNames} // 🔥 Pasar la prop
+        hideNames={hideNames}
       />
     );
   }
@@ -69,7 +77,8 @@ const AreaPolygon = ({
 
   const polygonClass = `area-polygon ${
     isSelectable ? 'area-polygon--selectable' : ''
-  } ${tipoActual === AREA_TYPES.PASILLO ? 'area-polygon--pasillo-mode' : ''}`;
+  } ${tipoActual === AREA_TYPES.PASILLO ? 'area-polygon--pasillo-mode' : ''}
+  ${area.destacado ? 'area-polygon--destacado' : ''}`;
 
   // Para áreas (aulas, halls, baños) - mostrar polígono + icono
   const [centerX, centerY] = getPolygonCenter(area.points);
@@ -77,47 +86,67 @@ const AreaPolygon = ({
   // 🔥 NUEVA LÓGICA: Determinar si mostrar etiquetas
   const shouldShowLabels = !hideNames || 
     (area.tipo !== AREA_TYPES.PASILLO && area.tipo !== AREA_TYPES.PUNTO);
- // En AreaPolygon.jsx, dentro del return:
-    return (
-      <g
-        onClick={handleClick}
-        className={polygonClass}
-      >
-        {/* 🔥 EL POLÍGONO SIEMPRE SE MUESTRA */}
+
+  // 🔥 FUNCIÓN PARA OBTENER COLOR SEGURO
+  const getSafeColor = () => {
+    if (area.destacado) {
+      return COLORS_DESTACADOS.DESTACADO;
+    }
+    return COLORS[area.tipo] || '#CCCCCC';
+  };
+
+  return (
+    <g
+      onClick={handleClick}
+      className={polygonClass}
+    >
+      {/* 🔥 EL POLÍGONO SIEMPRE SE MUESTRA */}
+      <polygon
+        points={geometryUtils.toPointsAttr(area.points)}
+        className={`area-polygon__shape area-polygon__shape--${area.tipo} ${
+          area.destacado ? 'area-polygon__shape--destacado' : ''
+        }`}
+        fill={getSafeColor()}
+      />
+      
+      {/* 🔥 EFECTO DE BRILLO PARA ELEMENTOS DESTACADOS */}
+      {area.destacado && (
         <polygon
           points={geometryUtils.toPointsAttr(area.points)}
-          className={`area-polygon__shape area-polygon__shape--${area.tipo}`}
+          className="area-polygon__destacado-glow"
         />
-        
-        {/* 🔥 ICONO EN EL CENTRO DEL ÁREA - SIEMPRE VISIBLE */}
-        {zoomScale >= 1.2 && ICONS[area.tipo] && (
-            <text
-              x={centerX}
-              y={centerY}
-              textAnchor="middle"
-              dominantBaseline="central"
-              className="area-polygon__icon"
-              fontSize={getAreaIconSize(zoomScale)}
-            >
-              {ICONS[area.tipo]}
-            </text>
-          )}
-        
-        {/* 🔥 SOLO LA ETIQUETA DEL NOMBRE SE OCULTA */}
-        {!hideNames && zoomScale >= 2.5 && (
+      )}
+
+      {/* 🔥 ICONO EN EL CENTRO DEL ÁREA - SIEMPRE VISIBLE */}
+      {zoomScale >= 1.2 && ICONS[area.tipo] && (
           <text
             x={centerX}
-            y={centerY + 20}
+            y={centerY}
             textAnchor="middle"
-            className={`area-polygon__label ${
-              zoomScale >= 3 ? 'area-polygon__label--medium' : 'area-polygon__label--small'
-            }`}
+            dominantBaseline="central"
+            className="area-polygon__icon"
+            fontSize={getAreaIconSize(zoomScale)}
           >
-            {area.nombre}
+            {ICONS[area.tipo]}
           </text>
         )}
-      </g>
-    );
+      
+      {/* 🔥 SOLO LA ETIQUETA DEL NOMBRE SE OCULTA */}
+      {!hideNames && zoomScale >= 2.5 && (
+        <text
+          x={centerX}
+          y={centerY + 20}
+          textAnchor="middle"
+          className={`area-polygon__label ${
+            zoomScale >= 3 ? 'area-polygon__label--medium' : 'area-polygon__label--small'
+          }`}
+        >
+          {area.nombre}
+          {area.destacado && ' ⭐'}
+        </text>
+      )}
+    </g>
+  );
 };
 
 // Función auxiliar para tamaño de iconos en áreas

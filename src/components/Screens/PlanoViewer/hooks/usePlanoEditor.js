@@ -12,6 +12,8 @@ export const usePlanoEditor = () => {
   const [nombreArea, setNombreArea] = useState("");
   const [selectedNode, setSelectedNode] = useState(null);
   const [planoActual, setPlanoActual] = useState(null);
+  // 🔥 NUEVO: Estado para controlar si el elemento es destacado
+  const [esDestacado, setEsDestacado] = useState(false);
 
   const datosPorPlanoRef = useRef(datosPorPlano);
 
@@ -67,7 +69,8 @@ export const usePlanoEditor = () => {
         fechaExportacion: new Date().toISOString(),
         totalPlanos: Object.keys(datosActuales).length,
         version: "2.0", // Actualizamos versión por el cambio
-        soporteDestinosMultiples: true
+        soporteDestinosMultiples: true,
+        soporteDestacados: true // 🔥 NUEVO: Indicar soporte para destacados
       },
       planos: {}
     };
@@ -110,7 +113,7 @@ export const usePlanoEditor = () => {
       };
     });
     
-    console.log("=== 📋 DATOS COMPLETOS EN FORMATO JSON (CON DESTINOS MÚLTIPLES) ===");
+    console.log("=== 📋 DATOS COMPLETOS EN FORMATO JSON (CON DESTINOS MÚLTIPLES Y DESTACADOS) ===");
     console.log(JSON.stringify(datosCompletos, null, 2));
     
     return datosCompletos;
@@ -160,7 +163,8 @@ export const usePlanoEditor = () => {
       escaleras: 0,
       pasillos: 0,
       elementosEspeciales: 0,
-      escalerasMultiDestino: 0
+      escalerasMultiDestino: 0,
+      destacados: 0 // 🔥 NUEVA ESTADÍSTICA
     };
 
     // Crear nueva estructura de datos
@@ -179,6 +183,11 @@ export const usePlanoEditor = () => {
         nuevosDatos[planoId].areas = planoData.areas.map(area => {
           estadisticas.areas++;
           
+          // 🔥 CONTAR ELEMENTOS DESTACADOS
+          if (area.destacado) {
+            estadisticas.destacados++;
+          }
+          
           if (area.tipo === AREA_TYPES.ESCALERA) {
             estadisticas.escaleras++;
             
@@ -193,7 +202,7 @@ export const usePlanoEditor = () => {
             estadisticas.pasillos++;
           }
           
-          console.log(`   🏢 Cargando área: ${area.nombre} (${area.tipo})`);
+          console.log(`   🏢 Cargando área: ${area.nombre} (${area.tipo}) ${area.destacado ? '⭐ DESTACADO' : ''}`);
           return area;
         });
       }
@@ -203,11 +212,16 @@ export const usePlanoEditor = () => {
         nuevosDatos[planoId].points = planoData.points.map(punto => {
           estadisticas.puntos++;
           
+          // 🔥 CONTAR ELEMENTOS DESTACADOS
+          if (punto.destacado) {
+            estadisticas.destacados++;
+          }
+          
           if (punto.tipo !== AREA_TYPES.PUNTO) {
             estadisticas.elementosEspeciales++;
           }
           
-          console.log(`   📍 Cargando punto: ${punto.nombre} (${punto.tipo})`);
+          console.log(`   📍 Cargando punto: ${punto.nombre} (${punto.tipo}) ${punto.destacado ? '⭐ DESTACADO' : ''}`);
           return punto;
         });
       }
@@ -224,6 +238,7 @@ export const usePlanoEditor = () => {
     console.log(`   🔄 Escaleras multi-destino: ${estadisticas.escalerasMultiDestino}`);
     console.log(`   🛣️ Pasillos: ${estadisticas.pasillos}`);
     console.log(`   🧯 Elementos especiales: ${estadisticas.elementosEspeciales}`);
+    console.log(`   ⭐ Elementos destacados: ${estadisticas.destacados}`); // 🔥 NUEVA ESTADÍSTICA
     
     // Mostrar notificación sutil
     setTimeout(() => {
@@ -252,6 +267,7 @@ export const usePlanoEditor = () => {
     setCursorPos(null);
     setNombreArea("");
     setSelectedNode(null);
+    setEsDestacado(false); // 🔥 Resetear estado destacado
   }, []);
 
   const actualizarDatosPlano = useCallback((planoId, nuevasAreas, nuevosPoints) => {
@@ -363,6 +379,7 @@ export const usePlanoEditor = () => {
             carrera: area.carrera,
             piso: area.piso,
             puntos: area.points || [],
+            destacado: area.destacado || false, // 🔥 INCLUIR DESTACADO
             ...(area.tipo === 'escalera' && {
               carreraActual: area.carreraActual,
               pisoActual: area.pisoActual,
@@ -395,7 +412,8 @@ export const usePlanoEditor = () => {
             y: punto.y,
             planoId: punto.planoId,
             carrera: punto.carrera,
-            piso: punto.piso
+            piso: punto.piso,
+            destacado: punto.destacado || false // 🔥 INCLUIR DESTACADO
           };
           console.log("  📍", puntoData);
           todosLosDatosArray.push(puntoData);
@@ -412,6 +430,7 @@ export const usePlanoEditor = () => {
     console.log(`   🛣️ Pasillos: ${todosLosDatosArray.filter(d => d.tipoArea === 'pasillo').length}`);
     console.log(`   🧯 Elementos especiales: ${todosLosDatosArray.filter(d => 
       d.tipoPunto && d.tipoPunto !== 'punto').length}`);
+    console.log(`   ⭐ Elementos destacados: ${todosLosDatosArray.filter(d => d.destacado).length}`); // 🔥 NUEVA ESTADÍSTICA
     
     return todosLosDatosArray;
   }, [datosPorPlano]);
@@ -429,7 +448,8 @@ export const usePlanoEditor = () => {
       desfibriladores: '💓',
       botiquines: '🩹',
       alarmas: '🚨',
-      totems: '📟'
+      totems: '📟',
+      destacados: '⭐' // 🔥 NUEVO ICONO
     };
     return iconos[tipo] || '📁';
   };
@@ -449,6 +469,7 @@ export const usePlanoEditor = () => {
       alarmas: [],
       totems: [],
       areas_genericas: [],
+      destacados: [] // 🔥 NUEVA CATEGORÍA
     };
     
     Object.values(datosPorPlano).forEach(planoData => {
@@ -459,7 +480,8 @@ export const usePlanoEditor = () => {
           planoId: area.planoId,
           carrera: area.carrera,
           piso: area.piso,
-          puntos: area.points
+          puntos: area.points,
+          destacado: area.destacado || false // 🔥 INCLUIR DESTACADO
         };
         
         switch(area.tipo) {
@@ -499,6 +521,18 @@ export const usePlanoEditor = () => {
               haciaNombre: area.to?.nombre
             });
             break;
+          case 'area_generica':
+            datosPorTipo.areas_genericas.push(areaData);
+            break;
+        }
+
+        // 🔥 AGREGAR A DESTACADOS SI CORRESPONDE
+        if (area.destacado) {
+          datosPorTipo.destacados.push({
+            ...areaData,
+            tipoElemento: 'area',
+            tipoEspecifico: area.tipo
+          });
         }
       });
       
@@ -510,7 +544,8 @@ export const usePlanoEditor = () => {
           y: punto.y,
           planoId: punto.planoId,
           carrera: punto.carrera,
-          piso: punto.piso
+          piso: punto.piso,
+          destacado: punto.destacado || false // 🔥 INCLUIR DESTACADO
         };
         
         switch(punto.tipo) {
@@ -536,6 +571,15 @@ export const usePlanoEditor = () => {
             datosPorTipo.totems.push(puntoData);
             break;
         }
+
+        // 🔥 AGREGAR A DESTACADOS SI CORRESPONDE
+        if (punto.destacado) {
+          datosPorTipo.destacados.push({
+            ...puntoData,
+            tipoElemento: 'punto',
+            tipoEspecifico: punto.tipo
+          });
+        }
       });
     });
     
@@ -543,11 +587,13 @@ export const usePlanoEditor = () => {
     Object.entries(datosPorTipo).forEach(([tipo, datos]) => {
       if (datos.length > 0) {
         const infoExtra = tipo === 'escaleras' ? 
-          ` (${datos.filter(d => d.destinosCount > 1).length} multi-destino)` : '';
+          ` (${datos.filter(d => d.destinosCount > 1).length} multi-destino)` : 
+          tipo === 'destacados' ? ` (${datos.length} elementos)` : '';
         console.log(`\n${getIconoTipo(tipo)} ${tipo.toUpperCase()} (${datos.length}${infoExtra}):`);
         datos.forEach(item => {
           const destinosInfo = item.destinosCount > 1 ? ` [${item.destinosCount} destinos]` : '';
-          console.log(`   📍 ${item.nombre} - ID: ${item.id}${destinosInfo}`);
+          const destacadoInfo = item.destacado ? ' ⭐ DESTACADO' : '';
+          console.log(`   📍 ${item.nombre} - ID: ${item.id}${destinosInfo}${destacadoInfo}`);
         });
       }
     });
@@ -649,14 +695,16 @@ export const usePlanoEditor = () => {
         y: puntosTemporales[0][1],
         carrera: planoInfo.carrera || 'general',
         piso: planoInfo.piso || 'planta_principal',
-        planoId: planoInfo.id
+        planoId: planoInfo.id,
+        // 🔥 AGREGAR: Propiedad destacado
+        destacado: esDestacado
       };
       
       const nuevosPoints = [...datosActuales.points, nuevoPunto];
       actualizarDatosPlano(planoInfo.id, datosActuales.areas, nuevosPoints);
       resetEditorState();
       
-      console.log("✅ Punto especial creado:", nuevoPunto.nombre);
+      console.log("✅ Punto especial creado:", nuevoPunto.nombre, esDestacado ? "⭐ DESTACADO" : "");
       
       setTimeout(async () => {
         await guardarTodosLosDatosEnServidor();
@@ -670,7 +718,9 @@ export const usePlanoEditor = () => {
         carrera: planoInfo.carrera || 'general',
         piso: planoInfo.piso || 'planta_principal',
         planoId: planoInfo.id,
-        points: nuevaArea.points || puntosTemporales
+        points: nuevaArea.points || puntosTemporales,
+        // 🔥 AGREGAR: Propiedad destacado
+        destacado: esDestacado
       };
       
       // Para escaleras con destinos múltiples, mostrar información
@@ -683,13 +733,13 @@ export const usePlanoEditor = () => {
       actualizarDatosPlano(planoInfo.id, nuevasAreas, datosActuales.points);
       resetEditorState();
       
-      console.log("✅ Área creada:", areaConInfo.nombre);
+      console.log("✅ Área creada:", areaConInfo.nombre, esDestacado ? "⭐ DESTACADA" : "");
       
       setTimeout(async () => {
         await guardarTodosLosDatosEnServidor();
       }, 100);
     }
-  }, [puntosTemporales, getDatosPlanoActual, actualizarDatosPlano, resetEditorState, generarIdUnico, guardarTodosLosDatosEnServidor]);
+  }, [puntosTemporales, getDatosPlanoActual, actualizarDatosPlano, resetEditorState, generarIdUnico, guardarTodosLosDatosEnServidor, esDestacado]);
 
   const handleGuardarPuntos = useCallback(async (planoInfo) => {
     if (puntosTemporales.length > 0 && planoInfo) {
@@ -704,7 +754,9 @@ export const usePlanoEditor = () => {
         y: pt[1],
         carrera: planoInfo.carrera || 'general',
         piso: planoInfo.piso || 'planta_principal',
-        planoId: planoInfo.id
+        planoId: planoInfo.id,
+        // 🔥 AGREGAR: Propiedad destacado
+        destacado: esDestacado
       }));
       
       const nuevosPoints = [...datosActuales.points, ...nuevosPuntos];
@@ -713,7 +765,7 @@ export const usePlanoEditor = () => {
       actualizarDatosPlano(planoInfo.id, datosActuales.areas, nuevosPoints);
       resetEditorState();
       
-      console.log("✅ Puntos creados:", nuevosPuntos.length);
+      console.log("✅ Puntos creados:", nuevosPuntos.length, esDestacado ? "⭐ DESTACADOS" : "");
       
       // 2️⃣ PEQUEÑO DELAY para asegurar que React actualizó el estado
       setTimeout(async () => {
@@ -721,7 +773,59 @@ export const usePlanoEditor = () => {
         await guardarTodosLosDatosEnServidor();
       }, 100);
     }
-  }, [puntosTemporales, tipoActual, getDatosPlanoActual, actualizarDatosPlano, resetEditorState, generarIdUnico, guardarTodosLosDatosEnServidor]);
+  }, [puntosTemporales, tipoActual, getDatosPlanoActual, actualizarDatosPlano, resetEditorState, generarIdUnico, guardarTodosLosDatosEnServidor, esDestacado]);
+
+  // 🔥 NUEVA FUNCIÓN: Toggle para destacado
+  const toggleDestacado = useCallback((destacado) => {
+    setEsDestacado(destacado);
+    console.log("⭐ Estado destacado:", destacado);
+  }, []);
+
+  // 🔥 NUEVA FUNCIÓN: Actualizar destacado de un nodo existente
+  const actualizarDestacadoNodo = useCallback(async (nodeId, destacado) => {
+    if (!planoActual) {
+      console.warn("❌ No hay plano actual para actualizar destacado");
+      return;
+    }
+    
+    console.log("🔄 Actualizando destacado para nodo:", nodeId, "a:", destacado);
+    
+    const datosActuales = getDatosPlanoActual();
+    
+    // Buscar y actualizar en áreas
+    let nodoActualizado = false;
+    const nuevasAreas = datosActuales.areas.map(area => {
+      if (area.id === nodeId) {
+        nodoActualizado = true;
+        console.log(`⭐ Actualizando área: ${area.nombre} destacado: ${destacado}`);
+        return { ...area, destacado };
+      }
+      return area;
+    });
+    
+    // Buscar y actualizar en puntos
+    const nuevosPoints = datosActuales.points.map(point => {
+      if (point.id === nodeId) {
+        nodoActualizado = true;
+        console.log(`⭐ Actualizando punto: ${point.nombre} destacado: ${destacado}`);
+        return { ...point, destacado };
+      }
+      return point;
+    });
+    
+    if (!nodoActualizado) {
+      console.warn(`❌ No se encontró el nodo con ID: ${nodeId}`);
+      return;
+    }
+    
+    actualizarDatosPlano(planoActual.id, nuevasAreas, nuevosPoints);
+    console.log("✅ Destacado actualizado para nodo:", nodeId);
+    
+    // Guardar en servidor
+    setTimeout(async () => {
+      await guardarTodosLosDatosEnServidor();
+    }, 100);
+  }, [planoActual, getDatosPlanoActual, actualizarDatosPlano, guardarTodosLosDatosEnServidor]);
 
   const handleDeshacer = useCallback(() => {
     setPuntosTemporales((prev) => prev.slice(0, -1));
@@ -747,7 +851,8 @@ export const usePlanoEditor = () => {
         nombre: `Pasillo ${selectedNode.nombre}-${node.nombre}`,
         carrera: planoActual.carrera || 'general',
         piso: planoActual.piso || 'planta_principal',
-        planoId: planoActual.id
+        planoId: planoActual.id,
+        destacado: esDestacado // 🔥 INCLUIR ESTADO DESTACADO
       };
       const pasillo2 = {
         id: generarIdUnico('pasillo'),
@@ -757,20 +862,21 @@ export const usePlanoEditor = () => {
         nombre: `Pasillo ${node.nombre}-${selectedNode.nombre}`,
         carrera: planoActual.carrera || 'general',
         piso: planoActual.piso || 'planta_principal',
-        planoId: planoActual.id
+        planoId: planoActual.id,
+        destacado: esDestacado // 🔥 INCLUIR ESTADO DESTACADO
       };
       
       const nuevasAreas = [...datosActuales.areas, pasillo1, pasillo2];
       actualizarDatosPlano(planoActual.id, nuevasAreas, datosActuales.points);
       setSelectedNode(null);
       
-      console.log("✅ Pasillos creados conectando:", selectedNode.nombre, "con", node.nombre);
+      console.log("✅ Pasillos creados conectando:", selectedNode.nombre, "con", node.nombre, esDestacado ? "⭐ DESTACADOS" : "");
       
       setTimeout(async () => {
         await guardarTodosLosDatosEnServidor();
       }, 100);
     }
-  }, [modoEdicion, tipoActual, selectedNode, planoActual, getDatosPlanoActual, actualizarDatosPlano, generarIdUnico, guardarTodosLosDatosEnServidor]);
+  }, [modoEdicion, tipoActual, selectedNode, planoActual, getDatosPlanoActual, actualizarDatosPlano, generarIdUnico, guardarTodosLosDatosEnServidor, esDestacado]);
 
   const actualizarPlanoActual = useCallback((planoInfo) => {
     setPlanoActual(planoInfo);
@@ -857,6 +963,8 @@ export const usePlanoEditor = () => {
     nombreArea,
     selectedNode,
     planoActual,
+    // 🔥 NUEVO: Estado para destacado
+    esDestacado,
     
     // Setters
     setModoEdicion,
@@ -865,6 +973,8 @@ export const usePlanoEditor = () => {
     setSelectedNode,
     setCursorPos,
     actualizarPlanoActual,
+    // 🔥 NUEVO: Setter para destacado
+    toggleDestacado,
     
     // Handlers principales
     handleClickSVG,
@@ -880,6 +990,9 @@ export const usePlanoEditor = () => {
     handleEliminarNodo,
     handleEliminarConexion,
     handleEliminarConexionesNodo,
+
+    // 🔥 NUEVO: Handler para actualizar destacado
+    actualizarDestacadoNodo,
 
     // Funciones de exportación
     exportarTodosLosDatos,

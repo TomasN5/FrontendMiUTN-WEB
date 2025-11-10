@@ -670,3 +670,44 @@
   margin-top: 6px;
   line-height: 1.4;
 }
+/* En styles/ControlPanel.css - AGREGAR estilos para checkbox destacado */
+.control-panel__checkbox-label--destacado {
+  background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+  border: 2px solid #ffd43b;
+  border-radius: 8px;
+  padding: 10px;
+  margin: 10px 0;
+}
+
+.control-panel__checkbox-custom--destacado {
+  font-size: 1.5em;
+  margin-right: 10px;
+}
+
+.control-panel__checkbox-hint {
+  font-size: 0.8em;
+  color: #666;
+  margin-top: 5px;
+  font-style: italic;
+}
+
+.control-panel__destacado-indicator {
+  background: #fff3cd;
+  border: 1px solid #ffd43b;
+  border-radius: 4px;
+  padding: 5px 10px;
+  margin: 5px 0;
+  font-size: 0.9em;
+  text-align: center;
+}
+
+.control-panel__stat-item--destacado {
+  background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+  border: 1px solid #ffd43b;
+}
+
+.control-panel__status-item--destacado {
+  background: #fff3cd;
+  border: 1px solid #ffd43b;
+  color: #856404;
+}

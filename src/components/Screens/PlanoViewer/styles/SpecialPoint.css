@@ -59,3 +59,26 @@
 .special-point--punto:hover .special-point__background {
   filter: drop-shadow(0 0 8px #607D8B) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
 }
+.special-point--destacado {
+  filter: drop-shadow(0 0 6px gold);
+}
+
+.special-point__background--destacado {
+  stroke: #FFA500;
+  stroke-width: 2;
+  animation: pulse-point-destacado 1.5s infinite;
+}
+
+.special-point__destacado-pulse {
+  fill: none;
+  stroke: #FFD700;
+  stroke-width: 2;
+  opacity: 0;
+  animation: pulse-ring-destacado 2s ease-out infinite;
+}
+
+@keyframes pulse-point-destacado {
+  0% { stroke-width: 2; }
+  50% { stroke-width: 4; }
+  100% { stroke-width: 2; }
+}

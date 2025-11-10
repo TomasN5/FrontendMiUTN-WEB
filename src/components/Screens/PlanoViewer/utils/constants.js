@@ -4,7 +4,16 @@ import sistemas_p2 from "./../assets/sistemas-piso-2.png"
 
 
 
+// utils/constants.js - AGREGAR constantes para destacados
+export const FEATURE_FLAGS = {
+  DESTACADO: 'destacado'
+};
 
+export const COLORS_DESTACADOS = {
+  DESTACADO: '#FFD700', // Dorado para elementos destacados
+  DESTACADO_BORDE: '#FFA500', // Naranja para el borde
+  DESTACADO_GLOW: '#FFF3CD' // Amarillo claro para efectos de brillo
+};
 export const AREA_TYPES = {
   AULA: 'aula',
   // SALON: 'salon', // ❌ QUITAMOS SALÓN (opcional)
