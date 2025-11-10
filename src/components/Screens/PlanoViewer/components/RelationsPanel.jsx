@@ -1,3 +1,4 @@
+// RelationsPanel.jsx - VERSIÓN CON PANEL MÁS ANCHO
 import React, { useState, useMemo } from 'react';
 import './../styles/RelationsPanel.css';
 
@@ -14,7 +15,9 @@ const RelationsPanel = ({
   connectionLines,
   onDeleteNode,
   onDeleteConnection,
-  onNavigateToNode
+  onNavigateToNode,
+  // 🔥 NUEVA PROP: Función para destacar nodos
+  onToggleDestacado
 }) => {
   const [selectedNode, setSelectedNode] = useState(null);
   const [activeTab, setActiveTab] = useState('todos');
@@ -22,7 +25,7 @@ const RelationsPanel = ({
   const [filterCarrera, setFilterCarrera] = useState('todas');
   const [filterPiso, setFilterPiso] = useState('todos');
 
-  // Obtener todos los nodos de todos los planos - SIEMPRE se ejecuta
+  // Obtener todos los nodos de todos los planos
   const todosLosNodos = useMemo(() => {
     const allAreas = [];
     const allPoints = [];
@@ -35,7 +38,7 @@ const RelationsPanel = ({
     return [...allAreas, ...allPoints];
   }, [todosLosDatos]);
 
-  // Obtener carreras y pisos únicos para los filtros - SIEMPRE se ejecuta
+  // Obtener carreras y pisos únicos para los filtros
   const carrerasUnicas = useMemo(() => {
     const carreras = [...new Set(todosLosNodos.map(nodo => nodo.carrera).filter(Boolean))];
     return ['todas', ...carreras];
@@ -46,7 +49,7 @@ const RelationsPanel = ({
     return ['todos', ...pisos];
   }, [todosLosNodos]);
 
-  // Filtrar nodos según búsqueda y filtros - SIEMPRE se ejecuta
+  // Filtrar nodos según búsqueda y filtros
   const nodosFiltrados = useMemo(() => {
     return todosLosNodos.filter(nodo => {
       const coincideBusqueda = !searchTerm || 
@@ -60,11 +63,11 @@ const RelationsPanel = ({
     });
   }, [todosLosNodos, searchTerm, filterCarrera, filterPiso]);
 
-  // Agrupar nodos por tipo - SIEMPRE se ejecuta
+  // Agrupar nodos por tipo
   const nodosPorTipo = useMemo(() => {
     const agrupados = {
       aulas: nodosFiltrados.filter(n => n.tipo === 'aula'),
-      halls: nodosFiltrados.filter(n => n.tipo === 'hall'),
+      departamentos: nodosFiltrados.filter(n => n.tipo === 'departamento'),
       banos: nodosFiltrados.filter(n => n.tipo === 'bano'),
       escaleras: nodosFiltrados.filter(n => n.tipo === 'escalera'),
       pasillos: nodosFiltrados.filter(n => n.tipo === 'pasillo'),
@@ -74,7 +77,8 @@ const RelationsPanel = ({
       desfibriladores: nodosFiltrados.filter(n => n.tipo === 'desfibrilador'),
       botiquines: nodosFiltrados.filter(n => n.tipo === 'botiquin'),
       alarmas: nodosFiltrados.filter(n => n.tipo === 'alarma'),
-      totems: nodosFiltrados.filter(n => n.tipo === 'totem')
+      totems: nodosFiltrados.filter(n => n.tipo === 'totem'),
+      areas_genericas: nodosFiltrados.filter(n => n.tipo === 'area_generica')
     };
     
     // Filtrar tipos vacíos
@@ -83,20 +87,21 @@ const RelationsPanel = ({
     );
   }, [nodosFiltrados]);
 
-  // Estadísticas - SIEMPRE se ejecuta
+  // Estadísticas
   const stats = useMemo(() => {
     const isNodeInCurrentPlano = (node) => node.planoId === planoActual?.id;
     
     return {
       total: nodosFiltrados.length,
       enPlanoActual: nodosFiltrados.filter(n => isNodeInCurrentPlano(n)).length,
-      enOtrosPlanos: nodosFiltrados.filter(n => !isNodeInCurrentPlano(n)).length
+      enOtrosPlanos: nodosFiltrados.filter(n => !isNodeInCurrentPlano(n)).length,
+      destacados: nodosFiltrados.filter(n => n.destacado).length // 🔥 NUEVA ESTADÍSTICA
     };
   }, [nodosFiltrados, planoActual]);
 
   if (!isVisible) return null;
 
-  // Handler para click en nodo - AHORA INCLUYE TODOS LOS TIPOS
+  // Handler para click en nodo
   const handleNodeClick = (node) => {
     console.log("🎯 Click en nodo desde RelationsPanel:", node.nombre, "Tipo:", node.tipo);
     
@@ -110,8 +115,7 @@ const RelationsPanel = ({
       // Seleccionar nuevo nodo
       setSelectedNode(node);
       
-      // 🔥 ACTUALIZADO: Activar highlight en el mapa para TODOS los tipos de nodos
-      // Incluye: botiquines, totems, desfibriladores, extintores, alarmas, salidas, etc.
+      // Activar highlight en el mapa para TODOS los tipos de nodos
       if (onNodeClick) {
         // Si está en el plano actual, hacer highlight inmediato
         if (node.planoId === planoActual?.id) {
@@ -122,7 +126,6 @@ const RelationsPanel = ({
           // Si no está en el plano actual, navegar primero y luego hacer highlight
           if (onNavigateToNode) {
             onNavigateToNode(node);
-            // El highlight se activará automáticamente después de la navegación
           }
         }
       }
@@ -146,7 +149,23 @@ const RelationsPanel = ({
     }
   };
 
-  // Encontrar conexiones de un nodo - CORREGIDO para evitar duplicados
+  // 🔥 NUEVO HANDLER: Toggle destacado
+  const handleToggleDestacado = (node) => {
+    console.log("⭐ Toggle destacado para:", node.nombre, "Estado actual:", node.destacado);
+    if (onToggleDestacado) {
+      onToggleDestacado(node.id, !node.destacado);
+      
+      // Actualizar el estado local del nodo seleccionado si es el mismo
+      if (selectedNode && selectedNode.id === node.id) {
+        setSelectedNode({
+          ...selectedNode,
+          destacado: !selectedNode.destacado
+        });
+      }
+    }
+  };
+
+  // Encontrar conexiones de un nodo
   const findNodeConnections = (nodeId) => {
     const connections = [];
     const connectionIds = new Set(); // Para evitar duplicados
@@ -156,7 +175,7 @@ const RelationsPanel = ({
         planoData.areas
           .filter(area => area.tipo === 'pasillo')
           .forEach(pasillo => {
-            // 🔥 CORREGIDO: Evitar duplicados en conexiones bidireccionales
+            // Evitar duplicados en conexiones bidireccionales
             const connectionKey = [pasillo.from?.id, pasillo.to?.id].sort().join('-');
             
             if (pasillo.from && pasillo.from.id === nodeId && !connectionIds.has(connectionKey)) {
@@ -164,7 +183,7 @@ const RelationsPanel = ({
                 node: pasillo.to, 
                 connection: pasillo,
                 type: 'pasillo',
-                direction: 'bidireccional', // 🔥 Cambiado a bidireccional
+                direction: 'bidireccional',
                 connectionKey: connectionKey
               });
               connectionIds.add(connectionKey);
@@ -175,7 +194,7 @@ const RelationsPanel = ({
                 node: pasillo.from, 
                 connection: pasillo,
                 type: 'pasillo',
-                direction: 'bidireccional', // 🔥 Cambiado a bidireccional
+                direction: 'bidireccional',
                 connectionKey: connectionKey
               });
               connectionIds.add(connectionKey);
@@ -250,11 +269,18 @@ const RelationsPanel = ({
           highlightedNode && highlightedNode.id === node.id ? 'relations-panel__node-item--highlighted' : ''
         } ${
           !isNodeInCurrentPlano(node) ? 'relations-panel__node-item--other-floor' : ''
+        } ${
+          node.destacado ? 'relations-panel__node-item--destacado' : ''
         }`}
         onClick={() => handleNodeClick(node)}
       >
         <div className="relations-panel__node-icon">
           {getNodeIcon(node.tipo)}
+          {node.destacado && (
+            <span className="relations-panel__node-destacado-indicator" title="Elemento destacado">
+              ⭐
+            </span>
+          )}
           {!isNodeInCurrentPlano(node) && (
             <span className="relations-panel__node-floor-indicator" title={`En ${node.piso}`}>
               🏢
@@ -277,7 +303,7 @@ const RelationsPanel = ({
                 • {node.destinos.length} destinos
               </span>
             )}
-            {/* 🔥 NUEVO: Mostrar información específica para elementos especiales */}
+            {/* Información específica para elementos especiales */}
             {node.tipo === 'botiquin' && (
               <span className="relations-panel__node-special-info">
                 • 🩹 Elemento de primeros auxilios
@@ -311,6 +337,20 @@ const RelationsPanel = ({
           </div>
         </div>
         <div className="relations-panel__node-actions">
+          {/* 🔥 NUEVO BOTÓN: Destacar */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleToggleDestacado(node);
+            }}
+            className={`relations-panel__action-button relations-panel__action-button--destacar ${
+              node.destacado ? 'relations-panel__action-button--destacado-active' : ''
+            }`}
+            title={node.destacado ? "Quitar destacado" : "Marcar como destacado"}
+          >
+            {node.destacado ? '⭐' : '☆'}
+          </button>
+
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -338,7 +378,7 @@ const RelationsPanel = ({
     ));
   };
 
-  // Renderizar conexiones del nodo seleccionado - MEJORADO
+  // Renderizar conexiones del nodo seleccionado
   const renderConnections = () => {
     if (!selectedNode) return null;
 
@@ -375,7 +415,6 @@ const RelationsPanel = ({
                     </span>
                     <span className="relations-panel__connection-meta">
                       {getTipoNombre(conn.node.tipo)} • {conn.node.piso}
-                      {/* 🔥 NUEVO: Mostrar que la conexión es bidireccional */}
                       {conn.direction === 'bidireccional' && (
                         <span className="relations-panel__connection-bidirectional">
                           • 🔄 Bidireccional
@@ -385,6 +424,17 @@ const RelationsPanel = ({
                   </div>
                 </div>
                 <div className="relations-panel__connection-actions">
+                  {/* 🔥 BOTÓN DESTACAR EN CONEXIONES TAMBIÉN */}
+                  <button
+                    onClick={() => handleToggleDestacado(conn.node)}
+                    className={`relations-panel__action-button relations-panel__action-button--destacar ${
+                      conn.node.destacado ? 'relations-panel__action-button--destacado-active' : ''
+                    }`}
+                    title={conn.node.destacado ? "Quitar destacado" : "Marcar como destacado"}
+                  >
+                    {conn.node.destacado ? '⭐' : '☆'}
+                  </button>
+
                   <button
                     onClick={() => handleNavigateToNode(conn.node)}
                     className="relations-panel__action-button relations-panel__action-button--navigate"
@@ -512,6 +562,14 @@ const RelationsPanel = ({
           <span className="relations-panel__tab-icon">🛡️</span>
           Especiales
         </button>
+        {/* 🔥 NUEVA PESTAÑA: Destacados */}
+        <button
+          className={`relations-panel__tab ${activeTab === 'destacados' ? 'relations-panel__tab--active' : ''}`}
+          onClick={() => setActiveTab('destacados')}
+        >
+          <span className="relations-panel__tab-icon">⭐</span>
+          Destacados ({stats.destacados})
+        </button>
       </div>
 
       <div className="relations-panel__content">
@@ -524,6 +582,11 @@ const RelationsPanel = ({
           <div className="relations-panel__stat-item">
             <span className="relations-panel__stat-value">{stats.enOtrosPlanos}</span>
             <span className="relations-panel__stat-label">En otros planos</span>
+          </div>
+          {/* 🔥 NUEVA ESTADÍSTICA: Destacados */}
+          <div className="relations-panel__stat-item relations-panel__stat-item--destacados">
+            <span className="relations-panel__stat-value">{stats.destacados}</span>
+            <span className="relations-panel__stat-label">⭐ Destacados</span>
           </div>
         </div>
 
@@ -590,7 +653,6 @@ const RelationsPanel = ({
           </div>
         )}
 
-        {/* 🔥 NUEVA PESTAÑA: Elementos Especiales */}
         {activeTab === 'especiales' && (
           <div className="relations-panel__section">
             <h3 className="relations-panel__section-title">Elementos Especiales</h3>
@@ -617,6 +679,30 @@ const RelationsPanel = ({
           </div>
         )}
 
+        {/* 🔥 NUEVA PESTAÑA: Destacados */}
+        {activeTab === 'destacados' && (
+          <div className="relations-panel__section">
+            <h3 className="relations-panel__section-title">
+              ⭐ Elementos Destacados ({stats.destacados})
+            </h3>
+            {stats.destacados === 0 ? (
+              <div className="relations-panel__empty-state relations-panel__empty-state--destacados">
+                <div className="relations-panel__empty-icon">⭐</div>
+                <div className="relations-panel__empty-text">
+                  No hay elementos destacados
+                </div>
+                <div className="relations-panel__empty-hint">
+                  Usa el botón ☆ en cualquier elemento para marcarlo como destacado
+                </div>
+              </div>
+            ) : (
+              <div className="relations-panel__node-list">
+                {renderNodeList(nodosFiltrados.filter(node => node.destacado))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Conexiones del nodo seleccionado */}
         {selectedNode && renderConnections()}
 
@@ -639,6 +725,9 @@ const RelationsPanel = ({
             <div className="relations-panel__selected-details">
               <div className="relations-panel__detail-row">
                 <strong>Nombre:</strong> {selectedNode.nombre}
+                {selectedNode.destacado && (
+                  <span className="relations-panel__destacado-badge">⭐ Destacado</span>
+                )}
               </div>
               <div className="relations-panel__detail-row">
                 <strong>Tipo:</strong> {getTipoNombre(selectedNode.tipo)}
@@ -654,7 +743,7 @@ const RelationsPanel = ({
                   <strong>Destinos:</strong> {selectedNode.destinos.length} conexiones
                 </div>
               )}
-              {/* 🔥 NUEVO: Información específica para elementos especiales */}
+              {/* Información específica para elementos especiales */}
               {['botiquin', 'totem', 'desfibrilador', 'extintor', 'alarma', 'salida_emergencia'].includes(selectedNode.tipo) && (
                 <div className="relations-panel__detail-row relations-panel__detail-row--special">
                   <strong>💡 Tipo:</strong> Elemento de seguridad y emergencia
@@ -667,9 +756,19 @@ const RelationsPanel = ({
               )}
             </div>
             <div className="relations-panel__selected-actions">
+              {/* 🔥 BOTÓN DESTACAR EN INFORMACIÓN DEL NODO */}
+              <button
+                onClick={() => handleToggleDestacado(selectedNode)}
+                className={`relations-panel__action-button relations-panel__action-button--primary ${
+                  selectedNode.destacado ? 'relations-panel__action-button--destacado-active' : ''
+                }`}
+              >
+                {selectedNode.destacado ? '⭐ Quitar Destacado' : '☆ Marcar como Destacado'}
+              </button>
+
               <button
                 onClick={() => handleNavigateToNode(selectedNode)}
-                className="relations-panel__action-button relations-panel__action-button--primary"
+                className="relations-panel__action-button relations-panel__action-button--secondary"
               >
                 🧭 Navegar a este nodo
               </button>
@@ -689,6 +788,11 @@ const RelationsPanel = ({
               {Object.keys(nodosPorTipo).length}
             </span>
             <span className="relations-panel__footer-stat-label">categorías</span>
+          </div>
+          {/* 🔥 NUEVA ESTADÍSTICA EN FOOTER */}
+          <div className="relations-panel__footer-stat relations-panel__footer-stat--destacados">
+            <span className="relations-panel__footer-stat-value">{stats.destacados}</span>
+            <span className="relations-panel__footer-stat-label">destacados</span>
           </div>
         </div>
       </div>

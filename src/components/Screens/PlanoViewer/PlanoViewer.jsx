@@ -227,6 +227,37 @@ const PlanoViewer = () => {
     
   }, [planoManager]);
 
+  // 🔥 NUEVA FUNCIÓN: Toggle destacado para nodos
+  const handleToggleDestacado = useCallback((nodeId, destacado) => {
+    console.log("⭐ Toggle destacado desde RelationsPanel:", nodeId, destacado);
+    
+    if (editor.actualizarDestacadoNodo) {
+      editor.actualizarDestacadoNodo(nodeId, destacado);
+    } else {
+      console.warn("❌ Función actualizarDestacadoNodo no disponible en editor");
+      // Implementación de respaldo
+      const nodeInfo = getNodeInfo(nodeId);
+      if (nodeInfo) {
+        console.log(`🔄 Actualizando destacado para: ${nodeInfo.nombre} a ${destacado}`);
+        // Aquí deberías implementar la lógica para actualizar el estado del nodo
+      }
+    }
+    
+    // Mostrar notificación
+    const notification = {
+      id: Date.now(),
+      message: destacado ? `⭐ ${getNodeInfo(nodeId)?.nombre} marcado como destacado` : `☆ Destacado removido de ${getNodeInfo(nodeId)?.nombre}`,
+      type: 'destacado',
+      timestamp: new Date().toISOString()
+    };
+    
+    setFloorNotifications(prev => [...prev, notification]);
+    
+    setTimeout(() => {
+      setFloorNotifications(prev => prev.filter(n => n.id !== notification.id));
+    }, 3000);
+  }, [editor, getNodeInfo]);
+
   // Animación de ruta
   useEffect(() => {
     if (gps.rutaActual.length > 1 && 
@@ -311,12 +342,13 @@ const PlanoViewer = () => {
           id: `a${editor.areas.length + 1}`,
           nombre: editor.nombreArea || `Nueva ${editor.tipoActual}`,
           tipo: editor.tipoActual,
-          points: editor.puntosTemporales
+          points: editor.puntosTemporales,
+          destacado: editor.esDestacado || false // 🔥 INCLUIR ESTADO DESTACADO
         };
         editor.handleGuardarArea(nuevaArea);
       }
     }
-  }, [editor.puntosTemporales, editor.tipoActual, editor.nombreArea, editor.areas.length, editor.handleGuardarArea]);
+  }, [editor.puntosTemporales, editor.tipoActual, editor.nombreArea, editor.areas.length, editor.handleGuardarArea, editor.esDestacado]);
 
   const handleGuardarPuntos = useCallback(() => {
     editor.handleGuardarPuntos();
@@ -336,6 +368,7 @@ const PlanoViewer = () => {
       pisoDestino: config.tipoDestino === 'multiple' ? 
         config.destinosMultiples[0]?.piso : config.pisoDestino,
       direccion: config.direccion,
+      destacado: editor.esDestacado || false, // 🔥 INCLUIR ESTADO DESTACADO
       // Nuevo campo para destinos múltiples
       destinos: config.tipoDestino === 'multiple' ? 
         config.destinosMultiples.map(destino => ({
@@ -348,7 +381,7 @@ const PlanoViewer = () => {
     editor.handleGuardarArea(nuevaEscalera);
     setShowStairConfig(false);
     setStairConfigData(null);
-  }, [editor.areas.length, editor.handleGuardarArea, stairConfigData]);
+  }, [editor.areas.length, editor.handleGuardarArea, stairConfigData, editor.esDestacado]);
 
   const handleDeshacer = useCallback(() => {
     editor.handleDeshacer();
@@ -388,7 +421,8 @@ const PlanoViewer = () => {
         tipo: AREA_TYPES.PASILLO,
         from: editor.selectedNode,
         to: editor.selectedNode,
-        nombre: `Punto ${editor.selectedNode.nombre}`
+        nombre: `Punto ${editor.selectedNode.nombre}`,
+        destacado: editor.esDestacado || false // 🔥 INCLUIR ESTADO DESTACADO
       };
       
       editor.handleGuardarArea(pasilloMarcador);
@@ -396,7 +430,7 @@ const PlanoViewer = () => {
       
       alert(`✅ Punto ${editor.selectedNode.nombre} guardado como referencia de pasillo`);
     }
-  }, [editor.selectedNode, editor.handleGuardarArea, editor.setSelectedNode, getAllNodesFromEditor]);
+  }, [editor.selectedNode, editor.handleGuardarArea, editor.setSelectedNode, getAllNodesFromEditor, editor.esDestacado]);
 
   const handleCambiarPlano = useCallback((planoId) => {
     console.log("🎯 Cambiando a plano ID:", planoId);
@@ -525,6 +559,7 @@ const PlanoViewer = () => {
         showDebugEdges={showDebugEdges}
         edgesCount={edges.length}
         isRouteAnimating={routeAnimation.isAnimating}
+ 
         floorTransitions={[]}
         
         carreraActual={planoManager.carreraActual}
@@ -568,6 +603,10 @@ const PlanoViewer = () => {
         onShowRelationsPanel={() => setShowRelationsPanel(true)}
         hideNames={hideNames}
         onToggleHideNames={setHideNames}
+
+        // 🔥 NUEVAS PROPS PARA DESTACADOS
+        esDestacado={editor.esDestacado || false}
+        onToggleDestacado={editor.toggleDestacado}
       />
 
       <SVGEditor
@@ -629,6 +668,8 @@ const PlanoViewer = () => {
           onDeleteNode={handleDeleteNode}
           onDeleteConnection={handleDeleteConnection}
           onNavigateToNode={handleNavigateToNode}
+          // 🔥 NUEVA PROP: Función para destacar nodos
+          onToggleDestacado={handleToggleDestacado}
         />
       )}
 

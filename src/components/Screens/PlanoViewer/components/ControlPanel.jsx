@@ -1,6 +1,6 @@
-// ControlPanel.jsx - VERSIÓN MODIFICADA CON DEPARTAMENTO Y ÁREA GENÉRICA
+// ControlPanel.jsx - VERSIÓN COMPLETA CON DESTACADOS
 import React, { useState } from 'react';
-import { AREA_TYPES } from '../utils/constants';
+import { AREA_TYPES, FEATURE_FLAGS } from '../utils/constants';
 import './../styles/ControlPanel.css';
 
 const ControlPanel = ({
@@ -52,7 +52,10 @@ const ControlPanel = ({
   onCopiarJSON,
   onSimularGuardado,
   hideNames,
-  onToggleHideNames
+  onToggleHideNames,
+  // 🔥 NUEVAS PROPS PARA DESTACADOS
+  esDestacado = false,
+  onToggleDestacado
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState('navegacion');
@@ -108,7 +111,9 @@ const ControlPanel = ({
     escaleras: todosLosNodos.filter(n => n.tipo === AREA_TYPES.ESCALERA).length,
     pasillos: todosLosNodos.filter(n => n.tipo === AREA_TYPES.PASILLO).length,
     departamentos: todosLosNodos.filter(n => n.tipo === AREA_TYPES.DEPARTAMENTO).length,
-    areasGenericas: todosLosNodos.filter(n => n.tipo === AREA_TYPES.AREA_GENERICA).length
+    areasGenericas: todosLosNodos.filter(n => n.tipo === AREA_TYPES.AREA_GENERICA).length,
+    // 🔥 NUEVA ESTADÍSTICA: Elementos destacados
+    destacados: todosLosNodos.filter(n => n.destacado).length
   };
 
   return (
@@ -370,6 +375,27 @@ const ControlPanel = ({
                   />
                 </div>
 
+                {/* 🔥 NUEVO: Checkbox para marcar como destacado */}
+                <div className="control-panel__input-group control-panel__input-group--checkbox">
+                  <label className="control-panel__checkbox-label control-panel__checkbox-label--destacado">
+                    <input
+                      type="checkbox"
+                      checked={esDestacado}
+                      onChange={(e) => onToggleDestacado && onToggleDestacado(e.target.checked)}
+                      className="control-panel__checkbox"
+                    />
+                    <span className="control-panel__checkbox-custom control-panel__checkbox-custom--destacado">
+                      {esDestacado ? '⭐' : '☆'}
+                    </span>
+                    <span className="control-panel__checkbox-text">
+                      Marcar como <strong>Destacado</strong>
+                    </span>
+                  </label>
+                  <div className="control-panel__checkbox-hint">
+                    Los elementos destacados se muestran con un efecto especial en el mapa
+                  </div>
+                </div>
+
                 <div className="control-panel__action-buttons">
                   {tipoActual === AREA_TYPES.PUNTO || 
                   tipoActual === AREA_TYPES.EXTINTOR ||
@@ -385,7 +411,8 @@ const ControlPanel = ({
                         puntosTemporales?.length > 0 ? '' : 'control-panel__button--disabled'
                       }`}
                     >
-                      💾 Guardar {getPointTypeName(tipoActual)}
+                      {esDestacado ? '⭐ ' : ''}💾 Guardar {getPointTypeName(tipoActual)}
+                      {esDestacado ? ' Destacado' : ''}
                     </button>
                   ) : tipoActual === AREA_TYPES.PASILLO ? (
                     <button
@@ -405,7 +432,8 @@ const ControlPanel = ({
                         puntosTemporales?.length >= 3 ? '' : 'control-panel__button--disabled'
                       }`}
                     >
-                      💾 Guardar Área
+                      {esDestacado ? '⭐ ' : ''}💾 Guardar Área
+                      {esDestacado ? ' Destacada' : ''}
                     </button>
                   )}
                   
@@ -472,6 +500,11 @@ const ControlPanel = ({
                   {puntosTemporales && puntosTemporales.length > 0 && (
                     <div className="control-panel__points-counter">
                       Puntos: {puntosTemporales.length}
+                    </div>
+                  )}
+                  {esDestacado && (
+                    <div className="control-panel__destacado-indicator">
+                      ⭐ Este elemento será marcado como <strong>DESTACADO</strong>
                     </div>
                   )}
                   <div className="control-panel__edit-hint">
@@ -590,6 +623,11 @@ const ControlPanel = ({
                   <span className="control-panel__stat-value">{stats.areasGenericas}</span>
                   <span className="control-panel__stat-label">Áreas Genéricas</span>
                 </div>
+                {/* 🔥 NUEVA ESTADÍSTICA: Elementos destacados */}
+                <div className="control-panel__stat-item control-panel__stat-item--destacado">
+                  <span className="control-panel__stat-value">{stats.destacados}</span>
+                  <span className="control-panel__stat-label">⭐ Destacados</span>
+                </div>
               </div>
             </div>
           </div>
@@ -608,6 +646,13 @@ const ControlPanel = ({
             <span className="control-panel__status-icon">🎬</span>
             <span>{isRouteAnimating ? "Activa" : "Inactiva"}</span>
           </div>
+          {/* 🔥 NUEVO: Indicador de modo destacado */}
+          {esDestacado && (
+            <div className="control-panel__status-item control-panel__status-item--destacado">
+              <span className="control-panel__status-icon">⭐</span>
+              <span>Destacado</span>
+            </div>
+          )}
         </div>
       </div>
 

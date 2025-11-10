@@ -1,6 +1,14 @@
+// SpecialPoint.jsx - VERSIÓN CORREGIDA
 import React from 'react';
 import { COLORS, ICONS, AREA_TYPES } from '../utils/constants';
 import './../styles/SpecialPoint.css';
+
+// 🔥 DEFINIR COLORS_DESTACADOS localmente por si no está en constants
+const COLORS_DESTACADOS = {
+  DESTACADO: '#FFD700',
+  DESTACADO_BORDE: '#FFA500',
+  DESTACADO_GLOW: '#FFF3CD'
+};
 
 const SpecialPoint = ({ 
   area, 
@@ -9,7 +17,7 @@ const SpecialPoint = ({
   onNodeClick,
   tipoActual,
   modoEdicion,
-  hideNames // 🔥 NUEVO: Prop para ocultar nombres
+  hideNames
 }) => {
   // 🔥 NUEVA LÓGICA: Si es un punto normal Y NO estamos en modo edición, no renderizar
   if (area.tipo === AREA_TYPES.PUNTO && !modoEdicion) {
@@ -24,52 +32,74 @@ const SpecialPoint = ({
 
   const pointClass = `special-point ${
     isSelectable ? 'special-point--selectable' : ''
-  } special-point--${area.tipo}`;
+  } special-point--${area.tipo} ${
+    area.destacado ? 'special-point--destacado' : ''
+  }`;
+
+  // 🔥 FUNCIÓN PARA OBTENER COLOR SEGURO
+  const getSafeColor = () => {
+    if (area.destacado) {
+      return COLORS_DESTACADOS.DESTACADO;
+    }
+    return COLORS[area.tipo] || '#CCCCCC';
+  };
 
   // 🔥 NUEVA LÓGICA: Determinar si mostrar etiqueta
   const shouldShowLabel = !hideNames && zoomScale >= 2;
 
-  // En SpecialPoint.jsx, dentro del return:
-return (
-  <g
-    onClick={handleClick}
-    className={pointClass}
-  >
-    {/* 🔥 EL PUNTO SIEMPRE SE MUESTRA */}
-    <circle
-      cx={area.x}
-      cy={area.y}
-      r={getPointSize(zoomScale)}
-      className="special-point__background"
-      fill={COLORS[area.tipo] || '#CCCCCC'}
-    />
-    
-    {/* 🔥 EL ICONO SIEMPRE SE MUESTRA */}
-    <text
-      x={area.x}
-      y={area.y}
-      textAnchor="middle"
-      dominantBaseline="central"
-      className="special-point__icon"
-      fontSize={getIconSize(zoomScale)}
+  return (
+    <g
+      onClick={handleClick}
+      className={pointClass}
     >
-      {ICONS[area.tipo] || '📍'}
-    </text>
-    
-    {/* 🔥 SOLO LA ETIQUETA DEL NOMBRE SE OCULTA */}
-    {!hideNames && zoomScale >= 2 && (
+      {/* 🔥 EL PUNTO SIEMPRE SE MUESTRA */}
+      <circle
+        cx={area.x}
+        cy={area.y}
+        r={getPointSize(zoomScale)}
+        className={`special-point__background ${
+          area.destacado ? 'special-point__background--destacado' : ''
+        }`}
+        fill={getSafeColor()}
+      />
+      
+      {/* 🔥 EFECTO DE PULSO PARA PUNTOS DESTACADOS */}
+      {area.destacado && (
+        <circle
+          cx={area.x}
+          cy={area.y}
+          r={getPointSize(zoomScale) + 3}
+          className="special-point__destacado-pulse"
+        />
+      )}
+
+      {/* 🔥 EL ICONO SIEMPRE SE MUESTRA */}
       <text
         x={area.x}
-        y={area.y + getPointSize(zoomScale) + 10}
+        y={area.y}
         textAnchor="middle"
-        className="special-point__label"
-        fontSize={getLabelSize(zoomScale)}
+        dominantBaseline="central"
+        className="special-point__icon"
+        fontSize={getIconSize(zoomScale)}
       >
-        {area.nombre}
+        {ICONS[area.tipo] || '📍'}
       </text>
-    )}
-  </g>
-);
+      
+      {/* 🔥 SOLO LA ETIQUETA DEL NOMBRE SE OCULTA */}
+      {!hideNames && zoomScale >= 2 && (
+        <text
+          x={area.x}
+          y={area.y + getPointSize(zoomScale) + 10}
+          textAnchor="middle"
+          className="special-point__label"
+          fontSize={getLabelSize(zoomScale)}
+        >
+          {area.nombre}
+          {area.destacado && ' ⭐'}
+        </text>
+      )}
+    </g>
+  );
 };
 
 // Funciones auxiliares para tamaños responsivos (sin cambios)

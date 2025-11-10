@@ -114,3 +114,32 @@
 .area-polygon__shape--area_generica + .area-polygon__icon {
   fill: #9E9E9E;
 }
+
+.area-polygon--destacado {
+  filter: drop-shadow(0 0 8px gold);
+}
+
+.area-polygon__shape--destacado {
+  stroke: #FFA500;
+  stroke-width: 3;
+  animation: pulse-destacado 2s infinite;
+}
+
+.area-polygon__destacado-glow {
+  fill: none;
+  stroke: #FFD700;
+  stroke-width: 2;
+  opacity: 0.6;
+  animation: glow-destacado 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-destacado {
+  0% { stroke-width: 3; }
+  50% { stroke-width: 5; }
+  100% { stroke-width: 3; }
+}
+
+@keyframes glow-destacado {
+  from { opacity: 0.6; stroke-width: 2; }
+  to { opacity: 0.9; stroke-width: 4; }
+}
