@@ -9,7 +9,8 @@ const Sidebar = ({ activeItem, onItemClick, onBack, onLogout }) => {
   const menuItems = [
     { id: 'announcements', label: 'Anuncios', icon: '●', path: '/announcements' },
     { id: 'materias', label: 'Materias', icon: '●', path: '/materias' },
-    { id: 'profesores', label: 'Profesores', icon: '●', path: '/profesores' }
+    { id: 'profesores', label: 'Profesores', icon: '●', path: '/profesores' },
+    { id: 'mapa', label: 'Mapa', icon: '●', path: '/planoviewer' }
   ];
 
   const handleMenuItemClick = (itemId, itemPath) => {
