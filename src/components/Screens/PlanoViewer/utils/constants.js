@@ -1,6 +1,7 @@
 import plata_principal from "./../assets/Dibujo1-Presentación1.png";
 import sistemas_p1 from "./../assets/sistemas-piso-1.png"
 import sistemas_p2 from "./../assets/sistemas-piso-2.png"
+import quimica_p1 from "./../assets/PlanoQuimica.png"
 
 
 
@@ -143,7 +144,7 @@ export const PLANOS_CONFIG = {
     nombre: 'Química - Piso 1',
     carrera: CARRERAS.QUIMICA,
     piso: PISOS.PISO1,
-    src: '/planos/quimica-p1.png',
+    src: quimica_p1,
     naturalWidth: 1012,
     naturalHeight: 768,
     areas: []
