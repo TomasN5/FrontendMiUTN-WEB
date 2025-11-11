@@ -325,7 +325,7 @@
   filter: 
     drop-shadow(0 0 10px #00ff88)
     drop-shadow(0 0 20px #00ff88);
-  animation: travelerFloat 2s ease-in-out infinite;
+  
 }
 
 @keyframes travelerFloat {
